@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import { createServerClient } from '@/lib/db';
 import { getISOWeekNumber } from '@/lib/scoring';
 import { getTierFromPoints } from '@/lib/points';
+import { getSessionFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,17 +56,24 @@ function aggregateLeaderboard(data: SubmissionRow[]) {
 
 // GET /api/leaderboard - Get current week or all-time leaderboard
 export async function GET(request: NextRequest) {
+  const session = await getSessionFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const timeRange = searchParams.get('range') || 'week';
+  const week = searchParams.get('week');
 
   try {
+    const supabase = createServerClient();
     let query = supabase
       .from('submissions')
       .select('wallet_address, points_awarded, normalized_score, users(display_name, avatar_url, level)')
-      .eq('status', 'scored');
+      .eq('status', 'approved');
 
     if (timeRange === 'week') {
-      const weekNumber = getISOWeekNumber(new Date());
+      const weekNumber = week ? parseInt(week, 10) : getISOWeekNumber(new Date());
       query = query.eq('week_number', weekNumber);
     }
 

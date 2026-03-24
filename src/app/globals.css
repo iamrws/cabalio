@@ -37,8 +37,8 @@
   --sidebar-width: 260px;
 
   /* Font */
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-jetbrains);
+  --font-sans: "Segoe UI", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
 }
 
 @theme inline {
@@ -58,8 +58,8 @@
   --color-text-muted: var(--text-muted);
   --color-border-subtle: var(--border-subtle);
   --color-border-neon: var(--border-neon);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-jetbrains);
+  --font-sans: "Segoe UI", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
 }
 
 /* Base styles */

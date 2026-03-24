@@ -1,34 +1,33 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from './database.types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // Lazy-initialized client to avoid build-time errors when env vars aren't set
-let _supabase: SupabaseClient<Database> | null = null;
+let _supabase: SupabaseClient | null = null;
 
-function getSupabase(): SupabaseClient<Database> {
+function getSupabase(): SupabaseClient {
   if (!_supabase) {
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error('Supabase URL and Anon Key must be set in environment variables');
     }
-    _supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+    _supabase = createClient(supabaseUrl, supabaseAnonKey);
   }
   return _supabase;
 }
 
 // For convenience - lazy wrapper that only initializes at runtime
 export const supabase = {
-  from: <T extends keyof Database['public']['Tables']>(table: T) => getSupabase().from(table),
+  from: (table: string) => getSupabase().from(table),
 };
 
 // Server-side client with service role key for admin operations
-export function createServerClient(): SupabaseClient<Database> {
+export function createServerClient(): SupabaseClient {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   if (!supabaseUrl || !serviceKey) {
     throw new Error('Supabase URL and Service Role Key must be set');
   }
-  return createClient<Database>(supabaseUrl, serviceKey);
+  return createClient(supabaseUrl, serviceKey);
 }
 
 // ============================================================
@@ -49,6 +48,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_submission_date DATE,
   is_holder BOOLEAN DEFAULT FALSE,
   nft_mint_address TEXT,
+  holder_verified_at TIMESTAMPTZ,
   badges JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -68,7 +68,9 @@ CREATE TABLE IF NOT EXISTS submissions (
   scoring_breakdown JSONB,
   points_awarded INTEGER DEFAULT 0,
   x_metrics JSONB,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'scored', 'flagged', 'rejected')),
+  status TEXT DEFAULT 'submitted' CHECK (
+    status IN ('submitted', 'queued', 'ai_scored', 'human_review', 'approved', 'flagged', 'rejected')
+  ),
   week_number INTEGER NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   scored_at TIMESTAMPTZ
@@ -134,10 +136,25 @@ CREATE TABLE IF NOT EXISTS quest_progress (
   UNIQUE(quest_id, wallet_address)
 );
 
+-- Points ledger for immutable accounting
+CREATE TABLE IF NOT EXISTS points_ledger (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wallet_address TEXT NOT NULL REFERENCES users(wallet_address),
+  submission_id UUID REFERENCES submissions(id) ON DELETE SET NULL,
+  entry_type TEXT NOT NULL CHECK (
+    entry_type IN ('submission_approved', 'quest_bonus', 'manual_adjustment', 'penalty')
+  ),
+  points_delta INTEGER NOT NULL,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_submissions_wallet ON submissions(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_submissions_week ON submissions(week_number);
 CREATE INDEX IF NOT EXISTS idx_submissions_created ON submissions(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reactions_submission ON reactions(submission_id);
 CREATE INDEX IF NOT EXISTS idx_rewards_wallet ON rewards(wallet_address);
+CREATE INDEX IF NOT EXISTS idx_points_ledger_wallet ON points_ledger(wallet_address);
+CREATE INDEX IF NOT EXISTS idx_points_ledger_submission ON points_ledger(submission_id);
 `;

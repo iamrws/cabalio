@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import HeroCanvas from './HeroCanvas';
-import WalletButton from '../shared/WalletButton';
+import AuthControls from '../shared/AuthControls';
 
 export default function Hero() {
   return (
@@ -63,7 +63,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.8 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <WalletButton />
+          <AuthControls compact />
           <a
             href="#how-it-works"
             className="px-6 py-3 rounded-xl border border-border-subtle text-text-secondary hover:text-neon-cyan hover:border-neon-cyan/50 transition-all duration-300"

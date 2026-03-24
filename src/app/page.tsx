@@ -1,13 +1,25 @@
-'use client';
-
 import Hero from '@/components/landing/Hero';
 import HowItWorks from '@/components/landing/HowItWorks';
 import CommunityStats from '@/components/landing/CommunityStats';
 import Footer from '@/components/landing/Footer';
 
-export default function LandingPage() {
+export default async function LandingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ auth?: string }>;
+}) {
+  const params = await searchParams;
+  const authState = params.auth;
+
   return (
     <main className="min-h-screen bg-bg-primary">
+      {authState === 'required' ? (
+        <div className="mx-auto max-w-5xl px-6 pt-6">
+          <div className="rounded-lg border border-neon-orange/30 bg-neon-orange/10 px-4 py-3 text-sm text-neon-orange">
+            Login required. Connect your wallet and verify holder access to continue.
+          </div>
+        </div>
+      ) : null}
       <Hero />
       <HowItWorks />
       <CommunityStats />

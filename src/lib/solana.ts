@@ -1,11 +1,17 @@
 import { Connection, PublicKey } from '@solana/web3.js';
+import nacl from 'tweetnacl';
 import { JITO_CABAL_COLLECTION_ADDRESS } from './constants';
 
 // Verify if a wallet holds a Jito Cabal NFT
 export async function verifyNFTHolder(
   walletAddress: string,
-  heliusApiKey: string
+  heliusApiKey: string,
+  collectionAddress: string = JITO_CABAL_COLLECTION_ADDRESS
 ): Promise<{ isHolder: boolean; mintAddress: string | null }> {
+  if (!heliusApiKey || !collectionAddress) {
+    return { isHolder: false, mintAddress: null };
+  }
+
   try {
     const response = await fetch(
       `https://mainnet.helius-rpc.com/?api-key=${heliusApiKey}`,
@@ -32,14 +38,18 @@ export async function verifyNFTHolder(
     const assets = data.result?.items || [];
 
     // Find any asset belonging to the Jito Cabal collection
-    const cabalNFT = assets.find(
-      (asset: { grouping?: { group_key: string; group_value: string }[] }) =>
-        asset.grouping?.some(
-          (g: { group_key: string; group_value: string }) =>
-            g.group_key === 'collection' &&
-            g.group_value === JITO_CABAL_COLLECTION_ADDRESS
-        )
-    );
+    const cabalNFT = assets.find((asset: {
+      id?: string;
+      grouping?: { group_key: string; group_value: string }[];
+      collection?: { key?: string };
+    }) => {
+      const groupingMatch = asset.grouping?.some(
+        (g: { group_key: string; group_value: string }) =>
+          g.group_key === 'collection' && g.group_value === collectionAddress
+      );
+      const collectionKeyMatch = asset.collection?.key === collectionAddress;
+      return groupingMatch || collectionKeyMatch;
+    });
 
     return {
       isHolder: !!cabalNFT,
@@ -57,9 +67,8 @@ export function verifySignature(
   signature: Uint8Array,
   publicKey: PublicKey
 ): boolean {
-  const { sign } = require('tweetnacl');
   const messageBytes = new TextEncoder().encode(message);
-  return sign.detached.verify(messageBytes, signature, publicKey.toBytes());
+  return nacl.sign.detached.verify(messageBytes, signature, publicKey.toBytes());
 }
 
 // Get a Solana connection

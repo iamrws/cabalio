@@ -1,84 +1,136 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
 import PointsBadge from '@/components/shared/PointsBadge';
-import { BADGE_DEFINITIONS, LEVEL_THRESHOLDS } from '@/lib/types';
+import { BADGE_DEFINITIONS } from '@/lib/types';
+import { getLevelInfo } from '@/lib/points';
 
-// Mock profile data
-const MOCK_PROFILE = {
-  wallet_address: 'Abc1...xyz9',
-  display_name: 'CabalOG.sol',
-  level: 4,
-  level_name: 'Guardian',
-  total_xp: 720,
-  next_level_xp: 1000,
-  current_streak: 7,
-  longest_streak: 14,
-  total_submissions: 32,
-  avg_score: 76,
-  weekly_points: 85,
-  badges: [
-    { ...BADGE_DEFINITIONS[0], earned_at: '2026-01-15' },
-    { ...BADGE_DEFINITIONS[1], earned_at: '2026-02-01' },
-    { ...BADGE_DEFINITIONS[8], earned_at: '2026-02-20' },
-  ],
-};
-
-// Streak calendar mock (last 28 days)
-const streakCalendar = Array.from({ length: 28 }, (_, i) => ({
-  date: new Date(Date.now() - (27 - i) * 86400000).toISOString().split('T')[0],
-  submitted: Math.random() > 0.4,
-}));
+interface SummaryResponse {
+  wallet_address: string;
+  user: {
+    display_name: string | null;
+    wallet_address: string;
+    level: number;
+    total_xp: number;
+    current_streak: number;
+    longest_streak: number;
+    badges: Array<{ id: string; earned_at: string }>;
+  };
+  stats: {
+    total_submissions: number;
+    approved_submissions: number;
+    pending_submissions: number;
+    weekly_points: number;
+    avg_score: number;
+  };
+}
 
 export default function ProfilePage() {
-  const profile = MOCK_PROFILE;
-  const levelProgress = ((profile.total_xp - 600) / (1000 - 600)) * 100;
+  const params = useParams<{ address: string }>();
+  const [summary, setSummary] = useState<SummaryResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await fetch('/api/me/summary', { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to load profile');
+        }
+        if (!cancelled) {
+          setSummary(data);
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(loadError instanceof Error ? loadError.message : 'Failed to load profile');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [params.address]);
+
+  const levelInfo = useMemo(
+    () => getLevelInfo(summary?.user.total_xp || 0),
+    [summary?.user.total_xp]
+  );
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <NeonCard hover={false} className="p-5">
+          <div className="text-sm text-text-muted">Loading profile...</div>
+        </NeonCard>
+      </div>
+    );
+  }
+
+  if (error || !summary) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <NeonCard hover={false} className="p-5 border border-red-500/30">
+          <div className="text-sm text-red-400">{error || 'Profile unavailable'}</div>
+        </NeonCard>
+      </div>
+    );
+  }
+
+  const displayName = summary.user.display_name || `${summary.wallet_address.slice(0, 4)}...${summary.wallet_address.slice(-4)}`;
+  const earnedBadgeIds = new Set(summary.user.badges?.map((badge) => badge.id) || []);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Profile header */}
       <NeonCard hover={false} className="p-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          {/* Avatar */}
           <div className="h-20 w-20 rounded-2xl bg-bg-tertiary border-2 border-neon-cyan/30 flex items-center justify-center text-2xl font-mono font-bold gradient-text">
-            {profile.display_name.slice(0, 2)}
+            {displayName.slice(0, 2)}
           </div>
 
           <div className="flex-1 text-center sm:text-left">
-            <h2 className="text-2xl font-bold text-text-primary mb-1">{profile.display_name}</h2>
-            <div className="text-sm text-text-muted font-mono mb-3">{profile.wallet_address}</div>
-
+            <h2 className="text-2xl font-bold text-text-primary mb-1">{displayName}</h2>
+            <div className="text-sm text-text-muted font-mono mb-3">{summary.wallet_address}</div>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
-              {/* Level badge */}
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon-purple/10 border border-neon-purple/30">
-                <span className="text-xs font-mono text-neon-purple font-bold">Lv.{profile.level}</span>
-                <span className="text-xs text-neon-purple/70">{profile.level_name}</span>
+                <span className="text-xs font-mono text-neon-purple font-bold">Lv.{levelInfo.level}</span>
+                <span className="text-xs text-neon-purple/70">{levelInfo.name}</span>
               </div>
-
-              {/* Streak */}
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon-orange/10 border border-neon-orange/30">
                 <span>🔥</span>
-                <span className="text-xs font-mono text-neon-orange font-bold">{profile.current_streak} day streak</span>
+                <span className="text-xs font-mono text-neon-orange font-bold">
+                  {summary.user.current_streak} day streak
+                </span>
               </div>
-
-              <PointsBadge points={profile.weekly_points} size="sm" />
+              <PointsBadge points={summary.stats.weekly_points} size="sm" />
             </div>
           </div>
         </div>
 
-        {/* XP Progress */}
         <div className="mt-5 pt-4 border-t border-border-subtle">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-text-muted">Level {profile.level} Progress</span>
+            <span className="text-xs text-text-muted">Level Progress</span>
             <span className="text-xs font-mono text-text-secondary">
-              {profile.total_xp} / {profile.next_level_xp} XP
+              {summary.user.total_xp} XP
             </span>
           </div>
           <div className="h-2 rounded-full bg-bg-tertiary">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${levelProgress}%` }}
+              animate={{ width: `${Math.max(levelInfo.progress * 100, 2)}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
               className="h-full rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple"
             />
@@ -86,13 +138,12 @@ export default function ProfilePage() {
         </div>
       </NeonCard>
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Submissions', value: profile.total_submissions, color: 'text-neon-cyan' },
-          { label: 'Avg Score', value: profile.avg_score, color: 'text-neon-green' },
-          { label: 'Total XP', value: profile.total_xp, color: 'text-neon-purple' },
-          { label: 'Best Streak', value: `${profile.longest_streak}d`, color: 'text-neon-orange' },
+          { label: 'Submissions', value: summary.stats.total_submissions, color: 'text-neon-cyan' },
+          { label: 'Approved', value: summary.stats.approved_submissions, color: 'text-neon-green' },
+          { label: 'Avg Score', value: summary.stats.avg_score, color: 'text-neon-purple' },
+          { label: 'Best Streak', value: `${summary.user.longest_streak}d`, color: 'text-neon-orange' },
         ].map((stat) => (
           <NeonCard key={stat.label} hover={false} className="p-4 text-center">
             <div className={`text-xl font-mono font-bold ${stat.color}`}>{stat.value}</div>
@@ -101,37 +152,13 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Streak calendar */}
-      <NeonCard hover={false} className="p-5">
-        <h3 className="text-sm font-semibold text-text-primary mb-4">Submission Calendar</h3>
-        <div className="grid grid-cols-7 gap-1.5">
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
-            <div key={i} className="text-center text-[10px] text-text-muted font-mono mb-1">
-              {day}
-            </div>
-          ))}
-          {streakCalendar.map((day, i) => (
-            <div
-              key={i}
-              className={`aspect-square rounded-sm ${
-                day.submitted
-                  ? 'bg-neon-cyan/40 border border-neon-cyan/30'
-                  : 'bg-bg-tertiary border border-border-subtle'
-              }`}
-              title={`${day.date}: ${day.submitted ? 'Submitted' : 'No submission'}`}
-            />
-          ))}
-        </div>
-      </NeonCard>
-
-      {/* Badges */}
       <NeonCard hover={false} className="p-5">
         <h3 className="text-sm font-semibold text-text-primary mb-4">
-          Badges ({profile.badges.length}/{BADGE_DEFINITIONS.length})
+          Badges ({earnedBadgeIds.size}/{BADGE_DEFINITIONS.length})
         </h3>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
           {BADGE_DEFINITIONS.map((badge) => {
-            const earned = profile.badges.find((b) => b.id === badge.id);
+            const earned = earnedBadgeIds.has(badge.id);
             return (
               <div
                 key={badge.id}

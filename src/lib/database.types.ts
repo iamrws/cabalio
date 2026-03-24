@@ -18,6 +18,7 @@ export interface Database {
           last_submission_date: string | null;
           is_holder: boolean;
           nft_mint_address: string | null;
+          holder_verified_at: string | null;
           badges: unknown[];
           created_at: string;
           updated_at: string;
@@ -35,6 +36,7 @@ export interface Database {
           last_submission_date: string | null;
           is_holder: boolean;
           nft_mint_address: string | null;
+          holder_verified_at: string | null;
           badges: unknown[];
           created_at: string;
           updated_at: string;
@@ -52,6 +54,7 @@ export interface Database {
           last_submission_date: string | null;
           is_holder: boolean;
           nft_mint_address: string | null;
+          holder_verified_at: string | null;
           badges: unknown[];
           updated_at: string;
         }>;
@@ -233,6 +236,31 @@ export interface Database {
         Update: Partial<{
           progress: number;
           completed_at: string | null;
+        }>;
+      };
+      points_ledger: {
+        Row: {
+          id: string;
+          wallet_address: string;
+          submission_id: string | null;
+          entry_type: string;
+          points_delta: number;
+          metadata: Record<string, unknown> | null;
+          created_at: string;
+        };
+        Insert: Partial<{
+          id: string;
+          wallet_address: string;
+          submission_id: string | null;
+          entry_type: string;
+          points_delta: number;
+          metadata: Record<string, unknown> | null;
+          created_at: string;
+        }> & { wallet_address: string; entry_type: string; points_delta: number };
+        Update: Partial<{
+          entry_type: string;
+          points_delta: number;
+          metadata: Record<string, unknown> | null;
         }>;
       };
     };

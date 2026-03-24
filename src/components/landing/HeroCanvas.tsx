@@ -45,6 +45,11 @@ export default function HeroCanvas() {
       }));
     };
 
+    const handleResize = () => {
+      resize();
+      createParticles();
+    };
+
     const drawConnections = () => {
       const maxDist = 150;
       for (let i = 0; i < particles.length; i++) {
@@ -78,7 +83,6 @@ export default function HeroCanvas() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.color.replace(')', `, ${p.opacity})`).replace('rgb', 'rgba').replace('#', '');
 
         // Convert hex to rgba for fill
         const hex = p.color;
@@ -103,14 +107,11 @@ export default function HeroCanvas() {
     createParticles();
     animate();
 
-    window.addEventListener('resize', () => {
-      resize();
-      createParticles();
-    });
+    window.addEventListener('resize', handleResize);
 
     return () => {
       cancelAnimationFrame(animationId);
-      window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 

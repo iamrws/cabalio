@@ -3,7 +3,14 @@
 // ============================================================
 
 export type SubmissionType = 'x_post' | 'blog' | 'art';
-export type SubmissionStatus = 'pending' | 'scored' | 'flagged' | 'rejected';
+export type SubmissionStatus =
+  | 'submitted'
+  | 'queued'
+  | 'ai_scored'
+  | 'human_review'
+  | 'approved'
+  | 'flagged'
+  | 'rejected';
 export type QuestStatus = 'active' | 'completed' | 'expired';
 export type RewardStatus = 'claimable' | 'claimed' | 'expired';
 

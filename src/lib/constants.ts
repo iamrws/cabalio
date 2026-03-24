@@ -24,8 +24,9 @@ export const MAX_IMAGE_SIZE_MB = 5;
 // Streak
 export const STREAK_GRACE_DAYS = 1;
 
-// Jito Cabal NFT (placeholder - replace with actual collection address)
-export const JITO_CABAL_COLLECTION_ADDRESS = 'REPLACE_WITH_ACTUAL_COLLECTION_ADDRESS';
+// Jito Cabal NFT collection address (public env)
+export const JITO_CABAL_COLLECTION_ADDRESS =
+  process.env.NEXT_PUBLIC_JITO_CABAL_COLLECTION_ADDRESS || '';
 
 // API endpoints
 export const HELIUS_RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=';
