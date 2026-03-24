@@ -37,9 +37,18 @@
 - [x] Submit page wired to real API flow
 - [x] Dashboard wired to real submissions feed
 - [x] Leaderboard wired to API
-- [x] Profile wired to authenticated summary API
+- [x] Leaderboard upgraded to aggregate from `points_ledger` (weekly/all-time holder points)
+- [x] Profile wired to per-user API (`/api/profile/[address]`)
 - [x] Rewards wired to authenticated summary API
 - [x] Sidebar/Header stats wired to API
+
+## Requested Product Requirements
+
+- [x] Account profile page for each user wallet
+- [x] Contribution tracking (submission history on profile + summary APIs)
+- [x] Admin point distribution flow (manual adjustments + review-based awarding)
+- [x] User point visibility (weekly/total stats + points history)
+- [x] Leaderboard showing everyone’s points
 
 ## Ops and Quality
 

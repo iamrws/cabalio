@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/db';
 import { getSessionFromRequest } from '@/lib/auth';
-import { getISOWeekNumber } from '@/lib/scoring';
+import { getISOWeekKey } from '@/lib/scoring';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,12 +23,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: userError.message }, { status: 500 });
   }
 
-  const weekNumber = getISOWeekNumber(new Date());
+  const weekKey = getISOWeekKey(new Date());
 
-  const [submissionsResult, rewardsResult] = await Promise.all([
+  const [submissionsResult, rewardsResult, pointsResult] = await Promise.all([
     supabase
       .from('submissions')
-      .select('id, points_awarded, normalized_score, status, created_at')
+      .select('id, type, title, points_awarded, normalized_score, status, created_at')
       .eq('wallet_address', session.walletAddress)
       .order('created_at', { ascending: false }),
     supabase
@@ -36,6 +36,12 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('wallet_address', session.walletAddress)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('points_ledger')
+      .select('id, entry_type, points_delta, metadata, created_at, submission_id')
+      .eq('wallet_address', session.walletAddress)
+      .order('created_at', { ascending: false })
+      .limit(100),
   ]);
 
   if (submissionsResult.error) {
@@ -44,17 +50,20 @@ export async function GET(request: NextRequest) {
   if (rewardsResult.error) {
     return NextResponse.json({ error: rewardsResult.error.message }, { status: 500 });
   }
+  if (pointsResult.error) {
+    return NextResponse.json({ error: pointsResult.error.message }, { status: 500 });
+  }
 
   const submissions = submissionsResult.data || [];
   const rewards = rewardsResult.data || [];
+  const pointsHistory = pointsResult.data || [];
 
   const approved = submissions.filter((submission) => submission.status === 'approved');
-  const weeklyPoints = approved
-    .filter((submission) => {
-      const created = new Date(submission.created_at);
-      return getISOWeekNumber(created) === weekNumber;
-    })
-    .reduce((sum, submission) => sum + (submission.points_awarded || 0), 0);
+  const weeklyPoints = pointsHistory.reduce((sum, entry) => {
+    const entryWeek = getISOWeekKey(new Date(entry.created_at));
+    return entryWeek === weekKey ? sum + (entry.points_delta || 0) : sum;
+  }, 0);
+  const totalPoints = pointsHistory.reduce((sum, entry) => sum + (entry.points_delta || 0), 0);
 
   const avgScore =
     approved.length > 0
@@ -67,12 +76,16 @@ export async function GET(request: NextRequest) {
     wallet_address: session.walletAddress,
     user,
     rewards,
+    contributions: submissions,
+    points_history: pointsHistory,
     stats: {
       total_submissions: submissions.length,
       approved_submissions: approved.length,
       pending_submissions: submissions.filter((submission) => submission.status === 'submitted').length,
+      total_points: totalPoints,
       weekly_points: weeklyPoints,
       avg_score: avgScore,
     },
   });
 }
+

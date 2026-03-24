@@ -29,6 +29,8 @@ const typeIcons: Record<string, { icon: string; label: string; color: string }> 
 export default function DashboardPage() {
   const [communitySubmissions, setCommunitySubmissions] = useState<SubmissionRow[]>([]);
   const [mySubmissions, setMySubmissions] = useState<SubmissionRow[]>([]);
+  const [myWeeklyPoints, setMyWeeklyPoints] = useState(0);
+  const [myTotalPoints, setMyTotalPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -39,13 +41,15 @@ export default function DashboardPage() {
       setLoading(true);
       setError('');
       try {
-        const [communityResponse, mineResponse] = await Promise.all([
+        const [communityResponse, mineResponse, summaryResponse] = await Promise.all([
           fetch('/api/submissions?limit=15', { cache: 'no-store' }),
           fetch('/api/submissions?scope=mine&limit=50', { cache: 'no-store' }),
+          fetch('/api/me/summary', { cache: 'no-store' }),
         ]);
 
         const communityData = await communityResponse.json();
         const mineData = await mineResponse.json();
+        const summaryData = await summaryResponse.json();
 
         if (!communityResponse.ok) {
           throw new Error(communityData.error || 'Failed to load community feed');
@@ -53,10 +57,15 @@ export default function DashboardPage() {
         if (!mineResponse.ok) {
           throw new Error(mineData.error || 'Failed to load your submissions');
         }
+        if (!summaryResponse.ok) {
+          throw new Error(summaryData.error || 'Failed to load your points summary');
+        }
 
         if (!cancelled) {
           setCommunitySubmissions(communityData.submissions || []);
           setMySubmissions(mineData.submissions || []);
+          setMyWeeklyPoints(summaryData.stats?.weekly_points || 0);
+          setMyTotalPoints(summaryData.stats?.total_points || 0);
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -75,10 +84,6 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const weekPoints = useMemo(
-    () => mySubmissions.reduce((sum, submission) => sum + (submission.points_awarded || 0), 0),
-    [mySubmissions]
-  );
   const approvedCount = useMemo(
     () => mySubmissions.filter((submission) => submission.points_awarded > 0).length,
     [mySubmissions]
@@ -106,7 +111,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <NeonCard hover={false} className="p-4 text-center">
           <div className="text-lg font-mono font-bold text-text-primary">{mySubmissions.length}</div>
           <div className="text-xs text-text-muted">Your Submissions</div>
@@ -120,8 +125,12 @@ export default function DashboardPage() {
           <div className="text-xs text-text-muted">In Review</div>
         </NeonCard>
         <NeonCard hover={false} className="p-4 text-center">
-          <PointsBadge points={weekPoints} size="sm" />
+          <PointsBadge points={myWeeklyPoints} size="sm" />
           <div className="text-xs text-text-muted mt-2">Points Earned</div>
+        </NeonCard>
+        <NeonCard hover={false} className="p-4 text-center">
+          <div className="text-lg font-mono font-bold text-neon-cyan">{myTotalPoints}</div>
+          <div className="text-xs text-text-muted mt-2">Total Points</div>
         </NeonCard>
       </div>
 
@@ -136,6 +145,32 @@ export default function DashboardPage() {
           <div className="text-sm text-text-muted">Loading activity feed...</div>
         </NeonCard>
       ) : null}
+
+      <div>
+        <h3 className="text-lg font-semibold text-text-primary mb-4">Your Recent Contributions</h3>
+        {!loading && mySubmissions.length === 0 ? (
+          <NeonCard hover={false} className="p-4">
+            <div className="text-sm text-text-muted">No submissions yet. Start with your first contribution.</div>
+          </NeonCard>
+        ) : null}
+        <div className="space-y-3">
+          {mySubmissions.slice(0, 6).map((submission) => (
+            <NeonCard key={submission.id} hover={false} className="p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-medium text-text-primary">{submission.title}</div>
+                  <div className="text-xs text-text-muted">
+                    {typeIcons[submission.type].label} · {new Date(submission.created_at).toLocaleDateString()} · {submission.normalized_score ? `Score ${Math.round(submission.normalized_score)}` : submission.points_awarded > 0 ? 'Scored' : 'In review'}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-mono font-bold text-neon-cyan">{submission.points_awarded} pts</div>
+                </div>
+              </div>
+            </NeonCard>
+          ))}
+        </div>
+      </div>
 
       <div>
         <h3 className="text-lg font-semibold text-text-primary mb-4">Community Feed</h3>

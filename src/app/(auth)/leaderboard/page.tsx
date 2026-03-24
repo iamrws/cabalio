@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
@@ -14,6 +15,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
+  const [participantCount, setParticipantCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,6 +34,7 @@ export default function LeaderboardPage() {
         if (!cancelled) {
           setEntries(data.leaderboard || []);
           setWeekNumber(data.week_number ?? null);
+          setParticipantCount(data.total_participants || 0);
         }
       } catch (fetchError) {
         if (!cancelled) {
@@ -85,6 +88,12 @@ export default function LeaderboardPage() {
           {timeRange === 'week' && weekNumber ? `Week ${weekNumber}` : 'All-Time Rankings'}
         </div>
       </div>
+
+      <NeonCard hover={false} className="p-3">
+        <div className="text-xs text-text-secondary">
+          Showing points for {participantCount} holder accounts.
+        </div>
+      </NeonCard>
 
       {error ? (
         <NeonCard hover={false} className="p-4 border border-red-500/30">
@@ -150,9 +159,12 @@ export default function LeaderboardPage() {
                         <span className="font-mono text-sm font-bold text-text-primary">{entry.rank}</span>
                       </td>
                       <td className="px-5 py-3">
-                        <div className="text-sm font-medium text-text-primary">
+                        <Link
+                          href={`/profile/${entry.wallet_address}`}
+                          className="text-sm font-medium text-text-primary hover:text-neon-cyan"
+                        >
                           {entry.display_name || entry.wallet_address}
-                        </div>
+                        </Link>
                         <div className="text-xs text-text-muted font-mono">{entry.wallet_address}</div>
                       </td>
                       <td className="text-right px-5 py-3 hidden sm:table-cell">

@@ -10,6 +10,7 @@ const HOLDER_PROTECTED_PREFIXES = [
   '/profile',
   '/api/submissions',
   '/api/leaderboard',
+  '/api/profile',
 ];
 
 const ADMIN_PROTECTED_PREFIXES = [
@@ -79,6 +80,7 @@ export const config = {
     '/cabal-core/:path*',
     '/api/submissions/:path*',
     '/api/leaderboard/:path*',
+    '/api/profile/:path*',
     '/api/admin/:path*',
   ],
 };

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -26,6 +26,12 @@ export default function CabalCorePage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('submitted');
+
+  const [walletAddressInput, setWalletAddressInput] = useState('');
+  const [pointsDeltaInput, setPointsDeltaInput] = useState('');
+  const [noteInput, setNoteInput] = useState('');
+  const [adjusting, setAdjusting] = useState(false);
+  const [adjustmentMessage, setAdjustmentMessage] = useState('');
 
   const loadSubmissions = useCallback(async () => {
     setLoading(true);
@@ -73,6 +79,44 @@ export default function CabalCorePage() {
     }
   }, [loadSubmissions]);
 
+  const handleManualAdjustment = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAdjustmentMessage('');
+
+    const parsedDelta = Number(pointsDeltaInput);
+    if (!Number.isFinite(parsedDelta) || parsedDelta === 0) {
+      setAdjustmentMessage('Points delta must be a non-zero number.');
+      return;
+    }
+
+    setAdjusting(true);
+    try {
+      const response = await fetch('/api/admin/points', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet_address: walletAddressInput.trim(),
+          points_delta: parsedDelta,
+          note: noteInput.trim(),
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Manual adjustment failed');
+      }
+
+      setWalletAddressInput('');
+      setPointsDeltaInput('');
+      setNoteInput('');
+      setAdjustmentMessage(`Applied ${parsedDelta >= 0 ? '+' : ''}${parsedDelta} points.`);
+    } catch (adjustError) {
+      setAdjustmentMessage(adjustError instanceof Error ? adjustError.message : 'Manual adjustment failed');
+    } finally {
+      setAdjusting(false);
+    }
+  }, [noteInput, pointsDeltaInput, walletAddressInput]);
+
   const statusCount = useMemo(() => submissions.length, [submissions]);
 
   return (
@@ -81,7 +125,7 @@ export default function CabalCorePage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-text-primary">Cabal Core</h1>
-            <p className="text-sm text-text-secondary">Private moderation and points review portal</p>
+            <p className="text-sm text-text-secondary">Private moderation and points operations portal</p>
           </div>
           <div className="flex items-center gap-2">
             <Link
@@ -90,8 +134,49 @@ export default function CabalCorePage() {
             >
               Back to App
             </Link>
+            <Link
+              href="/leaderboard"
+              className="rounded-lg border border-neon-cyan/40 bg-neon-cyan/10 px-3 py-2 text-xs text-neon-cyan"
+            >
+              View Leaderboard
+            </Link>
           </div>
         </div>
+
+        <NeonCard hover={false} className="p-4">
+          <h2 className="text-sm font-semibold text-text-primary mb-3">Manual Points Distribution</h2>
+          <form onSubmit={handleManualAdjustment} className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input
+              value={walletAddressInput}
+              onChange={(event) => setWalletAddressInput(event.target.value)}
+              placeholder="Wallet address"
+              required
+              className="md:col-span-2 rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+            />
+            <input
+              value={pointsDeltaInput}
+              onChange={(event) => setPointsDeltaInput(event.target.value)}
+              placeholder="Points (+/-)"
+              required
+              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+            />
+            <input
+              value={noteInput}
+              onChange={(event) => setNoteInput(event.target.value)}
+              placeholder="Reason / note"
+              required
+              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+            />
+            <button
+              type="submit"
+              disabled={adjusting}
+              className="md:col-span-4 rounded-lg bg-neon-purple/15 border border-neon-purple/40 px-3 py-2 text-sm text-neon-purple font-medium disabled:opacity-60"
+            >
+              {adjusting ? 'Applying points...' : 'Apply Manual Adjustment'}
+            </button>
+          </form>
+          {adjustmentMessage ? <div className="mt-3 text-xs text-text-secondary">{adjustmentMessage}</div> : null}
+        </NeonCard>
 
         <NeonCard hover={false} className="p-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -193,3 +278,4 @@ export default function CabalCorePage() {
     </main>
   );
 }
+

@@ -155,3 +155,16 @@ Use `.env.local` values matching `.env.example`:
 - Implement real reward claim transaction flow.
 - Expand moderation metadata and audit logs for admin actions.
 - Validate Supabase RLS policies against your deployed auth/JWT model.
+
+## March 24, 2026 Additions (Second Pass)
+
+- Added per-user profile API endpoint:
+  - `GET /api/profile/[address]`
+- Profile page now truly address-based and includes:
+  - contribution history
+  - points history
+  - weekly and total point visibility
+- Added explicit admin manual points distribution endpoint:
+  - `POST /api/admin/points`
+- Cabal Core now includes manual point adjustment UI form.
+- Leaderboard upgraded to aggregate points from `points_ledger` and show holder-wide ranking, not only submission totals.
