@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
+import { MAX_IMAGE_SIZE_MB } from '@/lib/constants';
 import type { SubmissionType } from '@/lib/types';
 
 type Tab = SubmissionType;
 
 const tabs: { id: Tab; label: string; icon: string }[] = [
-  { id: 'x_post', label: 'Jito Content', icon: '📢' },
-  { id: 'blog', label: 'Blog Article', icon: '📝' },
-  { id: 'art', label: 'Artwork', icon: '🎨' },
+  { id: 'x_post', label: 'Jito Content', icon: 'X' },
+  { id: 'blog', label: 'Blog Article', icon: 'B' },
+  { id: 'art', label: 'Artwork', icon: 'A' },
 ];
 
 const placeholderByType: Record<Tab, string> = {
@@ -24,7 +25,9 @@ export default function SubmitPage() {
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
   const [contentText, setContentText] = useState('');
-  const [imagePath, setImagePath] = useState('');
+  const [artFile, setArtFile] = useState<File | null>(null);
+  const [uploadedImagePath, setUploadedImagePath] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -33,8 +36,38 @@ export default function SubmitPage() {
     setUrl('');
     setTitle('');
     setContentText('');
-    setImagePath('');
+    setArtFile(null);
+    setUploadedImagePath('');
     setError('');
+  };
+
+  const uploadArtworkImage = async (): Promise<string> => {
+    if (!artFile) {
+      throw new Error('Please upload an artwork image');
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', artFile);
+
+      const uploadResponse = await fetch('/api/uploads/image', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+      const uploadData = await uploadResponse.json();
+      if (!uploadResponse.ok) {
+        throw new Error(uploadData.error || 'Image upload failed');
+      }
+      if (!uploadData.image_path) {
+        throw new Error('Image upload completed but no image path was returned');
+      }
+
+      setUploadedImagePath(uploadData.image_path);
+      return uploadData.image_path as string;
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -44,6 +77,7 @@ export default function SubmitPage() {
     setIsSubmitting(true);
 
     try {
+      const imagePath = activeTab === 'art' ? await uploadArtworkImage() : undefined;
       const response = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,6 +114,10 @@ export default function SubmitPage() {
               setActiveTab(tab.id);
               setError('');
               setSuccess('');
+              if (tab.id !== 'art') {
+                setArtFile(null);
+                setUploadedImagePath('');
+              }
             }}
             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
@@ -141,18 +179,28 @@ export default function SubmitPage() {
 
           {activeTab === 'art' ? (
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">Artwork Image Path</label>
+              <label className="block text-sm font-medium text-text-primary mb-2">Artwork Image</label>
               <input
-                type="text"
-                value={imagePath}
-                onChange={(event) => setImagePath(event.target.value)}
-                placeholder="/uploads/cabal-artwork.png"
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                onChange={(event) => {
+                  setArtFile(event.target.files?.[0] || null);
+                  setUploadedImagePath('');
+                }}
                 required
                 className="w-full px-4 py-3 rounded-lg bg-bg-tertiary border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/20 transition-colors text-sm"
               />
               <p className="mt-1.5 text-xs text-text-muted">
-                Storage upload integration is next phase. For now, provide stored image path.
+                Max file size: {MAX_IMAGE_SIZE_MB}MB. Image is scanned for suspicious scam or malware payloads before storage.
               </p>
+              {artFile ? (
+                <p className="mt-1.5 text-xs text-text-secondary">
+                  Selected: {artFile.name} ({(artFile.size / 1024).toFixed(1)} KB)
+                </p>
+              ) : null}
+              {uploadedImagePath ? (
+                <p className="mt-1.5 text-xs text-neon-green">Uploaded to: {uploadedImagePath}</p>
+              ) : null}
             </div>
           ) : null}
 
@@ -168,9 +216,7 @@ export default function SubmitPage() {
               rows={6}
               className="w-full px-4 py-3 rounded-lg bg-bg-tertiary border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/20 transition-colors text-sm resize-none"
             />
-            <div className="mt-1 text-xs text-text-muted text-right">
-              {contentText.length} characters
-            </div>
+            <div className="mt-1 text-xs text-text-muted text-right">{contentText.length} characters</div>
           </div>
 
           <motion.button
@@ -180,7 +226,7 @@ export default function SubmitPage() {
             disabled={isSubmitting}
             className="w-full gradient-bg py-3.5 rounded-xl font-semibold text-white shadow-lg shadow-neon-cyan/20 hover:shadow-neon-cyan/40 transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit For Review'}
+            {isUploadingImage ? 'Scanning & Uploading Image...' : isSubmitting ? 'Submitting...' : 'Submit For Review'}
           </motion.button>
         </NeonCard>
       </form>

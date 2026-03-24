@@ -8,6 +8,7 @@
 - [x] Server-side middleware protection for holder-only routes and APIs
 - [x] NFT holder verification enforced during login
 - [x] Collection address moved to environment variable
+- [x] Holder-only artwork upload API added with file-type validation and scam/malware payload scanning
 
 ## Admin and Authorization
 
@@ -35,6 +36,7 @@
 ## Product Surface Wiring
 
 - [x] Submit page wired to real API flow
+- [x] Submit page upgraded to real image upload flow for artwork submissions
 - [x] Dashboard wired to real submissions feed
 - [x] Leaderboard wired to API
 - [x] Leaderboard upgraded to aggregate from `points_ledger` (weekly/all-time holder points)

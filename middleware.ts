@@ -11,6 +11,7 @@ const HOLDER_PROTECTED_PREFIXES = [
   '/api/submissions',
   '/api/leaderboard',
   '/api/profile',
+  '/api/uploads',
 ];
 
 const ADMIN_PROTECTED_PREFIXES = [
@@ -81,6 +82,7 @@ export const config = {
     '/api/submissions/:path*',
     '/api/leaderboard/:path*',
     '/api/profile/:path*',
+    '/api/uploads/:path*',
     '/api/admin/:path*',
   ],
 };

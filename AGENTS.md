@@ -151,10 +151,22 @@ Use `.env.local` values matching `.env.example`:
 
 ## Current Known Follow-ups
 
-- Replace placeholder art `image_path` input with real upload/storage flow.
 - Implement real reward claim transaction flow.
 - Expand moderation metadata and audit logs for admin actions.
 - Validate Supabase RLS policies against your deployed auth/JWT model.
+
+## March 24, 2026 Additions (Image Upload Security)
+
+- Added holder-gated artwork upload API:
+  - `POST /api/uploads/image`
+- Upload pipeline now validates:
+  - file signature (PNG/JPEG/GIF/WEBP only)
+  - extension and MIME consistency
+  - max size limit
+  - suspicious scam/malware markers and executable/archive signatures
+- Submit page now uploads image first and uses returned `image_path` in submission payload.
+- Middleware now protects `/api/uploads/*`.
+- `art` submissions now require app-generated upload paths (`uploads/...`).
 
 ## March 24, 2026 Additions (Second Pass)
 

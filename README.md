@@ -19,6 +19,7 @@ Copy `.env.example` to `.env.local` and provide values:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_STORAGE_BUCKET` (example: `submission-images`)
 - `NEXT_PUBLIC_SOLANA_RPC_URL`
 - `NEXT_PUBLIC_JITO_CABAL_COLLECTION_ADDRESS`
 - `HELIUS_API_KEY`
@@ -49,4 +50,4 @@ Open `http://localhost:3000`.
 - Session identity is derived only from signed cookie.
 - All protected pages/APIs enforce holder checks server-side.
 - Admin routes return `404` for non-admin users.
-
+- Artwork uploads go through `/api/uploads/image` with signature/type validation and basic scam/malware payload screening before storage.

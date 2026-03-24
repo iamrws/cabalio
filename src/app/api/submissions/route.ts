@@ -52,6 +52,10 @@ function normalizeUrl(url: string | undefined): string | null {
   }
 }
 
+function isAllowedUploadedImagePath(imagePath: string): boolean {
+  return /^uploads\/[a-z0-9_-]+\/[a-z0-9._-]+\.(png|jpg|jpeg|gif|webp)$/i.test(imagePath);
+}
+
 function isIpRateLimited(ip: string): boolean {
   const now = Date.now();
   const existing = ipSubmissionWindow.get(ip);
@@ -92,6 +96,9 @@ function validateSubmissionByType(parsed: z.infer<typeof submissionSchema>) {
   if (parsed.type === 'art') {
     if (!parsed.image_path) {
       return 'Artwork submissions require an image path';
+    }
+    if (!isAllowedUploadedImagePath(parsed.image_path)) {
+      return 'Artwork submissions must use an image uploaded through this app';
     }
     if (parsed.content_text.trim().length < MIN_ART_DESCRIPTION_LENGTH) {
       return `Artwork descriptions must be at least ${MIN_ART_DESCRIPTION_LENGTH} characters`;
