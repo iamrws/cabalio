@@ -49,10 +49,10 @@ export async function GET(request: NextRequest) {
         .maybeSingle(),
     ]);
 
-    if (rolesResult.error) return NextResponse.json({ error: rolesResult.error.message }, { status: 500 });
-    if (worldBossResult.error) return NextResponse.json({ error: worldBossResult.error.message }, { status: 500 });
-    if (activeEventsResult.error) return NextResponse.json({ error: activeEventsResult.error.message }, { status: 500 });
-    if (memberStateLookup.error) return NextResponse.json({ error: memberStateLookup.error.message }, { status: 500 });
+    if (rolesResult.error) { console.error('Season roles query error:', rolesResult.error); return NextResponse.json({ error: 'Failed to load season data' }, { status: 500 }); }
+    if (worldBossResult.error) { console.error('Season world boss query error:', worldBossResult.error); return NextResponse.json({ error: 'Failed to load season data' }, { status: 500 }); }
+    if (activeEventsResult.error) { console.error('Season events query error:', activeEventsResult.error); return NextResponse.json({ error: 'Failed to load season data' }, { status: 500 }); }
+    if (memberStateLookup.error) { console.error('Season member state query error:', memberStateLookup.error); return NextResponse.json({ error: 'Failed to load season data' }, { status: 500 }); }
 
     let memberState = memberStateLookup.data;
     let memberStateCreated = false;
@@ -71,7 +71,8 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (insertResult.error) {
-        return NextResponse.json({ error: insertResult.error.message }, { status: 500 });
+        console.error('Season member state insert error:', insertResult.error);
+        return NextResponse.json({ error: 'Failed to join season' }, { status: 500 });
       }
 
       memberState = insertResult.data;

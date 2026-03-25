@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+
+/** Single-admin adjustments are capped at this value. Larger adjustments require a second admin approval. */
+const SINGLE_ADMIN_ADJUSTMENT_CAP = 100;
+
+/** Threshold at which anomaly detection flags are raised. */
+const ANOMALY_ALERT_THRESHOLD = 500;
 
 const manualAdjustmentSchema = z.object({
   wallet_address: z.string().min(32).max(64),
@@ -11,9 +17,15 @@ const manualAdjustmentSchema = z.object({
     message: 'points_delta must not be 0',
   }),
   note: z.string().min(3).max(500),
+  /** Required when |points_delta| > SINGLE_ADMIN_ADJUSTMENT_CAP. Must be a different admin wallet. */
+  approving_admin: z.string().min(32).max(64).optional(),
 });
 
 export async function POST(request: NextRequest) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -23,6 +35,41 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = manualAdjustmentSchema.parse(body);
     const walletAddress = parsed.wallet_address.trim();
+    const absDelta = Math.abs(parsed.points_delta);
+
+    // Enforce two-admin approval for large adjustments
+    if (absDelta > SINGLE_ADMIN_ADJUSTMENT_CAP) {
+      if (!parsed.approving_admin) {
+        return NextResponse.json(
+          { error: `Adjustments exceeding ${SINGLE_ADMIN_ADJUSTMENT_CAP} points require a second admin approval (approving_admin field)` },
+          { status: 403 }
+        );
+      }
+      if (parsed.approving_admin === session.walletAddress) {
+        return NextResponse.json(
+          { error: 'Approving admin must be a different admin than the requesting admin' },
+          { status: 403 }
+        );
+      }
+
+      // Verify the approving admin exists in admin_wallets table or env allowlist
+      const supabaseCheck = createServerClient();
+      const { data: approverRow } = await supabaseCheck
+        .from('admin_wallets')
+        .select('wallet_address')
+        .eq('wallet_address', parsed.approving_admin)
+        .eq('active', true)
+        .maybeSingle();
+
+      const envAdmins = (process.env.ADMIN_WALLET_ADDRESSES || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const isApproverAdmin = !!approverRow || envAdmins.includes(parsed.approving_admin);
+      if (!isApproverAdmin) {
+        return NextResponse.json(
+          { error: 'Approving wallet is not a recognized admin' },
+          { status: 403 }
+        );
+      }
+    }
 
     const supabase = createServerClient();
     const now = new Date().toISOString();
@@ -37,6 +84,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found for wallet address' }, { status: 404 });
     }
 
+    // Insert into immutable audit_logs table
+    const { error: auditError } = await supabase
+      .from('audit_logs')
+      .insert({
+        action: 'manual_points_adjustment',
+        actor_wallet: session.walletAddress,
+        target_wallet: walletAddress,
+        details: {
+          points_delta: parsed.points_delta,
+          note: parsed.note,
+          approving_admin: parsed.approving_admin || null,
+          previous_total_xp: existingUser.total_xp || 0,
+          new_total_xp: (existingUser.total_xp || 0) + parsed.points_delta,
+        },
+        created_at: now,
+      });
+
+    if (auditError) {
+      console.error('Audit log insert failed:', auditError);
+      return NextResponse.json({ error: 'Failed to record audit trail' }, { status: 500 });
+    }
+
+    // Anomaly detection: flag large adjustments
+    if (absDelta >= ANOMALY_ALERT_THRESHOLD) {
+      console.warn(
+        `[ANOMALY] Large points adjustment: ${parsed.points_delta} points to ${walletAddress} by admin ${session.walletAddress}` +
+        (parsed.approving_admin ? ` (approved by ${parsed.approving_admin})` : '')
+      );
+
+      // Insert anomaly alert record for monitoring
+      await supabase.from('audit_logs').insert({
+        action: 'anomaly_large_adjustment',
+        actor_wallet: session.walletAddress,
+        target_wallet: walletAddress,
+        details: {
+          points_delta: parsed.points_delta,
+          note: parsed.note,
+          threshold: ANOMALY_ALERT_THRESHOLD,
+        },
+        created_at: now,
+      });
+    }
+
     const { error: ledgerError } = await supabase
       .from('points_ledger')
       .insert({
@@ -46,12 +136,14 @@ export async function POST(request: NextRequest) {
         metadata: {
           note: parsed.note,
           reviewed_by: session.walletAddress,
+          approving_admin: parsed.approving_admin || null,
         },
         created_at: now,
       });
 
     if (ledgerError) {
-      return NextResponse.json({ error: ledgerError.message }, { status: 500 });
+      console.error('Points ledger insert failed:', ledgerError);
+      return NextResponse.json({ error: 'Failed to record points adjustment' }, { status: 500 });
     }
 
     const { error: userUpdateError } = await supabase
@@ -63,7 +155,8 @@ export async function POST(request: NextRequest) {
       .eq('wallet_address', walletAddress);
 
     if (userUpdateError) {
-      return NextResponse.json({ error: userUpdateError.message }, { status: 500 });
+      console.error('User XP update failed:', userUpdateError);
+      return NextResponse.json({ error: 'Failed to update user points' }, { status: 500 });
     }
 
     return NextResponse.json({

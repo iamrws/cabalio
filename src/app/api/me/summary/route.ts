@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
     .single();
 
   if (userError) {
-    return NextResponse.json({ error: userError.message }, { status: 500 });
+    console.error('Summary user query error:', userError);
+    return NextResponse.json({ error: 'Failed to load summary' }, { status: 500 });
   }
 
   const weekKey = getISOWeekKey(new Date());
@@ -45,13 +46,16 @@ export async function GET(request: NextRequest) {
   ]);
 
   if (submissionsResult.error) {
-    return NextResponse.json({ error: submissionsResult.error.message }, { status: 500 });
+    console.error('Summary submissions query error:', submissionsResult.error);
+    return NextResponse.json({ error: 'Failed to load summary' }, { status: 500 });
   }
   if (rewardsResult.error) {
-    return NextResponse.json({ error: rewardsResult.error.message }, { status: 500 });
+    console.error('Summary rewards query error:', rewardsResult.error);
+    return NextResponse.json({ error: 'Failed to load summary' }, { status: 500 });
   }
   if (pointsResult.error) {
-    return NextResponse.json({ error: pointsResult.error.message }, { status: 500 });
+    console.error('Summary points query error:', pointsResult.error);
+    return NextResponse.json({ error: 'Failed to load summary' }, { status: 500 });
   }
 
   const submissions = submissionsResult.data || [];

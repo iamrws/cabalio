@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +17,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ seasonId: string }> }
 ) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -36,7 +40,8 @@ export async function POST(
       .maybeSingle();
 
     if (seasonResult.error) {
-      return NextResponse.json({ error: seasonResult.error.message }, { status: 500 });
+      console.error('Signal storm season lookup error:', seasonResult.error);
+      return NextResponse.json({ error: 'Failed to look up season' }, { status: 500 });
     }
     if (!seasonResult.data) {
       return NextResponse.json({ error: 'Season not found' }, { status: 404 });
@@ -54,7 +59,8 @@ export async function POST(
         .select('id');
 
       if (closeResult.error) {
-        return NextResponse.json({ error: closeResult.error.message }, { status: 500 });
+        console.error('Signal storm close error:', closeResult.error);
+        return NextResponse.json({ error: 'Failed to close signal storm' }, { status: 500 });
       }
 
       return NextResponse.json({
@@ -92,7 +98,8 @@ export async function POST(
       .single();
 
     if (insertResult.error) {
-      return NextResponse.json({ error: insertResult.error.message }, { status: 500 });
+      console.error('Signal storm insert error:', insertResult.error);
+      return NextResponse.json({ error: 'Failed to create signal storm event' }, { status: 500 });
     }
 
     return NextResponse.json({

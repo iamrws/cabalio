@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +19,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ seasonId: string }> }
 ) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -39,7 +43,8 @@ export async function POST(
       .maybeSingle();
 
     if (seasonResult.error) {
-      return NextResponse.json({ error: seasonResult.error.message }, { status: 500 });
+      console.error('World boss season lookup error:', seasonResult.error);
+      return NextResponse.json({ error: 'Failed to look up season' }, { status: 500 });
     }
     if (!seasonResult.data) {
       return NextResponse.json({ error: 'Season not found' }, { status: 404 });
@@ -54,7 +59,8 @@ export async function POST(
       .maybeSingle();
 
     if (existingUpdate.error) {
-      return NextResponse.json({ error: existingUpdate.error.message }, { status: 500 });
+      console.error('World boss idempotency check error:', existingUpdate.error);
+      return NextResponse.json({ error: 'Failed to check update status' }, { status: 500 });
     }
 
     if (existingUpdate.data) {
@@ -66,7 +72,8 @@ export async function POST(
         .maybeSingle();
 
       if (progressResult.error) {
-        return NextResponse.json({ error: progressResult.error.message }, { status: 500 });
+        console.error('World boss progress query error:', progressResult.error);
+        return NextResponse.json({ error: 'Failed to load progress' }, { status: 500 });
       }
 
       return NextResponse.json({
@@ -84,7 +91,8 @@ export async function POST(
       .maybeSingle();
 
     if (currentProgressResult.error) {
-      return NextResponse.json({ error: currentProgressResult.error.message }, { status: 500 });
+      console.error('World boss current progress query error:', currentProgressResult.error);
+      return NextResponse.json({ error: 'Failed to load current progress' }, { status: 500 });
     }
 
     const existing = currentProgressResult.data;
@@ -112,7 +120,8 @@ export async function POST(
         .single();
 
       if (updateProgress.error) {
-        return NextResponse.json({ error: updateProgress.error.message }, { status: 500 });
+        console.error('World boss progress update error:', updateProgress.error);
+        return NextResponse.json({ error: 'Failed to update progress' }, { status: 500 });
       }
       progressRow = updateProgress.data;
     } else {
@@ -130,7 +139,8 @@ export async function POST(
         .single();
 
       if (insertProgress.error) {
-        return NextResponse.json({ error: insertProgress.error.message }, { status: 500 });
+        console.error('World boss progress insert error:', insertProgress.error);
+        return NextResponse.json({ error: 'Failed to create progress record' }, { status: 500 });
       }
       progressRow = insertProgress.data;
     }
@@ -145,7 +155,8 @@ export async function POST(
     });
 
     if (updateLogInsert.error) {
-      return NextResponse.json({ error: updateLogInsert.error.message }, { status: 500 });
+      console.error('World boss update log insert error:', updateLogInsert.error);
+      return NextResponse.json({ error: 'Failed to record update log' }, { status: 500 });
     }
 
     return NextResponse.json({

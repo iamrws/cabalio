@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 import { getDefaultSeasonRoles } from '@/lib/seasons';
 
 export const dynamic = 'force-dynamic';
@@ -38,13 +38,18 @@ export async function GET(request: NextRequest) {
     .limit(50);
 
   if (seasonsResult.error) {
-    return NextResponse.json({ error: seasonsResult.error.message }, { status: 500 });
+    console.error('Admin seasons query error:', seasonsResult.error);
+    return NextResponse.json({ error: 'Failed to load seasons' }, { status: 500 });
   }
 
   return NextResponse.json({ seasons: seasonsResult.data || [] });
 }
 
 export async function POST(request: NextRequest) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -89,7 +94,8 @@ export async function POST(request: NextRequest) {
       if (insertSeason.error.message.toLowerCase().includes('idx_single_live_season')) {
         return NextResponse.json({ error: 'Only one live season is allowed at a time' }, { status: 409 });
       }
-      return NextResponse.json({ error: insertSeason.error.message }, { status: 500 });
+      console.error('Season insert error:', insertSeason.error);
+      return NextResponse.json({ error: 'Failed to create season' }, { status: 500 });
     }
 
     const roleRows = (parsed.roles && parsed.roles.length > 0 ? parsed.roles : getDefaultSeasonRoles()).map(
@@ -106,7 +112,8 @@ export async function POST(request: NextRequest) {
 
     const insertRoles = await supabase.from('season_roles').insert(roleRows).select('*');
     if (insertRoles.error) {
-      return NextResponse.json({ error: insertRoles.error.message }, { status: 500 });
+      console.error('Season roles insert error:', insertRoles.error);
+      return NextResponse.json({ error: 'Failed to create season roles' }, { status: 500 });
     }
 
     return NextResponse.json({

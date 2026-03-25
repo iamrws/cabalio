@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
 import AnimatedCounter from '@/components/shared/AnimatedCounter';
@@ -15,11 +15,19 @@ interface Reward {
   created_at: string;
 }
 
+function generateIdempotencyKey(): string {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export default function RewardsPage() {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [weeklyPoints, setWeeklyPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [claimLoading, setClaimLoading] = useState(false);
+  const [claimError, setClaimError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +70,50 @@ export default function RewardsPage() {
     [claimableRewards]
   );
 
+  const handleClaim = useCallback(async () => {
+    if (claimableRewards.length === 0 || claimLoading) return;
+
+    setClaimLoading(true);
+    setClaimError('');
+
+    try {
+      // Claim each eligible reward sequentially with idempotency protection
+      for (const reward of claimableRewards) {
+        const idempotencyKey = generateIdempotencyKey();
+        const res = await fetch('/api/rewards/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            rewardId: reward.id,
+            idempotencyKey,
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          // 503 means the feature is gated/not yet enabled
+          if (res.status === 503) {
+            setClaimError(data.error || 'Claiming is not yet enabled.');
+            break;
+          }
+          setClaimError(data.error || 'Claim failed');
+          break;
+        }
+
+        // Update local state to reflect the claim
+        setRewards((prev) =>
+          prev.map((r) =>
+            r.id === reward.id ? { ...r, status: 'claimed' as const } : r
+          )
+        );
+      }
+    } catch {
+      setClaimError('Network error while claiming rewards');
+    } finally {
+      setClaimLoading(false);
+    }
+  }, [claimableRewards, claimLoading]);
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <NeonCard glowColor="green" hover={false} className="p-8 text-center">
@@ -72,13 +124,20 @@ export default function RewardsPage() {
         <div className="text-lg text-text-secondary mb-6">SOL</div>
 
         {totalClaimable > 0 ? (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="gradient-bg px-8 py-3 rounded-xl font-semibold text-white shadow-lg shadow-neon-cyan/20 hover:shadow-neon-cyan/40 transition-shadow"
-          >
-            Claim Flow (Next Phase)
-          </motion.button>
+          <div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleClaim}
+              disabled={claimLoading}
+              className="gradient-bg px-8 py-3 rounded-xl font-semibold text-white shadow-lg shadow-neon-cyan/20 hover:shadow-neon-cyan/40 transition-shadow disabled:opacity-50"
+            >
+              {claimLoading ? 'Processing...' : 'Claim Rewards'}
+            </motion.button>
+            {claimError ? (
+              <div className="mt-2 text-sm text-red-400">{claimError}</div>
+            ) : null}
+          </div>
         ) : (
           <div className="text-sm text-text-muted">
             No claimable rewards yet. Keep submitting approved work to qualify.

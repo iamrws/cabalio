@@ -7,7 +7,9 @@ import {
   encodeChallenge,
   generateNonce,
   getAuthCookieOptions,
+  validateCsrfOrigin,
 } from '@/lib/auth';
+import { createServerClient } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +18,10 @@ const nonceSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const parsed = nonceSchema.parse(body);
@@ -29,7 +35,23 @@ export async function POST(request: NextRequest) {
 
     const nonce = generateNonce();
     const issuedAt = new Date().toISOString();
-    const challenge = encodeChallenge({ nonce, issuedAt });
+
+    // C1: Store nonce in Supabase for server-side validation and single-use enforcement
+    const supabase = createServerClient();
+    const { error: insertError } = await supabase.from('auth_nonces').insert({
+      nonce,
+      wallet_address: parsed.walletAddress,
+      used: false,
+      issued_at: issuedAt,
+    });
+
+    if (insertError) {
+      console.error('Failed to store auth nonce:', insertError);
+      return NextResponse.json({ error: 'Authentication setup failed' }, { status: 500 });
+    }
+
+    // M4: Include wallet address in challenge cookie so it's bound to the requesting wallet
+    const challenge = encodeChallenge({ nonce, issuedAt, walletAddress: parsed.walletAddress });
     const message = buildSignInMessage(parsed.walletAddress, nonce, issuedAt);
 
     const response = NextResponse.json({ message, issuedAt });

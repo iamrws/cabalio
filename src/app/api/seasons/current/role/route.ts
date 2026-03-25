@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (roleResult.error) {
-      return NextResponse.json({ error: roleResult.error.message }, { status: 500 });
+      console.error('Season role lookup error:', roleResult.error);
+      return NextResponse.json({ error: 'Failed to look up role' }, { status: 500 });
     }
     if (!roleResult.data) {
       return NextResponse.json({ error: 'Role not found for active season' }, { status: 404 });
@@ -65,7 +66,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (updateResult.error) {
-      return NextResponse.json({ error: updateResult.error.message }, { status: 500 });
+      console.error('Season role update error:', updateResult.error);
+      return NextResponse.json({ error: 'Failed to update role' }, { status: 500 });
     }
 
     await trackEngagementEvent(supabase, 'season_role_selected', session.walletAddress, {

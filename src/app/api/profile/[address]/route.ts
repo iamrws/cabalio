@@ -5,6 +5,13 @@ import { getISOWeekKey } from '@/lib/scoring';
 
 export const dynamic = 'force-dynamic';
 
+/** Base58 alphabet used by Solana wallet addresses. */
+const BASE58_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+function isValidSolanaAddress(input: string): boolean {
+  return BASE58_REGEX.test(input);
+}
+
 function normalizeWalletAddress(input: string): string {
   return input.trim();
 }
@@ -20,6 +27,12 @@ export async function GET(
 
   const { address } = await params;
   const walletAddress = normalizeWalletAddress(address);
+
+  // L3: Validate Solana wallet address format (base58, 32-44 chars)
+  if (!isValidSolanaAddress(walletAddress)) {
+    return NextResponse.json({ error: 'Invalid wallet address format' }, { status: 400 });
+  }
+
   const isSelf = walletAddress === session.walletAddress;
   const isAdmin = session.role === 'admin';
 
@@ -63,13 +76,16 @@ export async function GET(
   ]);
 
   if (submissionsResult.error) {
-    return NextResponse.json({ error: submissionsResult.error.message }, { status: 500 });
+    console.error('Profile submissions query error:', submissionsResult.error);
+    return NextResponse.json({ error: 'Failed to load profile data' }, { status: 500 });
   }
   if (pointsResult.error) {
-    return NextResponse.json({ error: pointsResult.error.message }, { status: 500 });
+    console.error('Profile points query error:', pointsResult.error);
+    return NextResponse.json({ error: 'Failed to load profile data' }, { status: 500 });
   }
   if (rewardsResult.error) {
-    return NextResponse.json({ error: rewardsResult.error.message }, { status: 500 });
+    console.error('Profile rewards query error:', rewardsResult.error);
+    return NextResponse.json({ error: 'Failed to load profile data' }, { status: 500 });
   }
 
   const rawSubmissions = submissionsResult.data || [];

@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
         .maybeSingle();
 
       if (cursorResult.error) {
-        return NextResponse.json({ error: cursorResult.error.message }, { status: 500 });
+        console.error('Points feed cursor query error:', cursorResult.error);
+        return NextResponse.json({ error: 'Failed to load points feed' }, { status: 500 });
       }
       cursorCreatedAt = cursorResult.data?.created_at || null;
     }
@@ -52,7 +53,8 @@ export async function GET(request: NextRequest) {
 
     const entriesResult = await query;
     if (entriesResult.error) {
-      return NextResponse.json({ error: entriesResult.error.message }, { status: 500 });
+      console.error('Points feed entries query error:', entriesResult.error);
+      return NextResponse.json({ error: 'Failed to load points feed' }, { status: 500 });
     }
 
     const entries = entriesResult.data || [];
@@ -73,7 +75,8 @@ export async function GET(request: NextRequest) {
       .in('reason_code', reasonCodes);
 
     if (catalogResult.error) {
-      return NextResponse.json({ error: catalogResult.error.message }, { status: 500 });
+      console.error('Points feed catalog query error:', catalogResult.error);
+      return NextResponse.json({ error: 'Failed to load points feed' }, { status: 500 });
     }
 
     const catalogMap = new Map<string, PointReasonCatalogRow>();

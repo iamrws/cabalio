@@ -1,8 +1,9 @@
+import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
 import { getISOWeekNumber } from '@/lib/scoring';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 import {
   MAX_SUBMISSIONS_PER_DAY,
   MIN_ART_DESCRIPTION_LENGTH,
@@ -18,11 +19,14 @@ const submissionSchema = z.object({
   title: z.string().min(1).max(200),
   content_text: z.string().min(MIN_TEXT_LENGTH),
   image_path: z.string().optional(),
+  /** Client-generated idempotency token (UUIDv4). Prevents duplicate submissions across retries. */
+  idempotency_token: z.string().uuid().optional(),
 });
 
-const IP_WINDOW_MS = 60 * 60 * 1000;
-const IP_MAX_SUBMISSIONS_PER_WINDOW = 20;
-const ipSubmissionWindow = new Map<string, { count: number; resetAt: number }>();
+/** Rate limit window duration in seconds. */
+const RATE_LIMIT_WINDOW_SECONDS = 3600;
+/** Maximum submissions per wallet per window. */
+const RATE_LIMIT_MAX_PER_WINDOW = 20;
 
 function getWordCount(content: string): number {
   return content
@@ -56,21 +60,58 @@ function isAllowedUploadedImagePath(imagePath: string): boolean {
   return /^uploads\/[a-z0-9_-]+\/[a-z0-9._-]+\.(png|jpg|jpeg|gif|webp)$/i.test(imagePath);
 }
 
-function isIpRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const existing = ipSubmissionWindow.get(ip);
+/** Compute a SHA-256 content hash for duplicate detection. */
+function computeContentHash(title: string, contentText: string, url: string | null): string {
+  const payload = JSON.stringify({ title: title.trim().toLowerCase(), content_text: contentText.trim().toLowerCase(), url: url || '' });
+  return createHash('sha256').update(payload).digest('hex');
+}
 
-  if (!existing || now > existing.resetAt) {
-    ipSubmissionWindow.set(ip, { count: 1, resetAt: now + IP_WINDOW_MS });
-    return false;
-  }
+/** Wallet-based rate limiting backed by Supabase, resilient to serverless cold starts. */
+async function isWalletRateLimited(
+  supabase: ReturnType<typeof createServerClient>,
+  walletAddress: string
+): Promise<boolean> {
+  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_SECONDS * 1000).toISOString();
 
-  if (existing.count >= IP_MAX_SUBMISSIONS_PER_WINDOW) {
+  // Check rate_limits table for recent submission count
+  const { data: rateLimitRow } = await supabase
+    .from('rate_limits')
+    .select('request_count, window_start')
+    .eq('wallet_address', walletAddress)
+    .eq('action', 'submission')
+    .gte('window_start', windowStart)
+    .order('window_start', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (rateLimitRow && rateLimitRow.request_count >= RATE_LIMIT_MAX_PER_WINDOW) {
     return true;
   }
 
-  existing.count += 1;
-  ipSubmissionWindow.set(ip, existing);
+  const nowIso = new Date().toISOString();
+
+  if (rateLimitRow) {
+    // Increment counter
+    await supabase
+      .from('rate_limits')
+      .update({ request_count: rateLimitRow.request_count + 1, updated_at: nowIso })
+      .eq('wallet_address', walletAddress)
+      .eq('action', 'submission')
+      .eq('window_start', rateLimitRow.window_start);
+  } else {
+    // Create new window
+    await supabase.from('rate_limits').upsert(
+      {
+        wallet_address: walletAddress,
+        action: 'submission',
+        request_count: 1,
+        window_start: nowIso,
+        updated_at: nowIso,
+      },
+      { onConflict: 'wallet_address,action' }
+    );
+  }
+
   return false;
 }
 
@@ -150,6 +191,11 @@ export async function GET(request: NextRequest) {
   }
 
   if (status) {
+    // Whitelist allowed status values to prevent injection
+    const allowedStatuses = ['submitted', 'queued', 'ai_scored', 'human_review', 'approved', 'flagged', 'rejected'];
+    if (!allowedStatuses.includes(status)) {
+      return NextResponse.json({ error: 'Invalid status filter' }, { status: 400 });
+    }
     query = query.eq('status', status);
   }
   if (week) {
@@ -158,7 +204,8 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await query;
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Submissions query error:', error);
+    return NextResponse.json({ error: 'Failed to fetch submissions' }, { status: 500 });
   }
 
   return NextResponse.json({ submissions: data });
@@ -166,6 +213,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/submissions - create new submission for review pipeline.
 export async function POST(request: NextRequest) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -185,11 +236,11 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient();
     const walletAddress = session.walletAddress;
     const normalizedUrl = normalizeUrl(parsed.url);
-    const requestIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 
-    if (isIpRateLimited(requestIp)) {
+    // Wallet-based rate limiting (persisted in Supabase, survives cold starts)
+    if (await isWalletRateLimited(supabase, walletAddress)) {
       return NextResponse.json(
-        { error: 'Too many submissions from this IP. Try again later.' },
+        { error: 'Too many submissions. Try again later.' },
         { status: 429 }
       );
     }
@@ -208,37 +259,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Idempotency token check: if client sent a token, reject if already used
+    if (parsed.idempotency_token) {
+      const { data: existingToken } = await supabase
+        .from('submissions')
+        .select('id')
+        .eq('idempotency_token', parsed.idempotency_token)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingToken) {
+        return NextResponse.json(
+          { error: 'Duplicate submission (idempotency token already used)' },
+          { status: 409 }
+        );
+      }
+    }
+
+    // URL-based permanent duplicate check (not time-limited)
     if (normalizedUrl) {
-      const duplicateCheck = await supabase
+      const duplicateUrlCheck = await supabase
         .from('submissions')
         .select('id')
-        .eq('wallet_address', walletAddress)
         .eq('url', normalizedUrl)
-        .gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString())
         .limit(1);
 
-      if ((duplicateCheck.data || []).length > 0) {
+      if ((duplicateUrlCheck.data || []).length > 0) {
         return NextResponse.json(
-          { error: 'Duplicate submission detected for this URL in the last 7 days' },
+          { error: 'This URL has already been submitted' },
           { status: 409 }
         );
       }
-    } else {
-      const duplicateTextCheck = await supabase
-        .from('submissions')
-        .select('id')
-        .eq('wallet_address', walletAddress)
-        .eq('title', parsed.title.trim())
-        .eq('content_text', parsed.content_text.trim())
-        .gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString())
-        .limit(1);
+    }
 
-      if ((duplicateTextCheck.data || []).length > 0) {
-        return NextResponse.json(
-          { error: 'Duplicate submission detected in the last 7 days' },
-          { status: 409 }
-        );
-      }
+    // Content-hash based duplicate detection (SHA-256)
+    const contentHash = computeContentHash(parsed.title, parsed.content_text, normalizedUrl);
+    const { data: duplicateHashRow } = await supabase
+      .from('submissions')
+      .select('id')
+      .eq('content_hash', contentHash)
+      .limit(1)
+      .maybeSingle();
+
+    if (duplicateHashRow) {
+      return NextResponse.json(
+        { error: 'Duplicate submission detected (matching content)' },
+        { status: 409 }
+      );
     }
 
     const weekNumber = getISOWeekNumber(new Date());
@@ -262,6 +329,8 @@ export async function POST(request: NextRequest) {
         title: parsed.title.trim(),
         content_text: parsed.content_text.trim(),
         image_path: parsed.image_path || null,
+        content_hash: contentHash,
+        idempotency_token: parsed.idempotency_token || null,
         points_awarded: 0,
         status: 'submitted',
         week_number: weekNumber,
@@ -270,7 +339,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Submission insert error:', error);
+      return NextResponse.json({ error: 'Failed to create submission' }, { status: 500 });
     }
 
     return NextResponse.json({

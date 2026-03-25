@@ -16,6 +16,7 @@ export interface SessionPayload {
 export interface AuthChallenge {
   nonce: string;
   issuedAt: string;
+  walletAddress: string;
 }
 
 function base64UrlEncode(bytes: Uint8Array): string {
@@ -137,8 +138,32 @@ export function getAdminWalletAllowlist(): Set<string> {
   );
 }
 
-export function isAdminWallet(walletAddress: string): boolean {
-  return getAdminWalletAllowlist().has(walletAddress);
+/**
+ * Check admin status from both the env-based allowlist and the Supabase admin_wallets table.
+ * The DB lookup allows admins to be added/revoked without a redeploy.
+ */
+export async function isAdminWallet(walletAddress: string): Promise<boolean> {
+  // Fast path: check env-based allowlist first
+  if (getAdminWalletAllowlist().has(walletAddress)) {
+    return true;
+  }
+
+  // Fallback: check the admin_wallets table in Supabase
+  try {
+    const { createServerClient } = await import('@/lib/db');
+    const supabase = createServerClient();
+    const { data } = await supabase
+      .from('admin_wallets')
+      .select('wallet_address')
+      .eq('wallet_address', walletAddress)
+      .eq('active', true)
+      .maybeSingle();
+
+    return !!data;
+  } catch (error) {
+    console.error('Admin wallet DB lookup failed, falling back to env-only:', error);
+    return false;
+  }
 }
 
 export function generateNonce(): string {
@@ -169,7 +194,7 @@ export function decodeChallenge(raw: string | undefined): AuthChallenge | null {
   try {
     const decoded = new TextDecoder().decode(base64UrlDecode(raw));
     const challenge = JSON.parse(decoded) as AuthChallenge;
-    if (!challenge.nonce || !challenge.issuedAt) return null;
+    if (!challenge.nonce || !challenge.issuedAt || !challenge.walletAddress) return null;
     return challenge;
   } catch {
     return null;
@@ -179,9 +204,58 @@ export function decodeChallenge(raw: string | undefined): AuthChallenge | null {
 export function getAuthCookieOptions(maxAgeSeconds?: number) {
   return {
     httpOnly: true,
-    sameSite: 'lax' as const,
+    sameSite: 'strict' as const,
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: maxAgeSeconds ?? getSessionMaxAgeSeconds(),
   };
+}
+
+const NONCE_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Validate that the challenge issuedAt timestamp is not older than 5 minutes.
+ * Returns true if the challenge is still fresh, false if expired.
+ */
+export function isChallengeAgeFresh(issuedAt: string): boolean {
+  const issuedTime = new Date(issuedAt).getTime();
+  if (Number.isNaN(issuedTime)) return false;
+  return Date.now() - issuedTime < NONCE_MAX_AGE_MS;
+}
+
+/**
+ * Validate the Origin or Referer header against the expected host
+ * to protect against CSRF on POST endpoints.
+ * Returns true if the request origin is valid.
+ */
+export function validateCsrfOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const host = request.headers.get('host');
+
+  if (!host) return false;
+
+  // In development, allow localhost
+  const allowedHosts = new Set([host]);
+
+  if (origin) {
+    try {
+      const originHost = new URL(origin).host;
+      return allowedHosts.has(originHost);
+    } catch {
+      return false;
+    }
+  }
+
+  if (referer) {
+    try {
+      const refererHost = new URL(referer).host;
+      return allowedHosts.has(refererHost);
+    } catch {
+      return false;
+    }
+  }
+
+  // No origin or referer header present - reject for safety
+  return false;
 }

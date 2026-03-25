@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
 
+// L7: Validate required env vars at module load time (startup).
+// Log a warning instead of crashing so the fallback path still works.
+if (!process.env.YOUTUBE_API_KEY) {
+  console.warn(
+    '[game/shorts] YOUTUBE_API_KEY is not set. The shorts endpoint will serve fallback content only.'
+  );
+}
+
 const YOUTUBE_API_BASE = 'https://youtube.googleapis.com/youtube/v3';
+const EXTERNAL_API_TIMEOUT_MS = 10_000; // 10 seconds
 
 // Search queries that produce a good mix of AI-generated and real content
 const SEARCH_QUERIES = [
@@ -72,10 +81,15 @@ let cachedShorts: YouTubeShort[] = [];
 let cacheTimestamp = 0;
 const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
-// Curated fallback shorts (known working video IDs) for when API key is missing
+// Generate a YouTube thumbnail URL from a video ID.
+// YouTube always serves these deterministic URLs for any public video.
+function ytThumbnail(videoId: string): string {
+  return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+}
+
 const FALLBACK_SHORTS: YouTubeShort[] = [
-  { videoId: 'dQw4w9WgXcQ', title: 'Classic viral video', channelTitle: 'RickAstley', thumbnailUrl: '', publishedAt: '2009-10-25T00:00:00Z', viewCount: 1500000000 },
-  { videoId: 'kJQP7kiw5Fk', title: 'Despacito', channelTitle: 'LuisFonsiVEVO', thumbnailUrl: '', publishedAt: '2017-01-12T00:00:00Z', viewCount: 8000000000 },
+  { videoId: 'dQw4w9WgXcQ', title: 'Classic viral video', channelTitle: 'RickAstley', thumbnailUrl: ytThumbnail('dQw4w9WgXcQ'), publishedAt: '2009-10-25T00:00:00Z', viewCount: 1500000000 },
+  { videoId: 'kJQP7kiw5Fk', title: 'Despacito', channelTitle: 'LuisFonsiVEVO', thumbnailUrl: ytThumbnail('kJQP7kiw5Fk'), publishedAt: '2017-01-12T00:00:00Z', viewCount: 8000000000 },
 ];
 
 function parseDuration(duration: string): number {
@@ -113,7 +127,9 @@ async function fetchYouTubeShorts(apiKey: string): Promise<YouTubeShort[]> {
       searchUrl.searchParams.set('order', 'viewCount');
       searchUrl.searchParams.set('key', apiKey);
 
-      const searchRes = await fetch(searchUrl.toString());
+      const searchRes = await fetch(searchUrl.toString(), {
+        signal: AbortSignal.timeout(EXTERNAL_API_TIMEOUT_MS),
+      });
       if (!searchRes.ok) continue;
 
       const searchData = await searchRes.json() as { items: YouTubeSearchItem[] };
@@ -127,7 +143,9 @@ async function fetchYouTubeShorts(apiKey: string): Promise<YouTubeShort[]> {
       detailsUrl.searchParams.set('id', videoIds.join(','));
       detailsUrl.searchParams.set('key', apiKey);
 
-      const detailsRes = await fetch(detailsUrl.toString());
+      const detailsRes = await fetch(detailsUrl.toString(), {
+        signal: AbortSignal.timeout(EXTERNAL_API_TIMEOUT_MS),
+      });
       if (!detailsRes.ok) continue;
 
       const detailsData = await detailsRes.json() as { items: YouTubeVideoItem[] };

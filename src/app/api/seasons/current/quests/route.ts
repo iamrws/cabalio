@@ -43,7 +43,8 @@ export async function GET(request: NextRequest) {
 
     const questResult = await questQuery;
     if (questResult.error) {
-      return NextResponse.json({ error: questResult.error.message }, { status: 500 });
+      console.error('Season quests query error:', questResult.error);
+      return NextResponse.json({ error: 'Failed to load quests' }, { status: 500 });
     }
 
     const quests = questResult.data || [];
@@ -60,7 +61,8 @@ export async function GET(request: NextRequest) {
       : { data: [], error: null };
 
     if (submissionResult.error) {
-      return NextResponse.json({ error: submissionResult.error.message }, { status: 500 });
+      console.error('Season quest submissions query error:', submissionResult.error);
+      return NextResponse.json({ error: 'Failed to load quests' }, { status: 500 });
     }
 
     const latestSubmissionByQuest = new Map<string, (typeof submissionResult.data)[number]>();

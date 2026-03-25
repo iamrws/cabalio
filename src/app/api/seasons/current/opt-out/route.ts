@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 import { trackEngagementEvent } from '@/lib/analytics';
 import { ensureSeasonMemberState, getLiveSeason } from '@/lib/seasons';
 
@@ -12,6 +12,10 @@ const optOutSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -41,7 +45,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (updateResult.error) {
-      return NextResponse.json({ error: updateResult.error.message }, { status: 500 });
+      console.error('Season opt-out update error:', updateResult.error);
+      return NextResponse.json({ error: 'Failed to update opt-out preference' }, { status: 500 });
     }
 
     await trackEngagementEvent(supabase, 'season_opt_out_toggled', session.walletAddress, {

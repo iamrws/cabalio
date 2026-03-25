@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 import { MAX_IMAGE_SIZE_MB } from '@/lib/constants';
 import { createServerClient } from '@/lib/db';
 import { detectImageType, validateImageFile } from '@/lib/upload-security';
@@ -21,6 +21,10 @@ function mimeTypeMatchesDetected(providedMimeType: string, detectedMimeType: str
 }
 
 export async function POST(request: NextRequest) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
   }
 
   const imageBuffer = Buffer.from(await maybeFile.arrayBuffer());
-  const validation = validateImageFile(maybeFile.name, maybeFile.size, imageBuffer);
+  const validation = validateImageFile(maybeFile.name, maybeFile.size, imageBuffer, maybeFile.type);
   if (!validation.safe) {
     return NextResponse.json(
       { error: validation.reason || 'Uploaded image failed security validation' },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 import { trackEngagementEvent } from '@/lib/analytics';
 import { ensureSeasonMemberState, getLiveSeason } from '@/lib/seasons';
 
@@ -13,25 +13,54 @@ const questSubmitSchema = z.object({
   note: z.string().max(500).optional().nullable(),
 });
 
-const SUBMIT_WINDOW_MS = 60 * 60 * 1000;
-const SUBMIT_WINDOW_MAX = 20;
-const questSubmitWindow = new Map<string, { count: number; resetAt: number }>();
+/** Rate limit window in seconds. */
+const QUEST_RATE_LIMIT_WINDOW_SECONDS = 3600;
+/** Max quest submissions per wallet per window. */
+const QUEST_RATE_LIMIT_MAX = 20;
 
-function isSubmitRateLimited(walletAddress: string): boolean {
-  const now = Date.now();
-  const state = questSubmitWindow.get(walletAddress);
+/** Wallet-based rate limiting backed by Supabase (serverless-safe). */
+async function isSubmitRateLimited(
+  supabase: ReturnType<typeof createServerClient>,
+  walletAddress: string
+): Promise<boolean> {
+  const windowStart = new Date(Date.now() - QUEST_RATE_LIMIT_WINDOW_SECONDS * 1000).toISOString();
 
-  if (!state || now > state.resetAt) {
-    questSubmitWindow.set(walletAddress, { count: 1, resetAt: now + SUBMIT_WINDOW_MS });
-    return false;
-  }
+  const { data: rateLimitRow } = await supabase
+    .from('rate_limits')
+    .select('request_count, window_start')
+    .eq('wallet_address', walletAddress)
+    .eq('action', 'quest_submit')
+    .gte('window_start', windowStart)
+    .order('window_start', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  if (state.count >= SUBMIT_WINDOW_MAX) {
+  if (rateLimitRow && rateLimitRow.request_count >= QUEST_RATE_LIMIT_MAX) {
     return true;
   }
 
-  state.count += 1;
-  questSubmitWindow.set(walletAddress, state);
+  const nowIso = new Date().toISOString();
+
+  if (rateLimitRow) {
+    await supabase
+      .from('rate_limits')
+      .update({ request_count: rateLimitRow.request_count + 1, updated_at: nowIso })
+      .eq('wallet_address', walletAddress)
+      .eq('action', 'quest_submit')
+      .eq('window_start', rateLimitRow.window_start);
+  } else {
+    await supabase.from('rate_limits').upsert(
+      {
+        wallet_address: walletAddress,
+        action: 'quest_submit',
+        request_count: 1,
+        window_start: nowIso,
+        updated_at: nowIso,
+      },
+      { onConflict: 'wallet_address,action' }
+    );
+  }
+
   return false;
 }
 
@@ -39,6 +68,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ questId: string }> }
 ) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -47,7 +80,8 @@ export async function POST(
     return NextResponse.json({ error: 'Jito Cabal holder verification required' }, { status: 403 });
   }
 
-  if (isSubmitRateLimited(session.walletAddress)) {
+  const rateLimitSupabase = createServerClient();
+  if (await isSubmitRateLimited(rateLimitSupabase, session.walletAddress)) {
     return NextResponse.json({ error: 'Too many quest submissions. Try again later.' }, { status: 429 });
   }
 
@@ -73,7 +107,8 @@ export async function POST(
       .maybeSingle();
 
     if (questResult.error) {
-      return NextResponse.json({ error: questResult.error.message }, { status: 500 });
+      console.error('Quest lookup error:', questResult.error);
+      return NextResponse.json({ error: 'Failed to look up quest' }, { status: 500 });
     }
     if (!questResult.data) {
       return NextResponse.json({ error: 'Quest not found in active season' }, { status: 404 });
@@ -87,23 +122,26 @@ export async function POST(
     const normalizedEvidenceId = parsed.evidence_id?.trim() || null;
 
     if (normalizedEvidenceId) {
+      // Check for evidence reuse across ANY quest for this wallet + season
+      // (not just the same quest). This mirrors the database unique index
+      // idx_unique_season_wallet_evidence and catches duplicates early.
       const duplicateEvidence = await supabase
         .from('season_quest_submissions')
         .select('id, quest_id, status')
         .eq('season_id', season.id)
         .eq('wallet_address', session.walletAddress)
-        .eq('evidence_type', parsed.evidence_type)
         .eq('evidence_id', normalizedEvidenceId)
         .in('status', ['submitted', 'approved'])
         .limit(1);
 
       if (duplicateEvidence.error) {
-        return NextResponse.json({ error: duplicateEvidence.error.message }, { status: 500 });
+        console.error('Quest duplicate evidence check error:', duplicateEvidence.error);
+        return NextResponse.json({ error: 'Failed to check for duplicate evidence' }, { status: 500 });
       }
 
       if ((duplicateEvidence.data || []).length > 0) {
         return NextResponse.json(
-          { error: 'Duplicate evidence detected for this season submission.' },
+          { error: 'This evidence has already been used for a quest submission in this season.' },
           { status: 409 }
         );
       }
@@ -119,7 +157,8 @@ export async function POST(
       .limit(1);
 
     if (existingQuestSubmission.error) {
-      return NextResponse.json({ error: existingQuestSubmission.error.message }, { status: 500 });
+      console.error('Quest existing submission check error:', existingQuestSubmission.error);
+      return NextResponse.json({ error: 'Failed to check for existing submissions' }, { status: 500 });
     }
 
     if ((existingQuestSubmission.data || []).length > 0) {
@@ -142,7 +181,8 @@ export async function POST(
         .maybeSingle();
 
       if (sourceSubmission.error) {
-        return NextResponse.json({ error: sourceSubmission.error.message }, { status: 500 });
+        console.error('Quest source submission lookup error:', sourceSubmission.error);
+        return NextResponse.json({ error: 'Failed to look up referenced submission' }, { status: 500 });
       }
       if (!sourceSubmission.data || sourceSubmission.data.wallet_address !== session.walletAddress) {
         return NextResponse.json({ error: 'Referenced submission not found' }, { status: 404 });
@@ -170,7 +210,16 @@ export async function POST(
       .single();
 
     if (insertResult.error) {
-      return NextResponse.json({ error: insertResult.error.message }, { status: 500 });
+      // Handle unique constraint violation from idx_unique_season_wallet_evidence
+      // which catches race conditions between the check above and this insert.
+      if (insertResult.error.code === '23505') {
+        return NextResponse.json(
+          { error: 'This evidence has already been used for a quest submission.' },
+          { status: 409 }
+        );
+      }
+      console.error('Quest submission insert error:', insertResult.error);
+      return NextResponse.json({ error: 'Failed to submit quest' }, { status: 500 });
     }
 
     await trackEngagementEvent(supabase, 'season_quest_submitted', session.walletAddress, {

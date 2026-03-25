@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 import { scoreSubmission } from '@/lib/scoring';
 import { calculatePoints, calculateStreak } from '@/lib/points';
 
@@ -16,6 +16,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const session = await getSessionFromRequest(request);
   if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -38,17 +42,99 @@ export async function POST(
       return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
     }
 
+    // L6: Helper to insert an immutable audit log for every admin review action
+    const adminWallet = session.walletAddress;
+    async function logAdminReviewAction(
+      action: string,
+      submissionId: string,
+      targetWallet: string,
+      extra: Record<string, unknown> = {}
+    ) {
+      const auditNow = new Date().toISOString();
+      const { error: auditErr } = await supabase.from('audit_logs').insert({
+        action: `submission_${action}`,
+        actor_wallet: adminWallet,
+        target_wallet: targetWallet,
+        details: {
+          submission_id: submissionId,
+          note: parsed.note || null,
+          ...extra,
+        },
+        created_at: auditNow,
+      });
+      if (auditErr) {
+        console.error('Audit log insert failed for admin review:', auditErr);
+      }
+    }
+
     if (parsed.action === 'reject') {
+      const now = new Date().toISOString();
+
       const { error } = await supabase
         .from('submissions')
         .update({
           status: 'rejected',
-          scored_at: new Date().toISOString(),
+          scored_at: now,
         })
         .eq('id', id);
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Submission reject update error:', error);
+        return NextResponse.json({ error: 'Failed to reject submission' }, { status: 500 });
+      }
+
+      await logAdminReviewAction('rejected', id, submission.wallet_address);
+
+      // ── Cascade-reject: reverse any quest bonuses that were auto-approved
+      // based on this submission, and mark those quest submissions as rejected.
+      const { data: linkedQuestSubs } = await supabase
+        .from('season_quest_submissions')
+        .select('id, season_id, quest_id, wallet_address')
+        .eq('evidence_type', 'submission_id')
+        .eq('evidence_id', id)
+        .eq('status', 'approved');
+
+      if (linkedQuestSubs && linkedQuestSubs.length > 0) {
+        for (const qs of linkedQuestSubs) {
+          // Reject the quest submission
+          await supabase
+            .from('season_quest_submissions')
+            .update({
+              status: 'rejected',
+              reviewed_at: now,
+              reviewed_by: session.walletAddress,
+              updated_at: now,
+            })
+            .eq('id', qs.id);
+
+          // Find the corresponding points_ledger entry and reverse it
+          const { data: ledgerEntries } = await supabase
+            .from('points_ledger')
+            .select('id, points_delta')
+            .eq('wallet_address', qs.wallet_address)
+            .eq('entry_type', 'quest_bonus')
+            .contains('metadata', { season_quest_submission_id: qs.id });
+
+          if (ledgerEntries && ledgerEntries.length > 0) {
+            for (const entry of ledgerEntries) {
+              await supabase.from('points_ledger').insert({
+                wallet_address: qs.wallet_address,
+                entry_type: 'penalty',
+                points_delta: -Math.abs(entry.points_delta),
+                metadata: {
+                  reason_code: 'cascade_reject_reversal',
+                  reversed_ledger_id: entry.id,
+                  season_quest_submission_id: qs.id,
+                  season_id: qs.season_id,
+                  quest_id: qs.quest_id,
+                  source_submission_id: id,
+                  rejected_by: session.walletAddress,
+                },
+                created_at: now,
+              });
+            }
+          }
+        }
       }
 
       return NextResponse.json({ success: true, status: 'rejected' });
@@ -64,8 +150,11 @@ export async function POST(
         .eq('id', id);
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Submission flag update error:', error);
+        return NextResponse.json({ error: 'Failed to flag submission' }, { status: 500 });
       }
+
+      await logAdminReviewAction('flagged', id, submission.wallet_address);
 
       return NextResponse.json({ success: true, status: 'flagged' });
     }
@@ -107,7 +196,8 @@ export async function POST(
       .eq('id', id);
 
     if (updateSubmissionError) {
-      return NextResponse.json({ error: updateSubmissionError.message }, { status: 500 });
+      console.error('Submission approve update error:', updateSubmissionError);
+      return NextResponse.json({ error: 'Failed to approve submission' }, { status: 500 });
     }
 
     const newTotalXp = (userData?.total_xp || 0) + points;
@@ -187,6 +277,11 @@ export async function POST(
         }
       }
     }
+
+    await logAdminReviewAction('approved', id, submission.wallet_address, {
+      points_awarded: points,
+      scoring_weighted_total: scoringBreakdown.weighted_total,
+    });
 
     return NextResponse.json({
       success: true,

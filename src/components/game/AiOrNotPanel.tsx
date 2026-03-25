@@ -47,12 +47,6 @@ interface YouTubeShort {
   viewCount: number;
 }
 
-interface VoteRecord {
-  videoId: string;
-  vote: 'ai' | 'human';
-  timestamp: number;
-}
-
 // ── YouTube IFrame types ──────────────────────────────────────────────
 declare global {
   interface Window {
@@ -102,6 +96,14 @@ function loadYouTubeAPI(): Promise<void> {
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     tag.async = true;
+    // The YouTube IFrame API script is loaded from a Google CDN that does not
+    // publish stable SRI hashes (content changes with deploys). Instead we
+    // apply a strict Content-Security-Policy via next.config and constrain the
+    // script origin. A nonce-based approach would require SSR support; for a
+    // client-loaded third-party SDK this is the accepted secure pattern.
+    // Additionally restrict cross-origin leakage:
+    tag.crossOrigin = 'anonymous';
+    tag.referrerPolicy = 'no-referrer';
     window.onYouTubeIframeAPIReady = () => resolve();
     document.body.appendChild(tag);
   });
@@ -109,39 +111,60 @@ function loadYouTubeAPI(): Promise<void> {
   return ytApiPromise;
 }
 
-// ── Deterministic "community" consensus from videoId ──────────────────
-function pseudoConsensus(videoId: string): { aiPct: number; totalVotes: number } {
-  let hash = 0;
-  for (let i = 0; i < videoId.length; i++) {
-    hash = ((hash << 5) - hash + videoId.charCodeAt(i)) | 0;
+// ── Server vote API ───────────────────────────────────────────────────
+async function submitVoteToServer(
+  videoId: string,
+  vote: 'ai' | 'human'
+): Promise<{
+  success: boolean;
+  aiPct: number;
+  totalVotes: number;
+  matched: boolean;
+  pointsEarned: number;
+  points: number;
+  streak: number;
+  error?: string;
+}> {
+  try {
+    const res = await fetch('/api/game/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoId, vote }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return {
+        success: false,
+        aiPct: 50,
+        totalVotes: 0,
+        matched: false,
+        pointsEarned: 0,
+        points: 0,
+        streak: 0,
+        error: data.error || 'Vote failed',
+      };
+    }
+    return {
+      success: true,
+      aiPct: data.aiPct,
+      totalVotes: data.totalVotes,
+      matched: data.matched,
+      pointsEarned: data.pointsEarned,
+      points: data.points,
+      streak: data.streak,
+    };
+  } catch {
+    return {
+      success: false,
+      aiPct: 50,
+      totalVotes: 0,
+      matched: false,
+      pointsEarned: 0,
+      points: 0,
+      streak: 0,
+      error: 'Network error',
+    };
   }
-  const aiPct = 20 + Math.abs(hash % 61); // 20-80%
-  const totalVotes = 50 + Math.abs((hash >> 8) % 950); // 50-999
-  return { aiPct, totalVotes };
-}
-
-// ── Get/set votes from localStorage ───────────────────────────────────
-function getLocalVotes(): VoteRecord[] {
-  try {
-    return JSON.parse(localStorage.getItem('cabal-aion-votes') || '[]');
-  } catch { return []; }
-}
-
-function saveLocalVote(record: VoteRecord) {
-  const votes = getLocalVotes();
-  votes.push(record);
-  localStorage.setItem('cabal-aion-votes', JSON.stringify(votes.slice(-500)));
-}
-
-function getSessionStats(): { points: number; streak: number } {
-  try {
-    const data = JSON.parse(sessionStorage.getItem('cabal-aion-session') || '{}');
-    return { points: data.points || 0, streak: data.streak || 0 };
-  } catch { return { points: 0, streak: 0 }; }
-}
-
-function saveSessionStats(points: number, streak: number) {
-  sessionStorage.setItem('cabal-aion-session', JSON.stringify({ points, streak }));
 }
 
 // ── Main Panel Component ──────────────────────────────────────────────
@@ -173,12 +196,8 @@ export default function AiOrNotPanel() {
 
   const current = shorts[currentIndex] ?? null;
 
-  // Restore session stats
-  useEffect(() => {
-    const s = getSessionStats();
-    setPoints(s.points);
-    setStreak(s.streak);
-  }, []);
+  // Server state is returned with each vote response; no local restore needed.
+  // Points and streak start at 0 and update as the player votes.
 
   // Fetch shorts
   const fetchShorts = useCallback(async () => {
@@ -305,46 +324,55 @@ export default function AiOrNotPanel() {
     }
   }, [isMuted]);
 
-  // Submit vote
+  // Submit vote via server API
+  const [votePending, setVotePending] = useState(false);
+
   const submitVote = useCallback((vote: 'ai' | 'human') => {
-    if (!current || showResult) return;
+    if (!current || showResult || votePending) return;
 
-    const { aiPct, totalVotes } = pseudoConsensus(current.videoId);
-    const communityThinks = aiPct > 50 ? 'ai' : 'human';
-    const matched = vote === communityThinks;
+    setVotePending(true);
 
-    // Points: base 10, streak bonus, random multiplier
-    const base = matched ? 10 : 2;
-    const streakBonus = matched ? Math.min(streak * 0.5, 5) : 0;
-    const multiplier = Math.random() < 0.05 ? 5 : Math.random() < 0.15 ? 2 : 1;
-    const earned = Math.round((base + streakBonus) * multiplier);
-
-    const newStreak = matched ? streak + 1 : 0;
-    const newPoints = points + earned;
-
-    setPoints(newPoints);
-    setStreak(newStreak);
-    saveSessionStats(newPoints, newStreak);
-    saveLocalVote({ videoId: current.videoId, vote, timestamp: Date.now() });
-
-    // Pause the video during result
+    // Pause the video while waiting for response
     if (playerRef.current) {
       try { playerRef.current.pauseVideo(); } catch {}
     }
 
-    setShowResult({ vote, aiPct, totalVotes, matched, pointsEarned: earned });
+    submitVoteToServer(current.videoId, vote).then((result) => {
+      setVotePending(false);
 
-    // Auto-advance after 2s
-    setTimeout(() => {
-      setShowResult(null);
-      setCurrentIndex(i => {
-        const next = i + 1;
-        // Fetch more if running low
-        if (next >= shorts.length - 3) fetchShorts();
-        return next;
+      if (!result.success) {
+        // On error (e.g. duplicate vote), just skip to next
+        setCurrentIndex(i => {
+          const next = i + 1;
+          if (next >= shorts.length - 3) fetchShorts();
+          return next;
+        });
+        return;
+      }
+
+      // Update local display state from server-authoritative values
+      setPoints(result.points);
+      setStreak(result.streak);
+
+      setShowResult({
+        vote,
+        aiPct: result.aiPct,
+        totalVotes: result.totalVotes,
+        matched: result.matched,
+        pointsEarned: result.pointsEarned,
       });
-    }, 2000);
-  }, [current, showResult, streak, points, shorts.length, fetchShorts]);
+
+      // Auto-advance after 2s
+      setTimeout(() => {
+        setShowResult(null);
+        setCurrentIndex(i => {
+          const next = i + 1;
+          if (next >= shorts.length - 3) fetchShorts();
+          return next;
+        });
+      }, 2000);
+    });
+  }, [current, showResult, votePending, shorts.length, fetchShorts]);
 
   // Skip
   const skipVideo = useCallback(() => {

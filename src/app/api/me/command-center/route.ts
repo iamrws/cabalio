@@ -86,13 +86,13 @@ export async function GET(request: NextRequest) {
       getLiveSeason(supabase),
     ]);
 
-    if (userResult.error) return NextResponse.json({ error: userResult.error.message }, { status: 500 });
-    if (streakResult.error) return NextResponse.json({ error: streakResult.error.message }, { status: 500 });
-    if (templatesResult.error) return NextResponse.json({ error: templatesResult.error.message }, { status: 500 });
-    if (submissionsResult.error) return NextResponse.json({ error: submissionsResult.error.message }, { status: 500 });
-    if (allPointsResult.error) return NextResponse.json({ error: allPointsResult.error.message }, { status: 500 });
-    if (weeklyPointsResult.error) return NextResponse.json({ error: weeklyPointsResult.error.message }, { status: 500 });
-    if (holdersResult.error) return NextResponse.json({ error: holdersResult.error.message }, { status: 500 });
+    if (userResult.error) { console.error('Command center user query error:', userResult.error); return NextResponse.json({ error: 'Failed to load command center' }, { status: 500 }); }
+    if (streakResult.error) { console.error('Command center streak query error:', streakResult.error); return NextResponse.json({ error: 'Failed to load command center' }, { status: 500 }); }
+    if (templatesResult.error) { console.error('Command center templates query error:', templatesResult.error); return NextResponse.json({ error: 'Failed to load command center' }, { status: 500 }); }
+    if (submissionsResult.error) { console.error('Command center submissions query error:', submissionsResult.error); return NextResponse.json({ error: 'Failed to load command center' }, { status: 500 }); }
+    if (allPointsResult.error) { console.error('Command center points query error:', allPointsResult.error); return NextResponse.json({ error: 'Failed to load command center' }, { status: 500 }); }
+    if (weeklyPointsResult.error) { console.error('Command center weekly points query error:', weeklyPointsResult.error); return NextResponse.json({ error: 'Failed to load command center' }, { status: 500 }); }
+    if (holdersResult.error) { console.error('Command center holders query error:', holdersResult.error); return NextResponse.json({ error: 'Failed to load command center' }, { status: 500 }); }
 
     const user = userResult.data;
     const allPoints = allPointsResult.data || [];

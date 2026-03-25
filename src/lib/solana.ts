@@ -2,6 +2,8 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import { JITO_CABAL_COLLECTION_ADDRESS } from './constants';
 
+const EXTERNAL_API_TIMEOUT_MS = 10_000; // 10 seconds
+
 // Verify if a wallet holds a Jito Cabal NFT
 export async function verifyNFTHolder(
   walletAddress: string,
@@ -13,11 +15,15 @@ export async function verifyNFTHolder(
   }
 
   try {
+    // H7: Use Authorization header instead of exposing API key in URL
     const response = await fetch(
-      `https://mainnet.helius-rpc.com/?api-key=${heliusApiKey}`,
+      'https://mainnet.helius-rpc.com/',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${heliusApiKey}`,
+        },
         body: JSON.stringify({
           jsonrpc: '2.0',
           id: 'nft-check',
@@ -31,6 +37,8 @@ export async function verifyNFTHolder(
             },
           },
         }),
+        // M9: Add timeout to external API calls
+        signal: AbortSignal.timeout(EXTERNAL_API_TIMEOUT_MS),
       }
     );
 
@@ -56,7 +64,9 @@ export async function verifyNFTHolder(
       mintAddress: cabalNFT?.id || null,
     };
   } catch (error) {
-    console.error('Failed to verify NFT holder:', error);
+    // Avoid logging the API key in error messages
+    const safeError = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Failed to verify NFT holder:', safeError);
     return { isHolder: false, mintAddress: null };
   }
 }

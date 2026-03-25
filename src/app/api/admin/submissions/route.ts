@@ -15,6 +15,12 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
   const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
 
+  // L2: Whitelist allowed status values
+  const ALLOWED_STATUSES = ['all', 'submitted', 'queued', 'ai_scored', 'human_review', 'approved', 'flagged', 'rejected'];
+  if (!ALLOWED_STATUSES.includes(status)) {
+    return NextResponse.json({ error: 'Invalid status filter' }, { status: 400 });
+  }
+
   const supabase = createServerClient();
   let query = supabase
     .from('submissions')
@@ -28,7 +34,8 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await query;
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Admin submissions query error:', error);
+    return NextResponse.json({ error: 'Failed to fetch submissions' }, { status: 500 });
   }
 
   return NextResponse.json({ submissions: data });
