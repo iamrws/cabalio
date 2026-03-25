@@ -136,6 +136,58 @@ export async function POST(
       created_at: now,
     });
 
+    // Auto-complete any pending season quest submissions that referenced this submission.
+    const pendingSeasonQuestResult = await supabase
+      .from('season_quest_submissions')
+      .select('id, season_id, quest_id')
+      .eq('wallet_address', submission.wallet_address)
+      .eq('evidence_type', 'submission_id')
+      .eq('evidence_id', submission.id)
+      .eq('status', 'submitted');
+
+    if (!pendingSeasonQuestResult.error && (pendingSeasonQuestResult.data || []).length > 0) {
+      const questIds = Array.from(new Set((pendingSeasonQuestResult.data || []).map((row) => row.quest_id)));
+      const seasonQuestRows = await supabase
+        .from('season_quests')
+        .select('id, points_reward')
+        .in('id', questIds);
+
+      if (!seasonQuestRows.error) {
+        const pointsByQuestId = new Map<string, number>();
+        for (const quest of seasonQuestRows.data || []) {
+          pointsByQuestId.set(quest.id, quest.points_reward || 0);
+        }
+
+        for (const questSubmission of pendingSeasonQuestResult.data || []) {
+          const questBonusPoints = pointsByQuestId.get(questSubmission.quest_id) || 0;
+
+          await supabase
+            .from('season_quest_submissions')
+            .update({
+              status: 'approved',
+              reviewed_at: now,
+              reviewed_by: session.walletAddress,
+              updated_at: now,
+            })
+            .eq('id', questSubmission.id);
+
+          await supabase.from('points_ledger').insert({
+            wallet_address: submission.wallet_address,
+            entry_type: 'quest_bonus',
+            points_delta: questBonusPoints,
+            metadata: {
+              reason_code: 'season_quest_approved',
+              season_id: questSubmission.season_id,
+              quest_id: questSubmission.quest_id,
+              season_quest_submission_id: questSubmission.id,
+              approved_via_submission_review: submission.id,
+            },
+            created_at: now,
+          });
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       status: 'approved',
@@ -151,4 +203,3 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

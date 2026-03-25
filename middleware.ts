@@ -12,6 +12,7 @@ const HOLDER_PROTECTED_PREFIXES = [
   '/api/leaderboard',
   '/api/profile',
   '/api/uploads',
+  '/api/seasons',
 ];
 
 const ADMIN_PROTECTED_PREFIXES = [
@@ -83,6 +84,7 @@ export const config = {
     '/api/leaderboard/:path*',
     '/api/profile/:path*',
     '/api/uploads/:path*',
+    '/api/seasons/:path*',
     '/api/admin/:path*',
   ],
 };
