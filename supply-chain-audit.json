@@ -1,0 +1,132 @@
+{
+  "audit_metadata": {
+    "audit_date": "2026-03-27T00:00:00Z",
+    "auditor": "Claude Code Supply Chain Security Analysis",
+    "scope": "18 direct production dependencies, 8 dev dependencies, ~1544 transitive packages",
+    "methodology": "OWASP Supply Chain Security + npm package behavioral analysis"
+  },
+  "executive_summary": {
+    "overall_risk_rating": "LOW",
+    "total_direct_deps": 18,
+    "total_transitive_deps": 1544,
+    "suspicious_packages": 0,
+    "malicious_packages": 0,
+    "packages_requiring_review": 3,
+    "deprecated_transitive_deps": 14,
+    "packages_with_install_scripts": 8,
+    "non_registry_dependencies": 0,
+    "integrity_hashes_present": "1538/1538 (100%)",
+    "key_risks": [
+      "@solana/wallet-adapter-wallets pulls in 623+ transitive deps including deprecated WalletConnect packages — largest attack surface",
+      "GSAP has proprietary license with commercial restrictions — needs legal review",
+      "@anthropic-ai/sdk is pre-1.0 with caret range — should pin to exact version",
+      "tweetnacl unmaintained since 2019 — should pin to exact 1.0.3 to prevent accepting compromised future patch"
+    ]
+  },
+  "scan_results": {
+    "install_scripts": {
+      "status": "CLEAN",
+      "count": 8,
+      "details": "blake-hash, bufferutil, protobufjs, sharp, tiny-secp256k1, unrs-resolver, usb, utf-8-validate — all well-known native addons"
+    },
+    "obfuscated_code": {
+      "status": "CLEAN",
+      "eval_usage": "6 files — all in eslint-scope, protobufjs, react-devtools-core, terser (legitimate)",
+      "function_constructor": "5 files — all in tapable, tmpl, source-map-js, ajv (legitimate)",
+      "base64_operations": "20 files — all in standard packages (cbor, eslint, jws, postcss, etc.)"
+    },
+    "network_calls": {
+      "status": "CLEAN",
+      "details": "No suspicious hardcoded URLs or IP addresses. All network references in well-known packages."
+    },
+    "environment_access": {
+      "status": "CLEAN",
+      "process_env_access": "55 files (standard configuration reading)",
+      "bulk_enumeration": "0 files — no Object.keys(process.env) found"
+    },
+    "process_execution": {
+      "status": "CLEAN",
+      "details": "110 matches inflated by regex .exec(). Actual child_process: cross-spawn, sharp, napi-postinstall, typescript."
+    },
+    "native_binaries": {
+      "status": "CLEAN",
+      "count": 70,
+      "details": "All from @img/sharp, @next/swc, @tailwindcss/oxide, @unrs/resolver, blake-hash, bufferutil, usb, utf-8-validate"
+    },
+    "non_registry_deps": {
+      "status": "CLEAN",
+      "count": 0
+    },
+    "integrity_verification": {
+      "status": "CLEAN",
+      "hashes_present": 1538,
+      "hashes_missing": 0
+    }
+  },
+  "package_classifications": {
+    "SAFE": [
+      "@radix-ui/react-dialog@^1.1.15",
+      "@radix-ui/react-dropdown-menu@^2.1.16",
+      "@radix-ui/react-tooltip@^1.2.8",
+      "@supabase/supabase-js@^2.98.0",
+      "framer-motion@^12.35.1",
+      "react@19.2.3",
+      "react-dom@19.2.3",
+      "recharts@^3.8.0",
+      "zod@^3.25.76"
+    ],
+    "LOW_RISK": [
+      "@solana/wallet-adapter-base@^0.9.27",
+      "@solana/wallet-adapter-react@^0.15.39",
+      "@solana/wallet-adapter-react-ui@^0.9.39",
+      "@solana/web3.js@^1.98.4",
+      "next@16.1.6",
+      "tweetnacl@^1.0.3"
+    ],
+    "REVIEW": [
+      "@anthropic-ai/sdk@^0.78.0 — pre-1.0 caret range, pin to exact",
+      "@solana/wallet-adapter-wallets@^0.19.37 — massive transitive tree, deprecated sub-deps",
+      "gsap@^3.14.2 — proprietary license needs legal review"
+    ],
+    "SUSPICIOUS": [],
+    "MALICIOUS": []
+  },
+  "solana_incident_check": {
+    "incident": "@solana/web3.js credential-stealing backdoor (December 2023)",
+    "affected_versions": "1.95.5 - 1.95.7",
+    "project_version": "^1.98.4",
+    "status": "NOT AFFECTED"
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "action": "Replace @solana/wallet-adapter-wallets with individual wallet adapters",
+      "reason": "Cuts 80%+ of transitive dependency tree (~623 packages → ~50)"
+    },
+    {
+      "priority": "HIGH",
+      "action": "Pin @anthropic-ai/sdk to exact version: \"0.78.0\"",
+      "reason": "Pre-1.0 package, prevent unexpected updates"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Pin tweetnacl to exact: \"1.0.3\"",
+      "reason": "Unmaintained since 2019, prevent accepting hypothetical compromised patch"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Review GSAP license or replace with framer-motion",
+      "reason": "Proprietary license has commercial restrictions"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Enable Dependabot/Renovate for automated security updates",
+      "reason": "1544 transitive deps need ongoing monitoring"
+    },
+    {
+      "priority": "LOW",
+      "action": "Ensure CI uses npm ci (not npm install) for lockfile integrity",
+      "reason": "Prevents lockfile tampering attacks"
+    }
+  ]
+}
