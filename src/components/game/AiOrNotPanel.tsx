@@ -187,6 +187,9 @@ export default function AiOrNotPanel() {
     pointsEarned: number;
   } | null>(null);
 
+  // Auto-advance timer ref (to clear on unmount / panel close)
+  const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // YouTube player
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
@@ -303,11 +306,17 @@ export default function AiOrNotPanel() {
     };
   }, [isOpen, current?.videoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cleanup player when panel closes
+  // Cleanup player and timers when panel closes
   useEffect(() => {
-    if (!isOpen && playerRef.current) {
-      try { playerRef.current.destroy(); } catch {}
-      playerRef.current = null;
+    if (!isOpen) {
+      if (autoAdvanceTimerRef.current) {
+        clearTimeout(autoAdvanceTimerRef.current);
+        autoAdvanceTimerRef.current = null;
+      }
+      if (playerRef.current) {
+        try { playerRef.current.destroy(); } catch {}
+        playerRef.current = null;
+      }
       setPlayerReady(false);
     }
   }, [isOpen]);
@@ -363,7 +372,9 @@ export default function AiOrNotPanel() {
       });
 
       // Auto-advance after 2s
-      setTimeout(() => {
+      if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = setTimeout(() => {
+        autoAdvanceTimerRef.current = null;
         setShowResult(null);
         setCurrentIndex(i => {
           const next = i + 1;
@@ -417,28 +428,28 @@ export default function AiOrNotPanel() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-[56] w-full sm:w-[420px] bg-bg-primary border-l border-border-neon flex flex-col overflow-hidden"
+            className="fixed right-0 top-0 bottom-0 z-[56] w-full sm:w-[420px] bg-bg-base border-l border-border-default flex flex-col overflow-hidden"
           >
             {/* ─── Header ─── */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-neon-purple/20 border border-neon-purple/40 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-neon-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="h-8 w-8 rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] flex items-center justify-center">
+                  <svg className="w-4 h-4 text-accent-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
                   </svg>
                 </div>
-                <h2 className="text-lg font-bold gradient-text">AI or NOT?</h2>
+                <h2 className="text-lg font-bold text-accent-text">AI or NOT?</h2>
               </div>
 
               {/* Stats */}
               <div className="flex items-center gap-3">
                 {streak >= 2 && (
-                  <span className="text-sm font-bold text-neon-orange flex items-center gap-1">
+                  <span className="text-sm font-bold text-caution flex items-center gap-1">
                     <span className="text-base">🔥</span>{streak}
                   </span>
                 )}
-                <span className="text-sm font-mono font-bold text-neon-cyan">{points} pts</span>
-                <button onClick={close} className="w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-text-muted hover:text-text-primary transition-colors">
+                <span className="text-sm font-mono font-bold text-accent-text">{points} pts</span>
+                <button onClick={close} className="w-8 h-8 rounded-lg bg-bg-raised flex items-center justify-center text-text-muted hover:text-text-primary transition-colors">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -452,7 +463,7 @@ export default function AiOrNotPanel() {
               {loading && shorts.length === 0 && (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="w-10 h-10 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin mx-auto mb-3" />
+                    <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin mx-auto mb-3" />
                     <p className="text-text-secondary text-sm">Loading shorts...</p>
                   </div>
                 </div>
@@ -465,7 +476,7 @@ export default function AiOrNotPanel() {
                     <p className="text-text-secondary mb-3">{error}</p>
                     <button
                       onClick={fetchShorts}
-                      className="px-4 py-2 rounded-lg bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20 hover:bg-neon-cyan/20 transition-colors text-sm"
+                      className="px-4 py-2 rounded-lg bg-accent-muted text-accent-text border border-[rgba(59,130,246,0.15)] hover:bg-accent-muted/80 transition-colors text-sm"
                     >
                       Retry
                     </button>
@@ -482,7 +493,7 @@ export default function AiOrNotPanel() {
                     <p className="text-text-secondary text-sm mb-4">You scored {points} points with a best streak of {streak}</p>
                     <button
                       onClick={() => { setCurrentIndex(0); fetchShorts(); }}
-                      className="px-4 py-2 rounded-lg gradient-bg text-white font-medium text-sm"
+                      className="px-4 py-2 rounded-lg bg-accent text-white font-medium text-sm"
                     >
                       Play Again
                     </button>
@@ -504,17 +515,17 @@ export default function AiOrNotPanel() {
 
                     {/* Loading overlay */}
                     {!playerReady && !playerError && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-bg-primary z-10">
-                        <div className="w-8 h-8 border-2 border-neon-purple/30 border-t-neon-purple rounded-full animate-spin" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-bg-base z-10">
+                        <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
                       </div>
                     )}
 
                     {/* Error overlay */}
                     {playerError && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-bg-primary z-10">
+                      <div className="absolute inset-0 flex items-center justify-center bg-bg-base z-10">
                         <div className="text-center text-text-secondary text-sm">
                           <p className="mb-2">Video unavailable</p>
-                          <button onClick={skipVideo} className="text-neon-cyan hover:underline">Skip to next</button>
+                          <button onClick={skipVideo} className="text-accent-text hover:underline">Skip to next</button>
                         </div>
                       </div>
                     )}
@@ -562,8 +573,8 @@ export default function AiOrNotPanel() {
                           exit={{ opacity: 0 }}
                           className={`absolute inset-0 z-40 flex flex-col items-center justify-center ${
                             showResult.matched
-                              ? 'bg-[#39ff14]/10 backdrop-brightness-110'
-                              : 'bg-[#ff2d95]/10 backdrop-brightness-75'
+                              ? 'bg-[rgba(34,197,94,0.1)] backdrop-brightness-110'
+                              : 'bg-[rgba(239,68,68,0.1)] backdrop-brightness-75'
                           }`}
                         >
                           {/* Icon */}
@@ -573,21 +584,16 @@ export default function AiOrNotPanel() {
                             transition={{ type: 'spring', stiffness: 300, damping: 15 }}
                             className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
                               showResult.matched
-                                ? 'bg-neon-green/30 border-2 border-neon-green'
-                                : 'bg-neon-pink/30 border-2 border-neon-pink'
+                                ? 'bg-positive-muted border-2 border-positive'
+                                : 'bg-negative-muted border-2 border-negative'
                             }`}
-                            style={{
-                              boxShadow: showResult.matched
-                                ? '0 0 40px rgba(57,255,20,0.4)'
-                                : '0 0 40px rgba(255,45,149,0.4)',
-                            }}
                           >
                             {showResult.matched ? (
-                              <svg className="w-10 h-10 text-neon-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <svg className="w-10 h-10 text-positive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             ) : (
-                              <svg className="w-10 h-10 text-neon-pink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <svg className="w-10 h-10 text-negative" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                               </svg>
                             )}
@@ -610,9 +616,9 @@ export default function AiOrNotPanel() {
                             transition={{ delay: 0.2 }}
                             className="flex items-center gap-3 text-sm mb-3"
                           >
-                            <span className="text-neon-green font-bold">{100 - showResult.aiPct}% Human</span>
+                            <span className="text-positive font-bold">{100 - showResult.aiPct}% Human</span>
                             <span className="text-white/40">|</span>
-                            <span className="text-neon-purple font-bold">{showResult.aiPct}% AI</span>
+                            <span className="text-accent-text font-bold">{showResult.aiPct}% AI</span>
                           </motion.div>
 
                           {/* Vote bar */}
@@ -620,10 +626,10 @@ export default function AiOrNotPanel() {
                             initial={{ scaleX: 0 }}
                             animate={{ scaleX: 1 }}
                             transition={{ delay: 0.25, duration: 0.5 }}
-                            className="w-48 h-2 rounded-full bg-bg-tertiary overflow-hidden origin-left"
+                            className="w-48 h-2 rounded-full bg-bg-raised overflow-hidden origin-left"
                           >
                             <div
-                              className="h-full bg-gradient-to-r from-neon-green to-neon-purple rounded-full"
+                              className="h-full bg-gradient-to-r from-positive to-accent rounded-full"
                               style={{ width: `${showResult.aiPct}%`, marginLeft: `${100 - showResult.aiPct}%` }}
                             />
                           </motion.div>
@@ -633,8 +639,7 @@ export default function AiOrNotPanel() {
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.3, type: 'spring' }}
-                            className="text-3xl font-black text-neon-cyan mt-4"
-                            style={{ textShadow: '0 0 20px rgba(0,240,255,0.5)' }}
+                            className="text-3xl font-black text-accent-text mt-4"
                           >
                             +{showResult.pointsEarned}
                           </motion.p>
@@ -654,10 +659,9 @@ export default function AiOrNotPanel() {
                               initial={{ opacity: 0, scale: 0 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.5, type: 'spring' }}
-                              className="mt-3 px-4 py-1.5 rounded-full border border-neon-orange/40 bg-neon-orange/10"
-                              style={{ boxShadow: '0 0 20px rgba(255,107,53,0.3)' }}
+                              className="mt-3 px-4 py-1.5 rounded-full border border-[rgba(234,179,8,0.12)] bg-caution-muted"
                             >
-                              <span className="text-neon-orange font-bold text-sm">
+                              <span className="text-caution font-bold text-sm">
                                 🔥 {streak} Streak!
                                 {streak >= 10 && ' LEGENDARY!'}
                                 {streak >= 5 && streak < 10 && ' On Fire!'}
@@ -670,16 +674,15 @@ export default function AiOrNotPanel() {
                   </div>
 
                   {/* ─── Vote Buttons ─── */}
-                  <div className="px-4 py-4 bg-bg-secondary border-t border-border-subtle">
+                  <div className="px-4 py-4 bg-bg-surface border-t border-border-subtle">
                     <div className="flex items-center gap-3">
                       {/* HUMAN button */}
                       <button
                         onClick={() => submitVote('human')}
                         disabled={!!showResult}
                         className="flex-1 group relative py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all duration-200 disabled:opacity-40
-                          bg-neon-green/10 text-neon-green border border-neon-green/30
-                          hover:bg-neon-green/20 hover:border-neon-green/50 active:scale-[0.97]"
-                        style={{ boxShadow: '0 0 15px rgba(57,255,20,0.1)' }}
+                          bg-positive-muted text-positive border border-[rgba(34,197,94,0.12)]
+                          hover:bg-positive-muted/80 hover:border-positive/50 active:scale-[0.97]"
                       >
                         <span className="flex items-center justify-center gap-2">
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -693,7 +696,7 @@ export default function AiOrNotPanel() {
                       <button
                         onClick={skipVideo}
                         disabled={!!showResult}
-                        className="w-12 h-12 rounded-xl bg-bg-tertiary border border-border-subtle text-text-muted
+                        className="w-12 h-12 rounded-xl bg-bg-raised border border-border-subtle text-text-muted
                           hover:text-text-primary hover:bg-bg-elevated transition-all disabled:opacity-40 flex items-center justify-center"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -706,9 +709,8 @@ export default function AiOrNotPanel() {
                         onClick={() => submitVote('ai')}
                         disabled={!!showResult}
                         className="flex-1 group relative py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all duration-200 disabled:opacity-40
-                          bg-neon-purple/10 text-neon-purple border border-neon-purple/30
-                          hover:bg-neon-purple/20 hover:border-neon-purple/50 active:scale-[0.97]"
-                        style={{ boxShadow: '0 0 15px rgba(179,71,217,0.1)' }}
+                          bg-accent-muted text-accent-text border border-[rgba(59,130,246,0.15)]
+                          hover:bg-accent-muted/80 hover:border-accent/50 active:scale-[0.97]"
                       >
                         <span className="flex items-center justify-center gap-2">
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -722,16 +724,16 @@ export default function AiOrNotPanel() {
                     {/* Keyboard hints */}
                     <div className="hidden lg:flex items-center justify-center gap-4 mt-3 text-[10px] text-text-muted">
                       <span className="flex items-center gap-1">
-                        <kbd className="px-1.5 py-0.5 bg-bg-tertiary rounded font-mono border border-border-subtle">←</kbd> Human
+                        <kbd className="px-1.5 py-0.5 bg-bg-raised rounded font-mono border border-border-subtle">←</kbd> Human
                       </span>
                       <span className="flex items-center gap-1">
-                        <kbd className="px-1.5 py-0.5 bg-bg-tertiary rounded font-mono border border-border-subtle">↓</kbd> Skip
+                        <kbd className="px-1.5 py-0.5 bg-bg-raised rounded font-mono border border-border-subtle">↓</kbd> Skip
                       </span>
                       <span className="flex items-center gap-1">
-                        <kbd className="px-1.5 py-0.5 bg-bg-tertiary rounded font-mono border border-border-subtle">→</kbd> AI
+                        <kbd className="px-1.5 py-0.5 bg-bg-raised rounded font-mono border border-border-subtle">→</kbd> AI
                       </span>
                       <span className="flex items-center gap-1">
-                        <kbd className="px-1.5 py-0.5 bg-bg-tertiary rounded font-mono border border-border-subtle">Esc</kbd> Close
+                        <kbd className="px-1.5 py-0.5 bg-bg-raised rounded font-mono border border-border-subtle">Esc</kbd> Close
                       </span>
                     </div>
                   </div>

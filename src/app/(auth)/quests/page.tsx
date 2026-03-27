@@ -230,8 +230,8 @@ export default function QuestsPage() {
                     disabled={busyRole || season.status !== 'live'}
                     className={`w-full text-left rounded-lg border px-3 py-2 transition ${
                       active
-                        ? 'border-neon-cyan/50 bg-neon-cyan/10 text-neon-cyan'
-                        : 'border-border-subtle bg-bg-tertiary text-text-secondary'
+                        ? 'border-[rgba(59,130,246,0.15)] bg-accent-muted text-accent-text'
+                        : 'border-border-subtle bg-bg-raised text-text-secondary'
                     }`}
                   >
                     <div className="text-sm font-medium">{role.title}</div>
@@ -245,7 +245,7 @@ export default function QuestsPage() {
           <NeonCard hover={false} className="p-5">
             <h3 className="text-base font-semibold text-text-primary mb-3">Season Preferences</h3>
             <div className="space-y-3 text-sm">
-              <div className="rounded-lg bg-bg-tertiary border border-border-subtle p-3">
+              <div className="rounded-lg bg-bg-raised border border-border-subtle p-3">
                 <div className="text-text-primary">Current Role</div>
                 <div className="text-text-secondary mt-1">{memberState?.role_key || 'No role selected yet'}</div>
               </div>
@@ -253,7 +253,7 @@ export default function QuestsPage() {
                 type="button"
                 onClick={() => handleOptOutToggle(!(memberState?.opt_out || false))}
                 disabled={busyOptOut || season.status !== 'live'}
-                className="rounded-lg border border-neon-purple/40 bg-neon-purple/10 px-3 py-2 text-neon-purple text-xs"
+                className="rounded-lg border border-[rgba(59,130,246,0.15)] bg-accent-muted px-3 py-2 text-accent-text text-xs"
               >
                 {memberState?.opt_out ? 'Disable calm mode (opt back in)' : 'Enable calm mode (opt out)'}
               </button>
@@ -285,7 +285,7 @@ export default function QuestsPage() {
                 <NeonCard className="p-5 h-full flex flex-col" hover={false}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm font-semibold text-text-primary">{quest.title}</div>
-                    <div className="text-xs font-mono text-neon-green">+{quest.points_reward} pts</div>
+                    <div className="text-xs font-mono text-positive">+{quest.points_reward} pts</div>
                   </div>
                   <div className="text-xs text-text-muted mb-3">
                     {quest.role_key ? `Role: ${quest.role_key}` : 'Role-agnostic quest'}
@@ -307,7 +307,7 @@ export default function QuestsPage() {
                           },
                         }))
                       }
-                      className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-xs text-text-primary"
+                      className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-xs text-text-primary"
                     >
                       {Object.entries(evidenceTypeLabels).map(([value, label]) => (
                         <option key={value} value={value}>
@@ -328,14 +328,14 @@ export default function QuestsPage() {
                         }))
                       }
                       placeholder="Evidence ID (optional for No Evidence)"
-                      className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-xs text-text-primary"
+                      className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-xs text-text-primary"
                     />
 
                     <button
                       type="button"
                       onClick={() => handleQuestSubmit(quest.id)}
                       disabled={!quest.can_submit || questSubmittingId === quest.id}
-                      className="w-full rounded-lg bg-neon-cyan/10 border border-neon-cyan/40 px-3 py-2 text-xs text-neon-cyan disabled:opacity-50"
+                      className="w-full rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] px-3 py-2 text-xs text-accent-text disabled:opacity-50"
                     >
                       {questSubmittingId === quest.id
                         ? 'Submitting...'

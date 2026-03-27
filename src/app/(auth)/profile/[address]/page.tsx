@@ -137,7 +137,7 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <NeonCard hover={false} className="p-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          <div className="h-20 w-20 rounded-2xl bg-bg-tertiary border-2 border-neon-cyan/30 flex items-center justify-center text-2xl font-mono font-bold gradient-text">
+          <div className="h-20 w-20 rounded-2xl bg-bg-raised border-2 border-[rgba(59,130,246,0.15)] flex items-center justify-center text-2xl font-mono font-bold text-accent-text">
             {displayName.slice(0, 2)}
           </div>
 
@@ -145,13 +145,13 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-bold text-text-primary mb-1">{displayName}</h2>
             <div className="text-sm text-text-muted font-mono mb-3">{profile.wallet_address}</div>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon-purple/10 border border-neon-purple/30">
-                <span className="text-xs font-mono text-neon-purple font-bold">Lv.{levelInfo.level}</span>
-                <span className="text-xs text-neon-purple/70">{levelInfo.name}</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-muted border border-[rgba(59,130,246,0.15)]">
+                <span className="text-xs font-mono text-accent-text font-bold">Lv.{levelInfo.level}</span>
+                <span className="text-xs text-accent-text/70">{levelInfo.name}</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon-orange/10 border border-neon-orange/30">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-caution-muted border border-[rgba(234,179,8,0.12)]">
                 <span>??</span>
-                <span className="text-xs font-mono text-neon-orange font-bold">
+                <span className="text-xs font-mono text-caution font-bold">
                   {profile.user.current_streak} day streak
                 </span>
               </div>
@@ -167,12 +167,12 @@ export default function ProfilePage() {
               {profile.user.total_xp} XP
             </span>
           </div>
-          <div className="h-2 rounded-full bg-bg-tertiary">
+          <div className="h-2 rounded-full bg-bg-raised">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.max(levelInfo.progress * 100, 2)}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
-              className="h-full rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple"
+              className="h-full rounded-full bg-accent"
             />
           </div>
         </div>
@@ -180,11 +180,11 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
-          { label: 'Submissions', value: profile.stats.total_submissions, color: 'text-neon-cyan' },
-          { label: 'Approved', value: profile.stats.approved_submissions, color: 'text-neon-green' },
-          { label: 'Total Points', value: profile.stats.total_points, color: 'text-neon-cyan' },
-          { label: 'Avg Score', value: profile.stats.avg_score, color: 'text-neon-purple' },
-          { label: 'Best Streak', value: `${profile.user.longest_streak}d`, color: 'text-neon-orange' },
+          { label: 'Submissions', value: profile.stats.total_submissions, color: 'text-accent-text' },
+          { label: 'Approved', value: profile.stats.approved_submissions, color: 'text-positive' },
+          { label: 'Total Points', value: profile.stats.total_points, color: 'text-accent-text' },
+          { label: 'Avg Score', value: profile.stats.avg_score, color: 'text-accent-text' },
+          { label: 'Best Streak', value: `${profile.user.longest_streak}d`, color: 'text-caution' },
         ].map((stat) => (
           <NeonCard key={stat.label} hover={false} className="p-4 text-center">
             <div className={`text-xl font-mono font-bold ${stat.color}`}>{stat.value}</div>
@@ -204,7 +204,7 @@ export default function ProfilePage() {
             {profile.contributions.map((contribution) => (
               <div
                 key={contribution.id}
-                className="rounded-lg border border-border-subtle bg-bg-tertiary/40 p-3"
+                className="rounded-lg border border-border-subtle bg-bg-raised/40 p-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
@@ -213,14 +213,14 @@ export default function ProfilePage() {
                       {contributionTypeLabel[contribution.type]} · {new Date(contribution.created_at).toLocaleDateString()} · {contribution.status}
                     </div>
                   </div>
-                  <div className="text-sm font-mono font-bold text-neon-cyan">{contribution.points_awarded} pts</div>
+                  <div className="text-sm font-mono font-bold text-accent-text">{contribution.points_awarded} pts</div>
                 </div>
                 {contribution.url ? (
                   <a
                     href={contribution.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-neon-cyan underline mt-2 inline-block"
+                    className="text-xs text-accent-text underline mt-2 inline-block"
                   >
                     View Link
                   </a>
@@ -240,12 +240,12 @@ export default function ProfilePage() {
         ) : (
           <div className="space-y-2">
             {profile.points_history.slice(0, 20).map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between rounded-lg border border-border-subtle bg-bg-tertiary/40 px-3 py-2">
+              <div key={entry.id} className="flex items-center justify-between rounded-lg border border-border-subtle bg-bg-raised/40 px-3 py-2">
                 <div>
                   <div className="text-sm text-text-primary">{formatEntryType(entry.entry_type)}</div>
                   <div className="text-xs text-text-muted">{new Date(entry.created_at).toLocaleString()}</div>
                 </div>
-                <div className={`font-mono font-bold ${entry.points_delta >= 0 ? 'text-neon-green' : 'text-red-400'}`}>
+                <div className={`font-mono font-bold ${entry.points_delta >= 0 ? 'text-positive' : 'text-red-400'}`}>
                   {entry.points_delta >= 0 ? '+' : ''}{entry.points_delta}
                 </div>
               </div>
@@ -266,8 +266,8 @@ export default function ProfilePage() {
                 key={badge.id}
                 className={`text-center p-3 rounded-lg border transition-all ${
                   earned
-                    ? 'bg-neon-cyan/5 border-neon-cyan/20'
-                    : 'bg-bg-tertiary/50 border-border-subtle opacity-40'
+                    ? 'bg-accent-muted border-[rgba(59,130,246,0.15)]'
+                    : 'bg-bg-raised/50 border-border-subtle opacity-40'
                 }`}
               >
                 <div className="text-2xl mb-1">{badge.icon}</div>

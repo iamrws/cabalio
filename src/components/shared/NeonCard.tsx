@@ -6,6 +6,7 @@ import { KeyboardEvent } from 'react';
 interface NeonCardProps {
   children: React.ReactNode;
   className?: string;
+  /** @deprecated No longer renders glow effects. Kept for backwards compatibility. */
   glowColor?: 'cyan' | 'purple' | 'green' | 'orange' | 'gold';
   variant?: 'default' | 'elevated' | 'dark' | 'accent';
   accent?: string;
@@ -14,10 +15,10 @@ interface NeonCardProps {
 }
 
 const variantStyles = {
-  default: 'bg-white/80 border border-stone-200/60 shadow-[0_4px_20px_rgba(28,25,23,0.06)]',
-  elevated: 'bg-white border border-stone-200/80 shadow-[0_8px_30px_rgba(28,25,23,0.1)]',
-  dark: 'bg-[#1c1917] border border-stone-700/40 text-stone-100 shadow-[0_8px_30px_rgba(28,25,23,0.2)]',
-  accent: 'bg-white/80 border border-stone-200/60 shadow-[0_4px_20px_rgba(28,25,23,0.06)]',
+  default: 'bg-bg-surface border border-border-default shadow-[0_4px_12px_rgba(0,0,0,0.3)]',
+  elevated: 'bg-bg-surface border border-border-strong shadow-[0_8px_24px_rgba(0,0,0,0.4)]',
+  dark: 'bg-bg-base border border-border-subtle text-text-primary shadow-[0_8px_24px_rgba(0,0,0,0.4)]',
+  accent: 'bg-bg-surface border border-border-default shadow-[0_4px_12px_rgba(0,0,0,0.3)]',
 };
 
 export default function NeonCard({
@@ -47,8 +48,8 @@ export default function NeonCard({
       tabIndex={isInteractive ? 0 : undefined}
       className={`
         rounded-2xl ${variantStyles[variant]}
-        ${hover ? 'transition-all duration-200 hover:shadow-[0_8px_30px_rgba(28,25,23,0.1)]' : ''}
-        ${isInteractive ? 'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]' : ''}
+        ${hover ? 'transition-all duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)]' : ''}
+        ${isInteractive ? 'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent' : ''}
         ${className}
       `}
       style={accent ? { borderLeftWidth: '3px', borderLeftColor: accent } : undefined}

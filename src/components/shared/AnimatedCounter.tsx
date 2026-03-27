@@ -27,6 +27,7 @@ export default function AnimatedCounter({
   useEffect(() => {
     if (!isInView) return;
 
+    let rafId: number;
     const startTime = Date.now();
     const startValue = 0;
 
@@ -37,11 +38,12 @@ export default function AnimatedCounter({
       setDisplayValue(startValue + (value - startValue) * eased);
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        rafId = requestAnimationFrame(animate);
       }
     };
 
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, [isInView, value, duration]);
 
   return (
@@ -52,7 +54,7 @@ export default function AnimatedCounter({
       role="status"
       aria-live="polite"
       aria-label={`${prefix}${value.toFixed(decimals)}${suffix}`}
-      className={`font-mono tabular-nums text-[#0f766e] ${className}`}
+      className={`font-mono tabular-nums text-accent-text ${className}`}
     >
       {prefix}
       {displayValue.toFixed(decimals)}

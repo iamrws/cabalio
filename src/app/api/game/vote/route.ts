@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
   const session = await getSessionFromRequest(request);
   if (!session) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
   }
 
   if (isVoteRateLimited(session.walletAddress)) {

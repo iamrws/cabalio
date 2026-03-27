@@ -28,17 +28,14 @@ export const STREAK_GRACE_DAYS = 1;
 export const JITO_CABAL_COLLECTION_ADDRESS =
   process.env.NEXT_PUBLIC_JITO_CABAL_COLLECTION_ADDRESS || '';
 
-// API endpoints
-export const HELIUS_RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=';
-
 // Weekly snapshot day (0 = Sunday)
 export const SNAPSHOT_DAY = 0;
 
 // Tier colors for leaderboard
 export const TIER_COLORS = {
-  elite: { border: '#ffd700', glow: '0 0 20px rgba(255, 215, 0, 0.3)', label: 'Cabal Elite' },
-  member: { border: '#00f0ff', glow: '0 0 20px rgba(0, 240, 255, 0.3)', label: 'Cabal Member' },
-  initiate: { border: '#39ff14', glow: '0 0 20px rgba(57, 255, 20, 0.3)', label: 'Cabal Initiate' },
+  elite: { color: '#eab308', label: 'Cabal Elite' },
+  member: { color: '#22c55e', label: 'Cabal Member' },
+  initiate: { color: '#a1a1aa', label: 'Cabal Initiate' },
 } as const;
 
 // Navigation items for sidebar

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,6 +62,10 @@ export async function POST(request: NextRequest) {
   }
   if (!session.isHolder) {
     return NextResponse.json({ error: 'Holder verification required' }, { status: 403 });
+  }
+
+  if (!validateCsrfOrigin(request)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
   }
 
   if (isClaimRateLimited(session.walletAddress)) {

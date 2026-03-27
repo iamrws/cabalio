@@ -61,10 +61,12 @@ interface PointsFeedItem {
 }
 
 const typeIcons: Record<string, { label: string; color: string }> = {
-  x_post: { label: 'Jito Content', color: 'text-neon-cyan' },
-  blog: { label: 'Blog', color: 'text-neon-purple' },
-  art: { label: 'Art', color: 'text-neon-orange' },
+  x_post: { label: 'Jito Content', color: 'text-accent-text' },
+  blog: { label: 'Blog', color: 'text-accent-text' },
+  art: { label: 'Art', color: 'text-caution' },
 };
+
+const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary' };
 
 export default function DashboardPage() {
   const [communitySubmissions, setCommunitySubmissions] = useState<SubmissionRow[]>([]);
@@ -85,44 +87,47 @@ export default function DashboardPage() {
       setLoading(true);
       setError('');
       try {
-        const [communityResponse, mineResponse, summaryResponse, commandCenterResponse, pointsFeedResponse] =
-          await Promise.all([
-            fetch('/api/submissions?limit=15', { cache: 'no-store' }),
-            fetch('/api/submissions?scope=mine&limit=50', { cache: 'no-store' }),
-            fetch('/api/me/summary', { cache: 'no-store' }),
-            fetch('/api/me/command-center', { cache: 'no-store' }),
-            fetch('/api/me/points-feed?limit=8', { cache: 'no-store' }),
-          ]);
+        const results = await Promise.allSettled([
+          fetch('/api/submissions?limit=15', { cache: 'no-store' }).then(async (r) => {
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Failed to load community feed');
+            return d;
+          }),
+          fetch('/api/submissions?scope=mine&limit=50', { cache: 'no-store' }).then(async (r) => {
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Failed to load your submissions');
+            return d;
+          }),
+          fetch('/api/me/summary', { cache: 'no-store' }).then(async (r) => {
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Failed to load your points summary');
+            return d;
+          }),
+          fetch('/api/me/command-center', { cache: 'no-store' }).then(async (r) => {
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Failed to load command center');
+            return d;
+          }),
+          fetch('/api/me/points-feed?limit=8', { cache: 'no-store' }).then(async (r) => {
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Failed to load points feed');
+            return d;
+          }),
+        ]);
 
-        const communityData = await communityResponse.json();
-        const mineData = await mineResponse.json();
-        const summaryData = await summaryResponse.json();
-        const commandCenterData = await commandCenterResponse.json();
-        const pointsFeedData = await pointsFeedResponse.json();
-
-        if (!communityResponse.ok) {
-          throw new Error(communityData.error || 'Failed to load community feed');
-        }
-        if (!mineResponse.ok) {
-          throw new Error(mineData.error || 'Failed to load your submissions');
-        }
-        if (!summaryResponse.ok) {
-          throw new Error(summaryData.error || 'Failed to load your points summary');
-        }
-        if (!commandCenterResponse.ok) {
-          throw new Error(commandCenterData.error || 'Failed to load command center');
-        }
-        if (!pointsFeedResponse.ok) {
-          throw new Error(pointsFeedData.error || 'Failed to load points feed');
-        }
+        const communityData = results[0].status === 'fulfilled' ? results[0].value : null;
+        const mineData = results[1].status === 'fulfilled' ? results[1].value : null;
+        const summaryData = results[2].status === 'fulfilled' ? results[2].value : null;
+        const commandCenterData = results[3].status === 'fulfilled' ? results[3].value : null;
+        const pointsFeedData = results[4].status === 'fulfilled' ? results[4].value : null;
 
         if (!cancelled) {
-          setCommunitySubmissions(communityData.submissions || []);
-          setMySubmissions(mineData.submissions || []);
-          setMyWeeklyPoints(summaryData.stats?.weekly_points || 0);
-          setMyTotalPoints(summaryData.stats?.total_points || 0);
+          setCommunitySubmissions(communityData?.submissions || []);
+          setMySubmissions(mineData?.submissions || []);
+          setMyWeeklyPoints(summaryData?.stats?.weekly_points || 0);
+          setMyTotalPoints(summaryData?.stats?.total_points || 0);
           setCommandCenter(commandCenterData || null);
-          setPointsFeed(pointsFeedData.items || []);
+          setPointsFeed(pointsFeedData?.items || []);
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -179,7 +184,7 @@ export default function DashboardPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="gradient-bg px-6 py-3 rounded-xl font-semibold text-white shadow-lg shadow-neon-cyan/20 hover:shadow-neon-cyan/40 transition-shadow"
+            className="bg-accent px-6 py-3 rounded-[var(--radius-xs)] font-semibold text-white transition-colors hover:bg-accent-dim"
           >
             + Submit Content
           </motion.button>
@@ -192,11 +197,11 @@ export default function DashboardPage() {
           <div className="text-xs text-text-muted">Your Submissions</div>
         </NeonCard>
         <NeonCard hover={false} className="p-4 text-center">
-          <div className="text-lg font-mono font-bold text-neon-green">{approvedCount}</div>
+          <div className="text-lg font-mono font-bold text-positive">{approvedCount}</div>
           <div className="text-xs text-text-muted">Approved</div>
         </NeonCard>
         <NeonCard hover={false} className="p-4 text-center">
-          <div className="text-lg font-mono font-bold text-neon-orange">{pendingCount}</div>
+          <div className="text-lg font-mono font-bold text-caution">{pendingCount}</div>
           <div className="text-xs text-text-muted">In Review</div>
         </NeonCard>
         <NeonCard hover={false} className="p-4 text-center">
@@ -204,17 +209,17 @@ export default function DashboardPage() {
           <div className="text-xs text-text-muted mt-2">Weekly Points</div>
         </NeonCard>
         <NeonCard hover={false} className="p-4 text-center">
-          <div className="text-lg font-mono font-bold text-neon-cyan">{myTotalPoints}</div>
+          <div className="text-lg font-mono font-bold text-accent-text">{myTotalPoints}</div>
           <div className="text-xs text-text-muted mt-2">Total Points</div>
         </NeonCard>
       </div>
 
       {commandCenter ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <NeonCard glowColor="cyan" hover={false} className="p-5 space-y-4">
+          <NeonCard hover={false} className="p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold text-text-primary">Command Center</h3>
-              <span className="text-xs font-mono text-neon-cyan">{commandCenter.tier.current}</span>
+              <span className="text-xs font-mono text-accent-text">{commandCenter.tier.current}</span>
             </div>
 
             <div>
@@ -222,9 +227,9 @@ export default function DashboardPage() {
                 <span>Tier Progress</span>
                 <span>{tierProgressPercent}%</span>
               </div>
-              <div className="h-2 rounded-full bg-bg-tertiary">
+              <div className="h-2 rounded-full bg-bg-raised">
                 <div
-                  className="h-full rounded-full bg-neon-cyan transition-all duration-500"
+                  className="h-full rounded-full bg-accent transition-all duration-500"
                   style={{ width: `${tierProgressPercent}%` }}
                 />
               </div>
@@ -236,7 +241,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-lg bg-bg-tertiary border border-border-subtle p-3">
+              <div className="rounded-lg bg-bg-raised border border-border-subtle p-3">
                 <div className="text-text-muted">Streak</div>
                 <div className="text-text-primary font-semibold mt-1">
                   {commandCenter.streak.current_days} days
@@ -245,7 +250,7 @@ export default function DashboardPage() {
                   Shields: {commandCenter.streak.shields_available}
                 </div>
               </div>
-              <div className="rounded-lg bg-bg-tertiary border border-border-subtle p-3">
+              <div className="rounded-lg bg-bg-raised border border-border-subtle p-3">
                 <div className="text-text-muted">Bracket</div>
                 <div className="text-text-primary font-semibold mt-1">
                   #{commandCenter.bracket.rank} / {commandCenter.bracket.members}
@@ -254,8 +259,8 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-lg bg-neon-purple/10 border border-neon-purple/30 p-3">
-              <div className="text-xs text-neon-purple font-mono uppercase tracking-wide">Next Best Action</div>
+            <div className="rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] p-3">
+              <div className="text-xs text-accent-text font-mono uppercase tracking-wide">Next Best Action</div>
               <div className="text-sm text-text-primary font-medium mt-1">
                 {commandCenter.next_best_action.title}
               </div>
@@ -263,27 +268,27 @@ export default function DashboardPage() {
                 {commandCenter.next_best_action.reason}
               </div>
               <div className="flex items-center justify-between mt-3">
-                <span className="text-xs text-neon-green font-mono">
+                <span className="text-xs text-positive font-mono">
                   +{commandCenter.next_best_action.estimated_points} est.
                 </span>
-                <Link href="/submit" className="text-xs text-neon-cyan hover:underline">
+                <Link href="/submit" className="text-xs text-accent-text hover:underline">
                   Do it now
                 </Link>
               </div>
             </div>
           </NeonCard>
 
-          <NeonCard glowColor="purple" hover={false} className="p-5">
+          <NeonCard hover={false} className="p-5">
             <h3 className="text-base font-semibold text-text-primary mb-3">Why You Earned Points</h3>
             <div className="space-y-3 max-h-72 overflow-auto pr-1">
               {pointsFeed.length === 0 ? (
                 <div className="text-sm text-text-muted">No point events yet.</div>
               ) : (
                 pointsFeed.map((item) => (
-                  <div key={item.ledger_id} className="rounded-lg bg-bg-tertiary border border-border-subtle p-3">
+                  <div key={item.ledger_id} className="rounded-lg bg-bg-raised border border-border-subtle p-3">
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-text-primary font-medium">{item.reason_label}</div>
-                      <div className="text-xs font-mono text-neon-cyan">
+                      <div className="text-xs font-mono text-accent-text">
                         {item.points >= 0 ? '+' : ''}
                         {item.points}
                       </div>
@@ -326,7 +331,7 @@ export default function DashboardPage() {
                 <div>
                   <div className="text-sm font-medium text-text-primary">{submission.title}</div>
                   <div className="text-xs text-text-muted">
-                    {typeIcons[submission.type].label} | {new Date(submission.created_at).toLocaleDateString()} |{' '}
+                    {(typeIcons[submission.type] || fallbackTypeIcon).label} | {new Date(submission.created_at).toLocaleDateString()} |{' '}
                     {submission.normalized_score
                       ? `Score ${Math.round(submission.normalized_score)}`
                       : submission.points_awarded > 0
@@ -335,7 +340,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-mono font-bold text-neon-cyan">{submission.points_awarded} pts</div>
+                  <div className="text-sm font-mono font-bold text-accent-text">{submission.points_awarded} pts</div>
                 </div>
               </div>
             </NeonCard>
@@ -366,7 +371,7 @@ export default function DashboardPage() {
                       {submission.users?.display_name || submission.wallet_address}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span className={typeIcons[submission.type].color}>{typeIcons[submission.type].label}</span>
+                      <span className={(typeIcons[submission.type] || fallbackTypeIcon).color}>{(typeIcons[submission.type] || fallbackTypeIcon).label}</span>
                       <span>|</span>
                       <span>{new Date(submission.created_at).toLocaleDateString()}</span>
                     </div>

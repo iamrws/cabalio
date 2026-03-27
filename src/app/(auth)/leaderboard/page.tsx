@@ -4,8 +4,13 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
-import { TIER_COLORS } from '@/lib/constants';
 import type { LeaderboardEntry } from '@/lib/types';
+
+const TIER_CONFIG = {
+  elite: { color: 'var(--tier-elite)', label: 'Cabal Elite' },
+  member: { color: 'var(--tier-member)', label: 'Cabal Member' },
+  initiate: { color: 'var(--tier-initiate)', label: 'Cabal Initiate' },
+} as const;
 
 type TimeRange = 'week' | 'alltime';
 
@@ -66,7 +71,7 @@ export default function LeaderboardPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex gap-2 p-1 bg-bg-secondary rounded-xl border border-border-subtle">
+        <div className="flex gap-2 p-1 bg-bg-surface rounded-xl border border-border-subtle">
           {[
             { id: 'week' as const, label: 'This Week' },
             { id: 'alltime' as const, label: 'All Time' },
@@ -76,7 +81,7 @@ export default function LeaderboardPage() {
               onClick={() => setTimeRange(tab.id)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 timeRange === tab.id
-                  ? 'bg-bg-tertiary text-neon-cyan'
+                  ? 'bg-bg-raised text-accent-text'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -116,23 +121,22 @@ export default function LeaderboardPage() {
       {(['elite', 'member', 'initiate'] as const).map((tier) => {
         const tierEntries = groupedByTier[tier];
         if (tierEntries.length === 0) return null;
-        const tierConfig = TIER_COLORS[tier];
+        const tierConfig = TIER_CONFIG[tier];
 
         return (
           <div key={tier}>
             <div className="flex items-center gap-3 mb-3">
               <div
                 className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: tierConfig.border, boxShadow: tierConfig.glow }}
+                style={{ backgroundColor: tierConfig.color }}
               />
-              <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: tierConfig.border }}>
+              <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: tierConfig.color }}>
                 {tierConfig.label}
               </h3>
             </div>
 
             <NeonCard
               hover={false}
-              glowColor={tier === 'elite' ? 'gold' : tier === 'member' ? 'cyan' : 'green'}
               className="overflow-hidden"
             >
               <table className="w-full">
@@ -153,7 +157,7 @@ export default function LeaderboardPage() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="border-b border-border-subtle/50 last:border-0 hover:bg-bg-tertiary/50 transition-colors"
+                      className="border-b border-border-subtle/50 last:border-0 hover:bg-bg-raised/50 transition-colors"
                     >
                       <td className="px-5 py-3">
                         <span className="font-mono text-sm font-bold text-text-primary">{entry.rank}</span>
@@ -161,7 +165,7 @@ export default function LeaderboardPage() {
                       <td className="px-5 py-3">
                         <Link
                           href={`/profile/${entry.wallet_address}`}
-                          className="text-sm font-medium text-text-primary hover:text-neon-cyan"
+                          className="text-sm font-medium text-text-primary hover:text-accent-text"
                         >
                           {entry.display_name || entry.wallet_address}
                         </Link>
@@ -174,10 +178,10 @@ export default function LeaderboardPage() {
                         <span className="text-sm font-mono text-text-secondary">{entry.submission_count}</span>
                       </td>
                       <td className="text-right px-5 py-3 hidden md:table-cell">
-                        <span className="text-sm font-mono font-bold text-neon-green">{entry.best_score}</span>
+                        <span className="text-sm font-mono font-bold text-positive">{entry.best_score}</span>
                       </td>
                       <td className="text-right px-5 py-3">
-                        <span className="font-mono font-bold text-neon-cyan">{entry.total_points}</span>
+                        <span className="font-mono font-bold text-accent-text">{entry.total_points}</span>
                       </td>
                     </motion.tr>
                   ))}

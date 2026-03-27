@@ -299,7 +299,7 @@ export default function CabalCorePage() {
   const statusCount = useMemo(() => submissions.length, [submissions]);
 
   return (
-    <main className="min-h-screen bg-bg-primary p-6">
+    <main className="min-h-screen bg-bg-base p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -315,7 +315,7 @@ export default function CabalCorePage() {
             </Link>
             <Link
               href="/leaderboard"
-              className="rounded-lg border border-neon-cyan/40 bg-neon-cyan/10 px-3 py-2 text-xs text-neon-cyan"
+              className="rounded-lg border border-[rgba(59,130,246,0.15)] bg-accent-muted px-3 py-2 text-xs text-accent-text"
             >
               View Leaderboard
             </Link>
@@ -330,26 +330,26 @@ export default function CabalCorePage() {
               onChange={(event) => setWalletAddressInput(event.target.value)}
               placeholder="Wallet address"
               required
-              className="md:col-span-2 rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="md:col-span-2 rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             />
             <input
               value={pointsDeltaInput}
               onChange={(event) => setPointsDeltaInput(event.target.value)}
               placeholder="Points (+/-)"
               required
-              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             />
             <input
               value={noteInput}
               onChange={(event) => setNoteInput(event.target.value)}
               placeholder="Reason / note"
               required
-              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             />
             <button
               type="submit"
               disabled={adjusting}
-              className="md:col-span-4 rounded-lg bg-neon-purple/15 border border-neon-purple/40 px-3 py-2 text-sm text-neon-purple font-medium disabled:opacity-60"
+              className="md:col-span-4 rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] px-3 py-2 text-sm text-accent-text font-medium disabled:opacity-60"
             >
               {adjusting ? 'Applying points...' : 'Apply Manual Adjustment'}
             </button>
@@ -366,19 +366,19 @@ export default function CabalCorePage() {
                 onChange={(event) => setSeasonName(event.target.value)}
                 placeholder="Season name"
                 required
-                className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
               />
               <input
                 value={seasonTheme}
                 onChange={(event) => setSeasonTheme(event.target.value)}
                 placeholder="Theme"
                 required
-                className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
               />
               <select
                 value={seasonStatus}
                 onChange={(event) => setSeasonStatus(event.target.value as 'upcoming' | 'live' | 'ended')}
-                className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
               >
                 <option value="upcoming">upcoming</option>
                 <option value="live">live</option>
@@ -390,7 +390,7 @@ export default function CabalCorePage() {
                   type="datetime-local"
                   value={seasonStartsAt}
                   onChange={(event) => setSeasonStartsAt(event.target.value)}
-                  className="w-full mt-1 rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                  className="w-full mt-1 rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
                 />
               </label>
               <label className="text-xs text-text-muted block">
@@ -399,7 +399,7 @@ export default function CabalCorePage() {
                   type="datetime-local"
                   value={seasonEndsAt}
                   onChange={(event) => setSeasonEndsAt(event.target.value)}
-                  className="w-full mt-1 rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                  className="w-full mt-1 rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
                 />
               </label>
               <label className="text-xs text-text-muted block">
@@ -408,13 +408,13 @@ export default function CabalCorePage() {
                   type="datetime-local"
                   value={seasonRecapEndsAt}
                   onChange={(event) => setSeasonRecapEndsAt(event.target.value)}
-                  className="w-full mt-1 rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                  className="w-full mt-1 rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
                 />
               </label>
               <button
                 type="submit"
                 disabled={creatingSeason}
-                className="w-full rounded-lg bg-neon-cyan/15 border border-neon-cyan/40 px-3 py-2 text-sm text-neon-cyan disabled:opacity-60"
+                className="w-full rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] px-3 py-2 text-sm text-accent-text disabled:opacity-60"
               >
                 {creatingSeason ? 'Creating season...' : 'Create Season'}
               </button>
@@ -428,7 +428,7 @@ export default function CabalCorePage() {
               <select
                 value={signalSeasonId}
                 onChange={(event) => setSignalSeasonId(event.target.value)}
-                className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
               >
                 <option value="">Select season</option>
                 {seasons.map((seasonRow) => (
@@ -440,7 +440,7 @@ export default function CabalCorePage() {
               <select
                 value={signalActive ? 'open' : 'close'}
                 onChange={(event) => setSignalActive(event.target.value === 'open')}
-                className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
               >
                 <option value="open">Open signal storm</option>
                 <option value="close">Close signal storm</option>
@@ -451,7 +451,7 @@ export default function CabalCorePage() {
                   type="datetime-local"
                   value={signalStartsAt}
                   onChange={(event) => setSignalStartsAt(event.target.value)}
-                  className="w-full mt-1 rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                  className="w-full mt-1 rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
                   disabled={!signalActive}
                 />
               </label>
@@ -461,7 +461,7 @@ export default function CabalCorePage() {
                   type="datetime-local"
                   value={signalEndsAt}
                   onChange={(event) => setSignalEndsAt(event.target.value)}
-                  className="w-full mt-1 rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                  className="w-full mt-1 rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
                   disabled={!signalActive}
                 />
               </label>
@@ -470,18 +470,18 @@ export default function CabalCorePage() {
                 onChange={(event) => setSignalMultiplier(event.target.value)}
                 placeholder="Multiplier (e.g. 2)"
                 disabled={!signalActive}
-                className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
               />
               <input
                 value={signalNote}
                 onChange={(event) => setSignalNote(event.target.value)}
                 placeholder="Optional note"
-                className="w-full rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+                className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
               />
               <button
                 type="submit"
                 disabled={signalBusy}
-                className="w-full rounded-lg bg-neon-orange/15 border border-neon-orange/40 px-3 py-2 text-sm text-neon-orange disabled:opacity-60"
+                className="w-full rounded-lg bg-caution-muted border border-[rgba(234,179,8,0.12)] px-3 py-2 text-sm text-caution disabled:opacity-60"
               >
                 {signalBusy ? 'Updating...' : 'Apply Signal Storm Action'}
               </button>
@@ -496,7 +496,7 @@ export default function CabalCorePage() {
             <select
               value={bossSeasonId}
               onChange={(event) => setBossSeasonId(event.target.value)}
-              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             >
               <option value="">Select season</option>
               {seasons.map((seasonRow) => (
@@ -509,36 +509,36 @@ export default function CabalCorePage() {
               value={bossMetricKey}
               onChange={(event) => setBossMetricKey(event.target.value)}
               placeholder="Metric key"
-              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             />
             <input
               value={bossIdempotency}
               onChange={(event) => setBossIdempotency(event.target.value)}
               placeholder="Idempotency key"
-              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             />
             <input
               value={bossDelta}
               onChange={(event) => setBossDelta(event.target.value)}
               placeholder="Delta value"
-              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             />
             <input
               value={bossCurrent}
               onChange={(event) => setBossCurrent(event.target.value)}
               placeholder="Current value (optional)"
-              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             />
             <input
               value={bossTarget}
               onChange={(event) => setBossTarget(event.target.value)}
               placeholder="Target value"
-              className="rounded-lg bg-bg-tertiary border border-border-subtle px-3 py-2 text-sm text-text-primary"
+              className="rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary"
             />
             <button
               type="submit"
               disabled={bossBusy}
-              className="md:col-span-3 rounded-lg bg-neon-green/15 border border-neon-green/40 px-3 py-2 text-sm text-neon-green disabled:opacity-60"
+              className="md:col-span-3 rounded-lg bg-positive-muted border border-[rgba(34,197,94,0.12)] px-3 py-2 text-sm text-positive disabled:opacity-60"
             >
               {bossBusy ? 'Updating boss progress...' : 'Apply Boss Progress Update'}
             </button>
@@ -554,8 +554,8 @@ export default function CabalCorePage() {
                 onClick={() => setStatusFilter(status)}
                 className={`rounded-full px-3 py-1 text-xs border ${
                   statusFilter === status
-                    ? 'bg-neon-cyan/15 border-neon-cyan/40 text-neon-cyan'
-                    : 'bg-bg-tertiary border-border-subtle text-text-secondary'
+                    ? 'bg-accent-muted border-[rgba(59,130,246,0.15)] text-accent-text'
+                    : 'bg-bg-raised border-border-subtle text-text-secondary'
                 }`}
               >
                 {status}
@@ -596,7 +596,7 @@ export default function CabalCorePage() {
                     {submission.type} | {new Date(submission.created_at).toLocaleString()}
                   </div>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-neon-cyan font-mono">
+                <div className="text-xs uppercase tracking-wider text-accent-text font-mono">
                   {submission.status}
                 </div>
               </div>
@@ -606,7 +606,7 @@ export default function CabalCorePage() {
                   href={submission.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-neon-cyan underline"
+                  className="text-xs text-accent-text underline"
                 >
                   {submission.url}
                 </a>
@@ -619,14 +619,14 @@ export default function CabalCorePage() {
                   <button
                     onClick={() => handleReview(submission.id, 'approve')}
                     disabled={processingId === submission.id}
-                    className="rounded-lg bg-neon-green/15 border border-neon-green/40 text-neon-green px-3 py-1.5 text-xs disabled:opacity-60"
+                    className="rounded-lg bg-positive-muted border border-[rgba(34,197,94,0.12)] text-positive px-3 py-1.5 text-xs disabled:opacity-60"
                   >
                     Approve + Score
                   </button>
                   <button
                     onClick={() => handleReview(submission.id, 'flag')}
                     disabled={processingId === submission.id}
-                    className="rounded-lg bg-neon-orange/15 border border-neon-orange/40 text-neon-orange px-3 py-1.5 text-xs disabled:opacity-60"
+                    className="rounded-lg bg-caution-muted border border-[rgba(234,179,8,0.12)] text-caution px-3 py-1.5 text-xs disabled:opacity-60"
                   >
                     Flag
                   </button>

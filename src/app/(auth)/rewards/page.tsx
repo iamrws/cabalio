@@ -116,10 +116,10 @@ export default function RewardsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <NeonCard glowColor="green" hover={false} className="p-8 text-center">
+      <NeonCard hover={false} className="p-8 text-center">
         <div className="text-sm text-text-muted uppercase tracking-wider mb-2">Claimable Rewards</div>
-        <div className="text-5xl font-mono font-bold text-neon-green mb-1">
-          <AnimatedCounter value={totalClaimable / 1e9} decimals={4} className="text-neon-green" />
+        <div className="text-5xl font-mono font-bold text-positive mb-1">
+          <AnimatedCounter value={totalClaimable / 1e9} decimals={4} className="text-positive" />
         </div>
         <div className="text-lg text-text-secondary mb-6">SOL</div>
 
@@ -130,7 +130,7 @@ export default function RewardsPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleClaim}
               disabled={claimLoading}
-              className="gradient-bg px-8 py-3 rounded-xl font-semibold text-white shadow-lg shadow-neon-cyan/20 hover:shadow-neon-cyan/40 transition-shadow disabled:opacity-50"
+              className="bg-accent px-8 py-3 rounded-xl font-semibold text-white transition-shadow disabled:opacity-50"
             >
               {claimLoading ? 'Processing...' : 'Claim Rewards'}
             </motion.button>
@@ -188,7 +188,7 @@ export default function RewardsPage() {
               <NeonCard hover={false} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg flex items-center justify-center text-lg bg-bg-tertiary">
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center text-lg bg-bg-raised">
                       {reward.status === 'claimable' ? '🎁' : reward.status === 'claimed' ? '✅' : '⏳'}
                     </div>
                     <div>
@@ -201,7 +201,7 @@ export default function RewardsPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-mono font-bold text-neon-cyan">
+                    <div className="font-mono font-bold text-accent-text">
                       {(reward.reward_amount_lamports / 1e9).toFixed(4)} SOL
                     </div>
                     <div className="text-xs text-text-muted">{reward.status}</div>

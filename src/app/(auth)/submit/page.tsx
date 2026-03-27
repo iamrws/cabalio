@@ -106,7 +106,7 @@ export default function SubmitPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex gap-2 p-1 bg-bg-secondary rounded-xl border border-border-subtle">
+      <div className="flex gap-2 p-1 bg-bg-surface rounded-xl border border-border-subtle">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -121,7 +121,7 @@ export default function SubmitPage() {
             }}
             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-bg-tertiary text-neon-cyan border border-neon-cyan/20'
+                ? 'bg-bg-raised text-accent-text border border-[rgba(59,130,246,0.15)]'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
@@ -132,8 +132,8 @@ export default function SubmitPage() {
       </div>
 
       {success ? (
-        <NeonCard glowColor="green" hover={false} className="p-4">
-          <div className="text-sm text-neon-green">{success}</div>
+        <NeonCard hover={false} className="p-4">
+          <div className="text-sm text-positive">{success}</div>
         </NeonCard>
       ) : null}
 
@@ -153,7 +153,7 @@ export default function SubmitPage() {
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Give your submission a clear title"
               required
-              className="w-full px-4 py-3 rounded-lg bg-bg-tertiary border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/20 transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
             />
           </div>
 
@@ -173,7 +173,7 @@ export default function SubmitPage() {
                     : 'https://example.com/portfolio'
               }
               required={activeTab !== 'art'}
-              className="w-full px-4 py-3 rounded-lg bg-bg-tertiary border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/20 transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
             />
           </div>
 
@@ -188,7 +188,7 @@ export default function SubmitPage() {
                   setUploadedImagePath('');
                 }}
                 required
-                className="w-full px-4 py-3 rounded-lg bg-bg-tertiary border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/20 transition-colors text-sm"
+                className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
               />
               <p className="mt-1.5 text-xs text-text-muted">
                 Max file size: {MAX_IMAGE_SIZE_MB}MB. Image is scanned for suspicious scam or malware payloads before storage.
@@ -199,7 +199,7 @@ export default function SubmitPage() {
                 </p>
               ) : null}
               {uploadedImagePath ? (
-                <p className="mt-1.5 text-xs text-neon-green">Uploaded to: {uploadedImagePath}</p>
+                <p className="mt-1.5 text-xs text-positive">Uploaded to: {uploadedImagePath}</p>
               ) : null}
             </div>
           ) : null}
@@ -214,7 +214,7 @@ export default function SubmitPage() {
               placeholder={placeholderByType[activeTab]}
               required
               rows={6}
-              className="w-full px-4 py-3 rounded-lg bg-bg-tertiary border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/20 transition-colors text-sm resize-none"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm resize-none"
             />
             <div className="mt-1 text-xs text-text-muted text-right">{contentText.length} characters</div>
           </div>
@@ -224,7 +224,7 @@ export default function SubmitPage() {
             whileTap={{ scale: 0.99 }}
             type="submit"
             disabled={isSubmitting}
-            className="w-full gradient-bg py-3.5 rounded-xl font-semibold text-white shadow-lg shadow-neon-cyan/20 hover:shadow-neon-cyan/40 transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-white hover:bg-accent-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploadingImage ? 'Scanning & Uploading Image...' : isSubmitting ? 'Submitting...' : 'Submit For Review'}
           </motion.button>
