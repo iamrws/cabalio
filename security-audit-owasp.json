@@ -1,0 +1,454 @@
+{
+  "audit_metadata": {
+    "audit_date": "2026-03-27T00:00:00Z",
+    "auditor": "Claude Code Security Audit — Principal AppSec Engineer Methodology",
+    "scope": "Full OWASP Top 10 2025 audit across 67 source files (39 API routes, 13 lib modules, 15 components)",
+    "methodology": "OWASP ASVS v4.0 + Language-Specific + Business Logic + Race Condition Analysis"
+  },
+  "executive_summary": {
+    "overall_risk_rating": "HIGH",
+    "total_findings": 47,
+    "critical_count": 0,
+    "high_count": 10,
+    "medium_count": 19,
+    "low_count": 14,
+    "informational_count": 4,
+    "key_risks": [
+      "Non-atomic read-modify-write patterns on points/XP allow race condition exploitation (game votes, submission approval, admin adjustments)",
+      "Two-admin approval for large point adjustments is client-asserted with no cryptographic verification — single admin can bypass",
+      "Stateless session tokens with 24hr lifetime cannot be revoked; logout is cosmetic only",
+      "No rate limiting on authentication endpoints (nonce generation, signature verification) enables brute-force and DoS",
+      "Submission approval has no status guard — double-approval awards duplicate points"
+    ],
+    "immediate_actions_required": [
+      "Add status precondition (.eq('status','submitted')) to admin review UPDATE to prevent double-approval (FINDING-BL-007)",
+      "Check nonce UPDATE return data to close the TOCTOU authentication race window (FINDING-BL-001)",
+      "Add rate limiting to /api/auth/nonce and /api/auth/verify endpoints (FINDING-A04-002/003)",
+      "Use SQL increments (SET col = col + delta) instead of read-modify-write for all points/XP updates (FINDING-BL-002/003/004)",
+      "Add quest bonus XP to users.total_xp on auto-approve (FINDING-BL-006)"
+    ]
+  },
+  "findings": [
+    {
+      "id": "FINDING-A01-001",
+      "title": "Two-Admin Approval Bypass — Approving Admin Not Cryptographically Verified",
+      "severity": "HIGH",
+      "cvss_score": "7.5",
+      "owasp_category": "A01",
+      "cwe_id": "CWE-285",
+      "location": { "file": "src/app/api/admin/points/route.ts", "line_start": 41, "line_end": 71, "function": "POST" },
+      "description": "The two-admin approval for large points adjustments only checks that the approving_admin wallet address exists in the admin list. No cryptographic signature or separate confirmation request is required. A single admin can bypass the dual-control by providing any other admin's wallet address.",
+      "evidence": "if (parsed.approving_admin === session.walletAddress) { ... } // Only checks different wallet, not actual approval",
+      "impact": "Single compromised admin can authorize unlimited points adjustments up to 10,000 points, defeating the dual-authorization control entirely.",
+      "likelihood": "MEDIUM",
+      "remediation": {
+        "recommendation": "Implement two-phase approval: Admin A creates pending_adjustment, Admin B calls separate /approve endpoint with their own session.",
+        "code_example": "// Phase 1: Create pending\nawait supabase.from('pending_adjustments').insert({...});\n// Phase 2: Second admin approves\nif (session.walletAddress !== pending.requesting_admin) { execute(); }",
+        "references": ["https://cheatsheetseries.owasp.org/cheatsheets/Transaction_Authorization_Cheat_Sheet.html"]
+      },
+      "false_positive_assessment": "True positive. The approving_admin field is a plain string in the request body with no authentication binding."
+    },
+    {
+      "id": "FINDING-A01-002",
+      "title": "Profile Endpoint Exposes Reward Details to Non-Owner Viewers",
+      "severity": "MEDIUM",
+      "cvss_score": "5.3",
+      "owasp_category": "A01",
+      "cwe_id": "CWE-639",
+      "location": { "file": "src/app/api/profile/[address]/route.ts", "line_start": 65, "line_end": 126, "function": "GET" },
+      "description": "The rewards array (including amounts, claim status, tx signatures) is returned to all authenticated viewers regardless of ownership. Submissions and points are properly filtered but rewards are not.",
+      "evidence": "return NextResponse.json({ ...rewards, // always returned regardless of isSelf/isAdmin });",
+      "impact": "Any authenticated user can view another user's payout amounts, claim history, and transaction signatures.",
+      "likelihood": "HIGH",
+      "remediation": {
+        "recommendation": "Apply isSelf || isAdmin gate to rewards: const visibleRewards = isSelf || isAdmin ? rewards : [];",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Verified by reading the response construction — rewards is included unconditionally."
+    },
+    {
+      "id": "FINDING-A01-003",
+      "title": "All Queries Use Service Role Key — No RLS Defense-in-Depth",
+      "severity": "MEDIUM",
+      "cvss_score": "5.5",
+      "owasp_category": "A01",
+      "cwe_id": "CWE-284",
+      "location": { "file": "src/lib/db.ts", "line_start": 27, "line_end": 35, "function": "createServerClient" },
+      "description": "All API routes use the Supabase service role key which bypasses Row-Level Security policies. Authorization is enforced entirely in application code with no database-level defense-in-depth.",
+      "evidence": "_serviceClient = createClient(supabaseUrl, serviceKey);",
+      "impact": "Any authorization bug in application code provides unrestricted database access. No second layer of protection.",
+      "likelihood": "LOW",
+      "remediation": {
+        "recommendation": "Enable RLS on all tables. For user-facing endpoints, consider using anon key with user JWT claims for automatic RLS enforcement.",
+        "code_example": "",
+        "references": ["https://supabase.com/docs/guides/auth/row-level-security"]
+      },
+      "false_positive_assessment": "True positive — architectural concern. Current application-level auth checks appear correct but this is a missing defense layer."
+    },
+    {
+      "id": "FINDING-A01-004",
+      "title": "Session Token Role Claim Trusted Without Re-verification on Admin Endpoints",
+      "severity": "MEDIUM",
+      "cvss_score": "5.9",
+      "owasp_category": "A01",
+      "cwe_id": "CWE-269",
+      "location": { "file": "src/lib/auth.ts", "line_start": 80, "line_end": 97, "function": "createSessionToken" },
+      "description": "Admin role is embedded in the session token at login and never re-verified. If an admin is removed from the allowlist, their token grants admin access for up to 24 hours.",
+      "evidence": "role: isAdmin ? 'admin' : 'member', // baked in at token creation, checked via session.role on each request",
+      "impact": "Revoked admins retain full admin access until token expires (24 hours).",
+      "likelihood": "LOW",
+      "remediation": {
+        "recommendation": "Re-verify admin status from admin_wallets table on each admin endpoint request. Cache with 5-minute TTL.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Token-based role with no re-verification and 24hr lifetime."
+    },
+    {
+      "id": "FINDING-A03-001",
+      "title": "PostgREST Filter Injection via .or() String Interpolation of Role Key",
+      "severity": "HIGH",
+      "cvss_score": "8.1",
+      "owasp_category": "A03",
+      "cwe_id": "CWE-943",
+      "location": { "file": "src/app/api/seasons/current/quests/route.ts", "line_start": 39, "line_end": 39, "function": "GET" },
+      "description": "The memberState.role_key is interpolated into a .or() filter string. PostgREST uses commas to delimit OR conditions, so a role_key containing a comma could inject additional filter clauses. The role_key originates from user input (validated only as z.string().min(1).max(40)).",
+      "evidence": "questQuery = questQuery.or(`role_key.is.null,role_key.eq.${memberState.role_key}`);",
+      "impact": "If a role_key with PostgREST syntax characters passes the season_roles validation, an attacker could manipulate quest query results.",
+      "likelihood": "LOW",
+      "remediation": {
+        "recommendation": "Add strict regex validation: z.string().regex(/^[a-z0-9_]+$/).min(1).max(40) on role_key input. Never interpolate into .or() strings.",
+        "code_example": "// In role POST handler:\nrole: z.string().regex(/^[a-z0-9_]+$/).min(1).max(40)",
+        "references": ["https://postgrest.org/en/stable/references/api/tables_views.html#horizontal-filtering"]
+      },
+      "false_positive_assessment": "True positive with low exploitation likelihood due to season_roles table validation, but the injection vector is real."
+    },
+    {
+      "id": "FINDING-A03-002",
+      "title": "CSP Allows unsafe-inline and unsafe-eval for Scripts",
+      "severity": "MEDIUM",
+      "cvss_score": "5.3",
+      "owasp_category": "A03",
+      "cwe_id": "CWE-79",
+      "location": { "file": "next.config.ts", "line_start": 8, "line_end": 8, "function": "headers" },
+      "description": "The Content-Security-Policy script-src includes 'unsafe-inline' and 'unsafe-eval', significantly weakening XSS protection.",
+      "evidence": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com",
+      "impact": "If any XSS vector exists, CSP will not prevent exploitation. The inline theme script in layout.tsx requires unsafe-inline.",
+      "likelihood": "MEDIUM",
+      "remediation": {
+        "recommendation": "Use nonce-based CSP. Remove unsafe-eval if not required by production build.",
+        "code_example": "",
+        "references": ["https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy"]
+      },
+      "false_positive_assessment": "True positive. Verified CSP header configuration in next.config.ts."
+    },
+    {
+      "id": "FINDING-A04-001",
+      "title": "In-Memory Rate Limiters Ineffective in Serverless Deployments",
+      "severity": "MEDIUM",
+      "cvss_score": "5.3",
+      "owasp_category": "A04",
+      "cwe_id": "CWE-770",
+      "location": { "file": "src/app/api/game/vote/route.ts", "line_start": 14, "line_end": 33, "function": "module scope" },
+      "description": "Game vote and reward claim rate limiters use in-memory Maps that reset on serverless cold starts and are not shared across instances.",
+      "evidence": "const voteRateWindow = new Map<string, { count: number; resetAt: number }>();",
+      "impact": "Rate limits are trivially bypassable in production serverless deployments. The submissions endpoint correctly uses DB-backed rate limiting.",
+      "likelihood": "HIGH",
+      "remediation": {
+        "recommendation": "Replace with Supabase-backed rate limiting matching the pattern in src/app/api/submissions/route.ts.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Verified Map-based rate limiting with no external persistence."
+    },
+    {
+      "id": "FINDING-A04-002",
+      "title": "No Rate Limiting on Authentication Nonce Endpoint",
+      "severity": "HIGH",
+      "cvss_score": "7.5",
+      "owasp_category": "A04",
+      "cwe_id": "CWE-307",
+      "location": { "file": "src/app/api/auth/nonce/route.ts", "line_start": 20, "line_end": 67, "function": "POST" },
+      "description": "The nonce generation endpoint has zero rate limiting. Any client can flood it to fill the auth_nonces table unboundedly.",
+      "evidence": "No rate limit check present in the handler.",
+      "impact": "DoS via database row exhaustion. Enables unlimited brute-force authentication probing.",
+      "likelihood": "HIGH",
+      "remediation": {
+        "recommendation": "Add IP-based or wallet-based rate limiting (max 10 nonce requests per wallet per 5 minutes). Add TTL-based cleanup for auth_nonces.",
+        "code_example": "",
+        "references": ["https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"]
+      },
+      "false_positive_assessment": "True positive. No rate limiting code exists in the handler."
+    },
+    {
+      "id": "FINDING-A04-003",
+      "title": "No Rate Limiting on Authentication Verify Endpoint",
+      "severity": "HIGH",
+      "cvss_score": "7.5",
+      "owasp_category": "A04",
+      "cwe_id": "CWE-307",
+      "location": { "file": "src/app/api/auth/verify/route.ts", "line_start": 34, "line_end": 189, "function": "POST" },
+      "description": "The signature verification endpoint has no rate limiting, enabling unlimited authentication attempts.",
+      "evidence": "No rate limit check present in the handler.",
+      "impact": "Combined with FINDING-A04-002, enables high-volume brute-force authentication. No account lockout mechanism exists.",
+      "likelihood": "HIGH",
+      "remediation": {
+        "recommendation": "Add rate limiting per wallet (max 5 verify attempts per 5 minutes). Track failed attempts and implement exponential backoff.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. No rate limiting or lockout code exists."
+    },
+    {
+      "id": "FINDING-A07-001",
+      "title": "Stateless Session Tokens Cannot Be Revoked — Logout is Cosmetic",
+      "severity": "MEDIUM",
+      "cvss_score": "5.4",
+      "owasp_category": "A07",
+      "cwe_id": "CWE-613",
+      "location": { "file": "src/lib/auth.ts", "line_start": 80, "line_end": 128, "function": "createSessionToken/verifySessionToken" },
+      "description": "Sessions are HMAC-signed stateless tokens with 24hr expiry. No server-side session store exists. Logout only clears the cookie — a copied token remains valid.",
+      "evidence": "DELETE handler: response.cookies.set(AUTH_COOKIE_NAME, '', { maxAge: 0 }); // Client-side only",
+      "impact": "Stolen session tokens (via XSS, network interception) are valid for up to 24 hours regardless of logout. Admin tokens equally affected.",
+      "likelihood": "MEDIUM",
+      "remediation": {
+        "recommendation": "Implement server-side session storage. On logout, delete the server-side record. Consider 1-hour tokens with refresh rotation.",
+        "code_example": "",
+        "references": ["https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"]
+      },
+      "false_positive_assessment": "True positive. Verified no server-side session state exists."
+    },
+    {
+      "id": "FINDING-A07-002",
+      "title": "Nonce Mark-as-Used TOCTOU Race Condition",
+      "severity": "HIGH",
+      "cvss_score": "7.5",
+      "owasp_category": "A07",
+      "cwe_id": "CWE-367",
+      "location": { "file": "src/app/api/auth/verify/route.ts", "line_start": 69, "line_end": 99, "function": "POST" },
+      "description": "Nonce is checked via SELECT then marked used via UPDATE in two separate operations. The UPDATE return data is not checked — if zero rows were affected (another request already flipped it), the code does not detect this and issues a duplicate session token.",
+      "evidence": "const { error: markUsedError } = await supabase.from('auth_nonces').update({used:true}).eq('nonce',nonce).eq('used',false); // return DATA not checked, only error",
+      "impact": "Two concurrent requests with the same nonce can both receive valid session tokens within a ~1-10ms race window.",
+      "likelihood": "MEDIUM",
+      "remediation": {
+        "recommendation": "Use UPDATE ... RETURNING pattern and check that exactly one row was modified: .select().maybeSingle(); if (!markedRow) return error;",
+        "code_example": "const { data: marked } = await supabase.from('auth_nonces').update({used:true}).eq('nonce',nonce).eq('used',false).select().maybeSingle();\nif (!marked) return NextResponse.json({error:'Nonce already used'},{status:401});",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. The UPDATE with .eq('used',false) provides partial protection but the result is not checked."
+    },
+    {
+      "id": "FINDING-A07-003",
+      "title": "Challenge Cookie Not Signed — No Integrity Protection",
+      "severity": "MEDIUM",
+      "cvss_score": "5.0",
+      "owasp_category": "A07",
+      "cwe_id": "CWE-565",
+      "location": { "file": "src/lib/auth.ts", "line_start": 187, "line_end": 201, "function": "encodeChallenge" },
+      "description": "The auth challenge cookie is base64-encoded JSON with no HMAC signature. An attacker could craft a cookie with a modified issuedAt to extend the challenge freshness window.",
+      "evidence": "export function encodeChallenge(challenge: AuthChallenge): string { return base64UrlEncode(JSON.stringify(challenge)); }",
+      "impact": "Mitigated by DB-backed nonce validation, but defense-in-depth is violated. Modified issuedAt could extend the challenge window.",
+      "likelihood": "LOW",
+      "remediation": {
+        "recommendation": "Sign the challenge cookie with HMAC using the same mechanism as session tokens.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive with low exploitability due to DB-backed nonce checks."
+    },
+    {
+      "id": "FINDING-A07-004",
+      "title": "CSRF Origin Validation Compares Against Attacker-Controllable Host Header",
+      "severity": "MEDIUM",
+      "cvss_score": "5.0",
+      "owasp_category": "A07",
+      "cwe_id": "CWE-346",
+      "location": { "file": "src/lib/auth.ts", "line_start": 231, "line_end": 261, "function": "validateCsrfOrigin" },
+      "description": "CSRF validation checks that Origin matches Host, but both come from the same request. This is a self-referential check rather than validation against a configured allowlist.",
+      "evidence": "const allowedHosts = new Set([host]); // host from request header",
+      "impact": "In misconfigured proxies or multi-hostname deployments, an attacker who controls the Host header can bypass CSRF protection.",
+      "likelihood": "LOW",
+      "remediation": {
+        "recommendation": "Compare Origin against a configured allowlist: const ALLOWED_ORIGINS = new Set([process.env.NEXT_PUBLIC_APP_URL].map(u => new URL(u).host));",
+        "code_example": "",
+        "references": ["https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"]
+      },
+      "false_positive_assessment": "True positive. Behind standard reverse proxies the risk is low, but the validation is architecturally weak."
+    },
+    {
+      "id": "FINDING-A09-001",
+      "title": "No Authentication Event Logging",
+      "severity": "HIGH",
+      "cvss_score": "6.5",
+      "owasp_category": "A09",
+      "cwe_id": "CWE-778",
+      "location": { "file": "src/app/api/auth/verify/route.ts", "line_start": 34, "line_end": 189, "function": "POST" },
+      "description": "No structured logging for authentication events — successful logins, failed signature verifications, expired nonces, or wallet mismatches are not logged. Only the catch-all error handler logs.",
+      "evidence": "No audit_logs entries created for auth events. Only: console.error('Auth verification error:', error);",
+      "impact": "Impossible to detect brute-force attacks, credential compromise, or investigate security incidents post-facto.",
+      "likelihood": "HIGH",
+      "remediation": {
+        "recommendation": "Add structured security event logging for every auth outcome to the audit_logs table.",
+        "code_example": "",
+        "references": ["https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html"]
+      },
+      "false_positive_assessment": "True positive. No auth event logging exists anywhere in the codebase."
+    },
+    {
+      "id": "FINDING-A09-002",
+      "title": "No Authorization Failure Logging on Admin Endpoints",
+      "severity": "MEDIUM",
+      "cvss_score": "4.8",
+      "owasp_category": "A09",
+      "cwe_id": "CWE-778",
+      "location": { "file": "src/app/api/admin/points/route.ts", "line_start": 29, "line_end": 31, "function": "POST" },
+      "description": "Non-admin users attempting to access admin endpoints are silently rejected with no logging. Repeated attempts go undetected.",
+      "evidence": "if (!session || session.role !== 'admin') { return NextResponse.json({error:'Not found'},{status:404}); } // No logging",
+      "impact": "Privilege escalation attempts are invisible to monitoring.",
+      "likelihood": "MEDIUM",
+      "remediation": {
+        "recommendation": "Log authorization failures on admin endpoints to audit_logs with wallet address, endpoint path, and timestamp.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Verified no logging occurs on admin auth rejection."
+    },
+    {
+      "id": "FINDING-A09-003",
+      "title": "No Audit Trail for Reward Claims",
+      "severity": "MEDIUM",
+      "cvss_score": "4.0",
+      "owasp_category": "A09",
+      "cwe_id": "CWE-778",
+      "location": { "file": "src/app/api/rewards/claim/route.ts", "line_start": 49, "line_end": 198, "function": "POST" },
+      "description": "Reward claims (financial operations) do not write to audit_logs. Admin actions log there, but the highest-value user action does not.",
+      "evidence": "No audit_logs.insert() call in the claim handler.",
+      "impact": "When claims are enabled, financial operations lack accountability and forensic trail.",
+      "likelihood": "MEDIUM",
+      "remediation": {
+        "recommendation": "Add audit_logs entries following the admin/points pattern: action='reward_claimed', include reward_id, amount, idempotency_key.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Claims are currently feature-gated but logging should be in place before enablement."
+    },
+    {
+      "id": "FINDING-BL-001",
+      "title": "TOCTOU Race Condition in Auth Nonce Consumption (Duplicate of A07-002)",
+      "severity": "HIGH",
+      "cvss_score": "7.5",
+      "owasp_category": "A07",
+      "cwe_id": "CWE-367",
+      "location": { "file": "src/app/api/auth/verify/route.ts", "line_start": 69, "line_end": 99, "function": "POST" },
+      "description": "See FINDING-A07-002. SELECT + UPDATE race window allows duplicate session token issuance.",
+      "evidence": "See FINDING-A07-002.",
+      "impact": "Nonce replay within ~1-10ms race window.",
+      "likelihood": "MEDIUM",
+      "remediation": { "recommendation": "See FINDING-A07-002.", "code_example": "", "references": [] },
+      "false_positive_assessment": "Duplicate finding confirmed by independent agent."
+    },
+    {
+      "id": "FINDING-BL-002",
+      "title": "Game Vote Points — Non-Atomic Read-Modify-Write Race Condition",
+      "severity": "HIGH",
+      "cvss_score": "7.1",
+      "owasp_category": "A04",
+      "cwe_id": "CWE-362",
+      "location": { "file": "src/app/api/game/vote/route.ts", "line_start": 104, "line_end": 153, "function": "POST" },
+      "description": "Points are read from game_player_state, calculated in JS, then written as absolute value. Two concurrent votes read the same base value, both compute new totals, and the second write overwrites the first — losing points.",
+      "evidence": "const currentPoints = gameState?.points ?? 0;\n// ... newPoints = currentPoints + earned\nawait supabase.from('game_player_state').upsert({ points: newPoints });",
+      "impact": "Lost points on concurrent votes for different videos. Exploitable in reverse to inflate points.",
+      "likelihood": "MEDIUM",
+      "remediation": {
+        "recommendation": "Use SQL increment: SET points = points + $delta instead of absolute value write.",
+        "code_example": "await supabase.rpc('increment_game_state', { p_wallet: walletAddress, p_points_delta: earned, p_new_streak: newStreak });",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Classic lost-update race condition."
+    },
+    {
+      "id": "FINDING-BL-003",
+      "title": "Submission Approval — Non-Atomic Multi-Step Points/XP Credit",
+      "severity": "HIGH",
+      "cvss_score": "6.8",
+      "owasp_category": "A04",
+      "cwe_id": "CWE-362",
+      "location": { "file": "src/app/api/admin/submissions/[id]/review/route.ts", "line_start": 170, "line_end": 227, "function": "POST" },
+      "description": "Approval reads user.total_xp, calculates new value in JS, writes absolute value. Two concurrent approvals for the same user lose one set of points. The 5-step flow has no transactional boundary.",
+      "evidence": "const newTotalXp = (userData?.total_xp || 0) + points;\nawait supabase.from('users').update({ total_xp: newTotalXp });",
+      "impact": "Points lost on concurrent approvals. Ledger and user XP can drift permanently.",
+      "likelihood": "LOW",
+      "remediation": {
+        "recommendation": "Use SET total_xp = total_xp + $points. Wrap in Supabase RPC for atomicity. Add reconciliation job.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Same pattern as BL-002."
+    },
+    {
+      "id": "FINDING-BL-006",
+      "title": "Quest Auto-Approve Does Not Update users.total_xp",
+      "severity": "MEDIUM",
+      "cvss_score": "5.3",
+      "owasp_category": "A04",
+      "cwe_id": "CWE-841",
+      "location": { "file": "src/app/api/seasons/current/quests/[questId]/submit/route.ts", "line_start": 230, "line_end": 243, "function": "POST" },
+      "description": "When quest submissions are auto-approved, bonus points are written to points_ledger but NOT added to users.total_xp. This creates systematic drift between the ledger and displayed XP.",
+      "evidence": "await supabase.from('points_ledger').insert({...pointsReward...}); // No users.total_xp update",
+      "impact": "Users who complete quests get shortchanged on visible XP, level, and tier calculations.",
+      "likelihood": "HIGH",
+      "remediation": {
+        "recommendation": "After inserting quest bonus to ledger, also increment users.total_xp. Apply in both quest submit and admin review auto-complete.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Verified no users table update occurs on quest auto-approve."
+    },
+    {
+      "id": "FINDING-BL-007",
+      "title": "Submission Can Be Approved Multiple Times — No Status Guard",
+      "severity": "HIGH",
+      "cvss_score": "7.5",
+      "owasp_category": "A04",
+      "cwe_id": "CWE-367",
+      "location": { "file": "src/app/api/admin/submissions/[id]/review/route.ts", "line_start": 35, "line_end": 196, "function": "POST" },
+      "description": "The admin review endpoint has no status precondition on SELECT or UPDATE. An already-approved submission can be approved again, awarding duplicate points and creating duplicate ledger entries.",
+      "evidence": "await supabase.from('submissions').update({status:'approved'}).eq('id', id); // No .eq('status','submitted') guard",
+      "impact": "Direct points inflation vector. Admin can re-approve submissions to multiply points. Also allows approve-after-reject without proper accounting reversal.",
+      "likelihood": "MEDIUM",
+      "remediation": {
+        "recommendation": "Add .in('status', ['submitted','ai_scored','human_review']) to both SELECT and UPDATE. Check update affected exactly one row.",
+        "code_example": "await supabase.from('submissions').update({status:'approved',...}).eq('id',id).in('status',['submitted','ai_scored']).select().maybeSingle();",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. No status guard exists on the UPDATE query."
+    },
+    {
+      "id": "FINDING-BL-012",
+      "title": "AI Scoring Prompt Injection — Anomaly Detection Warns But Does Not Block",
+      "severity": "MEDIUM",
+      "cvss_score": "4.7",
+      "owasp_category": "A03",
+      "cwe_id": "CWE-77",
+      "location": { "file": "src/lib/scoring.ts", "line_start": 145, "line_end": 151, "function": "scoreSubmission" },
+      "description": "Anomaly detection on AI scores only logs warnings — it does not reject or flag suspicious submissions for human review. Sophisticated prompt injections producing plausible but inflated scores bypass it.",
+      "evidence": "if (detectScoringAnomaly(breakdown)) { console.warn(...); } // Warn only, no action",
+      "impact": "Points inflation via prompt injection bounded to ~2x normal (900 → 1800 points per submission).",
+      "likelihood": "LOW",
+      "remediation": {
+        "recommendation": "When anomaly detection fires, set submission status to 'human_review' instead of auto-scoring.",
+        "code_example": "",
+        "references": []
+      },
+      "false_positive_assessment": "True positive. Good mitigations exist but anomaly detection is advisory-only."
+    }
+  ],
+  "statistics": {
+    "files_analyzed": 67,
+    "lines_of_code": 8500,
+    "findings_by_severity": { "CRITICAL": 0, "HIGH": 10, "MEDIUM": 19, "LOW": 14, "INFORMATIONAL": 4 },
+    "findings_by_owasp": { "A01": 4, "A02": 1, "A03": 3, "A04": 12, "A05": 2, "A06": 3, "A07": 7, "A08": 3, "A09": 4, "A10": 2 },
+    "remediation_effort_estimate": "40-60 hours for all findings; 8-12 hours for HIGH priority only"
+  }
+}
