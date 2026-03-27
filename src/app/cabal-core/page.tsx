@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import NeonCard from '@/components/shared/NeonCard';
 
@@ -37,6 +37,9 @@ function toLocalInputValue(date: Date): string {
 }
 
 export default function CabalCorePage() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminLoading, setAdminLoading] = useState(true);
+
   const [submissions, setSubmissions] = useState<SubmissionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -60,6 +63,9 @@ export default function CabalCorePage() {
   const [seasonRecapEndsAt, setSeasonRecapEndsAt] = useState(toLocalInputValue(new Date(Date.now() + 33 * 24 * 60 * 60 * 1000)));
 
   const [signalSeasonId, setSignalSeasonId] = useState('');
+  const signalSeasonIdRef = useRef(signalSeasonId);
+  signalSeasonIdRef.current = signalSeasonId;
+
   const [signalActive, setSignalActive] = useState(true);
   const [signalStartsAt, setSignalStartsAt] = useState(toLocalInputValue(new Date()));
   const [signalEndsAt, setSignalEndsAt] = useState(toLocalInputValue(new Date(Date.now() + 2 * 60 * 60 * 1000)));
@@ -69,6 +75,9 @@ export default function CabalCorePage() {
   const [signalMessage, setSignalMessage] = useState('');
 
   const [bossSeasonId, setBossSeasonId] = useState('');
+  const bossSeasonIdRef = useRef(bossSeasonId);
+  bossSeasonIdRef.current = bossSeasonId;
+
   const [bossMetricKey, setBossMetricKey] = useState('helpful_actions');
   const [bossDelta, setBossDelta] = useState('10');
   const [bossCurrent, setBossCurrent] = useState('');
@@ -107,16 +116,16 @@ export default function CabalCorePage() {
       }
       const nextSeasons = data.seasons || [];
       setSeasons(nextSeasons);
-      if (!signalSeasonId && nextSeasons.length > 0) {
+      if (!signalSeasonIdRef.current && nextSeasons.length > 0) {
         setSignalSeasonId(nextSeasons[0].id);
       }
-      if (!bossSeasonId && nextSeasons.length > 0) {
+      if (!bossSeasonIdRef.current && nextSeasons.length > 0) {
         setBossSeasonId(nextSeasons[0].id);
       }
     } catch (seasonError) {
       setSeasonMessage(seasonError instanceof Error ? seasonError.message : 'Failed to load seasons');
     }
-  }, [bossSeasonId, signalSeasonId]);
+  }, []);
 
   useEffect(() => {
     void loadSubmissions();
@@ -297,6 +306,36 @@ export default function CabalCorePage() {
   }, [bossCurrent, bossDelta, bossIdempotency, bossMetricKey, bossSeasonId, bossTarget]);
 
   const statusCount = useMemo(() => submissions.length, [submissions]);
+
+  useEffect(() => {
+    fetch('/api/auth/session', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        setIsAdmin(data.session?.isAdmin === true);
+        setAdminLoading(false);
+      })
+      .catch(() => setAdminLoading(false));
+  }, []);
+
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="text-text-muted text-sm">Verifying access...</div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-text-primary text-lg font-semibold mb-2">Access Denied</div>
+          <div className="text-text-muted text-sm mb-4">This page is restricted to administrators.</div>
+          <a href="/dashboard" className="text-accent-text hover:underline text-sm">Back to Dashboard</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-bg-base p-6">

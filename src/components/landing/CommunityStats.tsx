@@ -1,15 +1,55 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedCounter from '../shared/AnimatedCounter';
 
-const stats = [
-  { label: 'Active Members', value: 0, suffix: '', description: 'NFT holders engaging daily' },
-  { label: 'Submissions', value: 0, suffix: '', description: 'Content pieces scored by AI' },
-  { label: 'Points Distributed', value: 0, suffix: '', description: 'Total points earned by community' },
-];
+interface CommunityStatsData {
+  activeMembers: number;
+  submissions: number;
+  pointsDistributed: number;
+}
+
+// TODO: Create a public /api/community-stats endpoint that returns aggregate
+// community metrics (active holder count, total submissions, total points).
+// The existing /api/leaderboard and /api/me/summary endpoints require
+// authentication and are per-user, so they cannot serve this landing page.
+// Until then, this component fetches from /api/community-stats and falls back
+// to zeros if the endpoint does not exist.
 
 export default function CommunityStats() {
+  const [data, setData] = useState<CommunityStatsData>({
+    activeMembers: 0,
+    submissions: 0,
+    pointsDistributed: 0,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/community-stats', { cache: 'no-store' });
+        if (!res.ok || cancelled) return;
+        const json = await res.json();
+        if (cancelled) return;
+        setData({
+          activeMembers: json.active_members ?? 0,
+          submissions: json.total_submissions ?? 0,
+          pointsDistributed: json.total_points ?? 0,
+        });
+      } catch {
+        // Endpoint may not exist yet — keep defaults at 0
+      }
+    };
+    void load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const stats = [
+    { label: 'Active Members', value: data.activeMembers, suffix: '', description: 'NFT holders engaging daily' },
+    { label: 'Submissions', value: data.submissions, suffix: '', description: 'Content pieces scored by AI' },
+    { label: 'Points Distributed', value: data.pointsDistributed, suffix: '', description: 'Total points earned by community' },
+  ];
   return (
     <section className="py-24 px-6 bg-bg-light">
       <div className="max-w-6xl mx-auto">

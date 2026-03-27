@@ -189,7 +189,8 @@ export default function RewardsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-lg flex items-center justify-center text-lg bg-bg-raised">
-                      {reward.status === 'claimable' ? '🎁' : reward.status === 'claimed' ? '✅' : '⏳'}
+                      <span aria-hidden="true">{reward.status === 'claimable' ? '🎁' : reward.status === 'claimed' ? '✅' : '⏳'}</span>
+                      <span className="sr-only">{reward.status === 'claimable' ? 'Claimable' : reward.status === 'claimed' ? 'Claimed' : 'Expired'}</span>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-text-primary">

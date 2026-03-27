@@ -140,6 +140,7 @@ export default function LeaderboardPage() {
               className="overflow-hidden"
             >
               <table className="w-full">
+                <caption className="sr-only">{tierConfig.label} tier leaderboard rankings</caption>
                 <thead>
                   <tr className="text-xs text-text-muted uppercase tracking-wider border-b border-border-subtle">
                     <th className="text-left px-5 py-3 w-12">#</th>

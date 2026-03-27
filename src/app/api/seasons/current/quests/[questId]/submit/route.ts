@@ -80,8 +80,8 @@ export async function POST(
     return NextResponse.json({ error: 'Jito Cabal holder verification required' }, { status: 403 });
   }
 
-  const rateLimitSupabase = createServerClient();
-  if (await isSubmitRateLimited(rateLimitSupabase, session.walletAddress)) {
+  const supabase = createServerClient();
+  if (await isSubmitRateLimited(supabase, session.walletAddress)) {
     return NextResponse.json({ error: 'Too many quest submissions. Try again later.' }, { status: 429 });
   }
 
@@ -89,8 +89,6 @@ export async function POST(
     const { questId } = await params;
     const body = await request.json();
     const parsed = questSubmitSchema.parse(body);
-
-    const supabase = createServerClient();
     const season = await getLiveSeason(supabase);
     if (!season) {
       return NextResponse.json({ error: 'No live season found' }, { status: 404 });

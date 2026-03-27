@@ -209,6 +209,9 @@ export default function SubmitPage() {
               {activeTab === 'blog' ? 'Article Summary' : 'Content Description'}
             </label>
             <textarea
+              id="content-text"
+              aria-describedby="content-char-count"
+              maxLength={5000}
               value={contentText}
               onChange={(event) => setContentText(event.target.value)}
               placeholder={placeholderByType[activeTab]}
@@ -216,7 +219,7 @@ export default function SubmitPage() {
               rows={6}
               className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm resize-none"
             />
-            <div className="mt-1 text-xs text-text-muted text-right">{contentText.length} characters</div>
+            <div id="content-char-count" className="mt-1 text-xs text-text-muted text-right">{contentText.length}/5000 characters</div>
           </div>
 
           <motion.button

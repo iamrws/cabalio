@@ -445,7 +445,7 @@ export default function AiOrNotPanel() {
               <div className="flex items-center gap-3">
                 {streak >= 2 && (
                   <span className="text-sm font-bold text-caution flex items-center gap-1">
-                    <span className="text-base">🔥</span>{streak}
+                    <span className="text-base" aria-hidden="true">🔥</span>{streak}
                   </span>
                 )}
                 <span className="text-sm font-mono font-bold text-accent-text">{points} pts</span>
@@ -662,7 +662,7 @@ export default function AiOrNotPanel() {
                               className="mt-3 px-4 py-1.5 rounded-full border border-caution-border bg-caution-muted"
                             >
                               <span className="text-caution font-bold text-sm">
-                                🔥 {streak} Streak!
+                                <span aria-hidden="true">🔥</span> {streak} Streak!
                                 {streak >= 10 && ' LEGENDARY!'}
                                 {streak >= 5 && streak < 10 && ' On Fire!'}
                               </span>

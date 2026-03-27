@@ -297,6 +297,7 @@ export default function QuestsPage() {
 
                   <div className="space-y-2 mt-auto">
                     <select
+                      aria-label="Evidence type"
                       value={evidence.evidence_type}
                       onChange={(event) =>
                         setEvidenceByQuest((prev) => ({
@@ -317,6 +318,7 @@ export default function QuestsPage() {
                     </select>
 
                     <input
+                      aria-label="Evidence ID"
                       value={evidence.evidence_id}
                       onChange={(event) =>
                         setEvidenceByQuest((prev) => ({

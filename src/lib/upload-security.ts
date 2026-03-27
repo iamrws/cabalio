@@ -67,7 +67,12 @@ export function scanUploadedImage(buffer: Buffer): ScanResult {
     return { safe: false, reason: 'Executable/archive signature detected' };
   }
 
-  const decoded = buffer.toString('utf8').toLowerCase();
+  // Only scan metadata regions (head/tail), not pixel data which causes false positives
+  // when random binary data decodes to strings matching suspicious patterns.
+  const headRegion = buffer.subarray(0, Math.min(1024, buffer.length)).toString('utf8').toLowerCase();
+  const tailRegion = buffer.subarray(Math.max(0, buffer.length - 1024)).toString('utf8').toLowerCase();
+  const textToScan = headRegion + tailRegion;
+
   const suspiciousSnippets = [
     '<script',
     'javascript:',
@@ -82,7 +87,7 @@ export function scanUploadedImage(buffer: Buffer): ScanResult {
   ];
 
   for (const snippet of suspiciousSnippets) {
-    if (decoded.includes(snippet)) {
+    if (textToScan.includes(snippet)) {
       return { safe: false, reason: `Suspicious payload marker detected (${snippet})` };
     }
   }
