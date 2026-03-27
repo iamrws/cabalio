@@ -1,168 +1,431 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Jito Cabal Design System — Clean Web3 / Palantir-inspired
+   Zinc neutrals, single blue accent, tight radii, minimal motion.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CUSTOM PROPERTIES
+   -------------------------------------------------------------------------- */
 :root {
-  /* Base backgrounds */
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-tertiary: #1a1a2e;
-  --bg-elevated: #22223a;
+  /* --- Surfaces (Dark — App Shell) --- */
+  --bg-base:           #111113;
+  --bg-surface:        #18181b;
+  --bg-raised:         #1f1f23;
+  --bg-overlay:        #27272b;
+  --bg-hover:          rgba(255,255,255,0.04);
+  --bg-active:         rgba(255,255,255,0.06);
 
-  /* Neon accents */
-  --neon-cyan: #00f0ff;
-  --neon-purple: #b347d9;
-  --neon-green: #39ff14;
-  --neon-orange: #ff6b35;
-  --neon-pink: #ff2d95;
+  /* --- Surfaces (Light — Landing) --- */
+  --bg-light:          #f4f4f5;
+  --bg-light-surface:  #ffffff;
+  --bg-light-raised:   #fafafa;
 
-  /* Text */
-  --text-primary: #e0e0e0;
-  --text-secondary: #8888aa;
-  --text-muted: #555577;
+  /* --- Borders --- */
+  --border-subtle:       rgba(255,255,255,0.06);
+  --border-default:      rgba(255,255,255,0.09);
+  --border-strong:       rgba(255,255,255,0.14);
+  --border-light:        #e4e4e7;
+  --border-light-strong: #d4d4d8;
 
-  /* Glow effects */
-  --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.3);
-  --glow-purple: 0 0 20px rgba(179, 71, 217, 0.3);
-  --glow-green: 0 0 20px rgba(57, 255, 20, 0.3);
-  --glow-orange: 0 0 20px rgba(255, 107, 53, 0.3);
+  /* --- Text (Dark) --- */
+  --text-primary:   #fafafa;
+  --text-secondary:  #a1a1aa;
+  --text-tertiary:   #71717a;
+  --text-muted:      #52525b;
 
-  /* Borders */
-  --border-subtle: rgba(136, 136, 170, 0.15);
-  --border-neon: rgba(0, 240, 255, 0.3);
+  /* --- Text (Light) --- */
+  --text-light-primary:   #09090b;
+  --text-light-secondary: #3f3f46;
+  --text-light-tertiary:  #71717a;
 
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #00f0ff, #b347d9);
-  --gradient-card: linear-gradient(180deg, rgba(18, 18, 26, 0.8), rgba(10, 10, 15, 0.95));
+  /* --- Accent --- */
+  --accent:       #3b82f6;
+  --accent-dim:   #2563eb;
+  --accent-muted: rgba(59,130,246,0.10);
+  --accent-text:  #60a5fa;
 
-  /* Spacing */
-  --sidebar-width: 260px;
+  /* --- Semantic --- */
+  --positive:       #22c55e;
+  --positive-muted: rgba(34,197,94,0.10);
+  --caution:        #eab308;
+  --caution-muted:  rgba(234,179,8,0.08);
+  --negative:       #ef4444;
+  --negative-muted: rgba(239,68,68,0.08);
 
-  /* Font */
-  --font-sans: "Segoe UI", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
+  /* --- Tier --- */
+  --tier-elite:    #eab308;
+  --tier-member:   #22c55e;
+  --tier-initiate: #a1a1aa;
+
+  /* --- Typography --- */
+  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* --- Radii --- */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* --- Spacing (4px base) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* --- Shadows --- */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+
+  /* --- Motion --- */
+  --duration-fast: 100ms;
+  --duration-normal: 150ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /* --- Z-index --- */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-nav: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+
+  /* --- Layout --- */
+  --sidebar-width: 220px;
+  --header-height: 48px;
+  --content-max: 1400px;
 }
 
-@theme inline {
-  --color-background: var(--bg-primary);
-  --color-foreground: var(--text-primary);
-  --color-neon-cyan: var(--neon-cyan);
-  --color-neon-purple: var(--neon-purple);
-  --color-neon-green: var(--neon-green);
-  --color-neon-orange: var(--neon-orange);
-  --color-neon-pink: var(--neon-pink);
-  --color-bg-primary: var(--bg-primary);
-  --color-bg-secondary: var(--bg-secondary);
-  --color-bg-tertiary: var(--bg-tertiary);
-  --color-bg-elevated: var(--bg-elevated);
+/* --------------------------------------------------------------------------
+   2. TAILWIND v4 THEME BRIDGE
+   -------------------------------------------------------------------------- */
+@theme {
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-raised: var(--bg-raised);
+  --color-bg-overlay: var(--bg-overlay);
+
+  --color-bg-light: var(--bg-light);
+  --color-bg-light-surface: var(--bg-light-surface);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-light: var(--border-light);
+
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
   --color-text-muted: var(--text-muted);
-  --color-border-subtle: var(--border-subtle);
-  --color-border-neon: var(--border-neon);
-  --font-sans: "Segoe UI", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", "Consolas", "Menlo", "Monaco", "Courier New", monospace;
+
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-text: var(--accent-text);
+
+  --color-positive: var(--positive);
+  --color-positive-muted: var(--positive-muted);
+  --color-caution: var(--caution);
+  --color-caution-muted: var(--caution-muted);
+  --color-negative: var(--negative);
+  --color-negative-muted: var(--negative-muted);
+
+  --color-tier-elite: var(--tier-elite);
+  --color-tier-member: var(--tier-member);
+  --color-tier-initiate: var(--tier-initiate);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
 }
 
-/* Base styles */
+/* --------------------------------------------------------------------------
+   3. BASE STYLES
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 body {
-  background: var(--bg-primary);
+  font-family: var(--font-sans);
+  background: var(--bg-base);
   color: var(--text-primary);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
+  line-height: 1.5;
+  font-size: 14px;
 }
 
-/* Scrollbar styling */
+/* --------------------------------------------------------------------------
+   4. TYPOGRAPHY UTILITIES
+   -------------------------------------------------------------------------- */
+.text-display {
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.text-h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.text-h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.text-h3 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.text-body {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.text-small {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.text-caption {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.text-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   5. COMPONENT BASE STYLES
+   -------------------------------------------------------------------------- */
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  border-radius: var(--radius-xs);
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  outline: none;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: var(--text-primary);
+  color: var(--bg-base);
+}
+.btn-primary:hover {
+  background: #e4e4e7;
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: white;
+}
+.btn-accent:hover {
+  background: var(--accent-dim);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+.btn-secondary:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  border-radius: var(--radius-xs);
+}
+.badge-default {
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+.badge-accent {
+  background: var(--accent-muted);
+  color: var(--accent-text);
+  border: 1px solid rgba(59,130,246,0.15);
+}
+.badge-positive {
+  background: var(--positive-muted);
+  color: var(--positive);
+  border: 1px solid rgba(34,197,94,0.12);
+}
+.badge-caution {
+  background: var(--caution-muted);
+  color: var(--caution);
+  border: 1px solid rgba(234,179,8,0.12);
+}
+.badge-negative {
+  background: var(--negative-muted);
+  color: var(--negative);
+  border: 1px solid rgba(239,68,68,0.12);
+}
+
+/* Stat card */
+.stat-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+}
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 4px;
+  background: var(--bg-overlay);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--text-primary);
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+/* Card */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+.card:hover {
+  border-color: var(--border-default);
+}
+.card-raised {
+  background: var(--bg-raised);
+}
+
+/* Skeleton */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+.skeleton {
+  background: var(--bg-raised);
+  border-radius: var(--radius-xs);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
+  background: var(--border-default);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-cyan);
+  background: var(--border-strong);
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Selection */
 ::selection {
-  background: rgba(0, 240, 255, 0.2);
-  color: var(--neon-cyan);
-}
-
-/* Neon glow utilities */
-.glow-cyan {
-  box-shadow: var(--glow-cyan);
-}
-.glow-purple {
-  box-shadow: var(--glow-purple);
-}
-.glow-green {
-  box-shadow: var(--glow-green);
-}
-
-.neon-border {
-  border: 1px solid var(--border-neon);
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
-}
-.neon-border:hover {
-  box-shadow: var(--glow-cyan);
-  border-color: var(--neon-cyan);
-}
-
-.neon-text {
-  color: var(--neon-cyan);
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-}
-
-/* Gradient text */
-.gradient-text {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Animated gradient background */
-.gradient-bg {
-  background: var(--gradient-primary);
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Pulse animation for live indicators */
-@keyframes pulse-neon {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.pulse-neon {
-  animation: pulse-neon 2s ease-in-out infinite;
-}
-
-/* Card hover effect */
-.card-hover {
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
-}
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 240, 255, 0.1);
-}
-
-/* Canvas particle background */
-#hero-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
+  background: var(--accent-muted);
+  color: var(--text-primary);
 }
