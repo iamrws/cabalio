@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
 import { getDefaultSeasonRoles } from '@/lib/seasons';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,20 @@ const createSeasonSchema = z.object({
 
 export async function GET(request: NextRequest) {
   const session = await getSessionFromRequest(request);
-  if (!session || session.role !== 'admin') {
+  if (!session) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  const isAdminGet = await verifyAdminStatus(session.walletAddress);
+  if (!isAdminGet) {
+    const supabaseAudit = createServerClient();
+    supabaseAudit.from('audit_logs').insert({
+      action: 'admin_access_denied',
+      actor_wallet: session.walletAddress,
+      target_wallet: session.walletAddress,
+      details: { endpoint: '/api/admin/seasons', reason: 'not_admin' },
+      created_at: new Date().toISOString(),
+    }).then(() => {}, () => {});
+
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
@@ -51,7 +64,20 @@ export async function POST(request: NextRequest) {
   }
 
   const session = await getSessionFromRequest(request);
-  if (!session || session.role !== 'admin') {
+  if (!session) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  const isAdminPost = await verifyAdminStatus(session.walletAddress);
+  if (!isAdminPost) {
+    const supabaseAudit = createServerClient();
+    supabaseAudit.from('audit_logs').insert({
+      action: 'admin_access_denied',
+      actor_wallet: session.walletAddress,
+      target_wallet: session.walletAddress,
+      details: { endpoint: '/api/admin/seasons', reason: 'not_admin' },
+      created_at: new Date().toISOString(),
+    }).then(() => {}, () => {});
+
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 

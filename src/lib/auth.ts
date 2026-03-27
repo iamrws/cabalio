@@ -2,6 +2,8 @@ import type { NextRequest } from 'next/server';
 
 export const AUTH_COOKIE_NAME = 'jc_session';
 export const AUTH_CHALLENGE_COOKIE_NAME = 'jc_auth_challenge';
+// Security note: 24h is long for financial operations. Consider reducing to 4h
+// and implementing refresh token rotation. See security-audit-owasp.json FINDING-A07-001.
 const DEFAULT_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24; // 24 hours
 
 export type SessionRole = 'member' | 'admin';
@@ -166,6 +168,28 @@ export async function isAdminWallet(walletAddress: string): Promise<boolean> {
   }
 }
 
+/**
+ * Re-verify admin status from the database/env, not trusting the token claim.
+ * Use this on admin endpoints instead of checking session.role.
+ */
+export async function verifyAdminStatus(walletAddress: string): Promise<boolean> {
+  // Check environment allowlist first (fast path)
+  const envAdmins = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim()).filter(Boolean);
+  if (envAdmins.includes(walletAddress)) return true;
+
+  // Check database
+  const { createServerClient } = await import('./db');
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from('admin_wallets')
+    .select('wallet_address')
+    .eq('wallet_address', walletAddress)
+    .eq('active', true)
+    .maybeSingle();
+
+  return !!data;
+}
+
 export function generateNonce(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
@@ -184,15 +208,39 @@ export function buildSignInMessage(walletAddress: string, nonce: string, issuedA
   ].join('\n');
 }
 
-export function encodeChallenge(challenge: AuthChallenge): string {
-  const encoded = new TextEncoder().encode(JSON.stringify(challenge));
-  return base64UrlEncode(encoded);
+async function getSigningKey(): Promise<CryptoKey> {
+  const secret = getSessionSecret();
+  const secretBytes = new TextEncoder().encode(secret) as unknown as BufferSource;
+  return crypto.subtle.importKey(
+    'raw',
+    secretBytes,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
 }
 
-export function decodeChallenge(raw: string | undefined): AuthChallenge | null {
+export async function encodeChallenge(challenge: AuthChallenge): Promise<string> {
+  const payload = new TextEncoder().encode(JSON.stringify(challenge));
+  const payloadB64 = base64UrlEncode(payload);
+  const key = await getSigningKey();
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, payload.buffer as ArrayBuffer));
+  const sigB64 = base64UrlEncode(sig);
+  return `${payloadB64}.${sigB64}`;
+}
+
+export async function decodeChallenge(raw: string | undefined): Promise<AuthChallenge | null> {
   if (!raw) return null;
   try {
-    const decoded = new TextDecoder().decode(base64UrlDecode(raw));
+    const parts = raw.split('.');
+    if (parts.length !== 2) return null;
+    const [payloadB64, sigB64] = parts;
+    const payload = base64UrlDecode(payloadB64);
+    const sig = base64UrlDecode(sigB64);
+    const key = await getSigningKey();
+    const expectedSig = new Uint8Array(await crypto.subtle.sign('HMAC', key, payload.buffer as ArrayBuffer));
+    if (!timingSafeEqual(expectedSig, sig)) return null;
+    const decoded = new TextDecoder().decode(payload);
     const challenge = JSON.parse(decoded) as AuthChallenge;
     if (!challenge.nonce || !challenge.issuedAt || !challenge.walletAddress) return null;
     return challenge;
@@ -235,8 +283,13 @@ export function validateCsrfOrigin(request: NextRequest): boolean {
 
   if (!host) return false;
 
-  // In development, allow localhost
-  const allowedHosts = new Set([host]);
+  // Build allowlist from configured app URL + request host as fallback
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const allowedHosts = new Set<string>();
+  allowedHosts.add(host); // Keep host as fallback for dev environments
+  if (appUrl) {
+    try { allowedHosts.add(new URL(appUrl).host); } catch {}
+  }
 
   if (origin) {
     try {
@@ -256,6 +309,5 @@ export function validateCsrfOrigin(request: NextRequest): boolean {
     }
   }
 
-  // No origin or referer header present - reject for safety
   return false;
 }

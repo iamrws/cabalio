@@ -41,18 +41,52 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = verifySchema.parse(body);
 
-    const challenge = decodeChallenge(request.cookies.get(AUTH_CHALLENGE_COOKIE_NAME)?.value);
+    // C1: Check nonce in database and mark as used atomically
+    const supabase = createServerClient();
+
+    // Rate limit: max 5 verify attempts per wallet per 5 minutes
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { count: recentAttempts } = await supabase
+      .from('auth_nonces')
+      .select('id', { count: 'exact', head: true })
+      .eq('wallet_address', parsed.walletAddress)
+      .gte('issued_at', fiveMinAgo);
+
+    if (recentAttempts !== null && recentAttempts >= 15) {
+      return NextResponse.json(
+        { error: 'Too many authentication attempts. Please wait.' },
+        { status: 429 }
+      );
+    }
+
+    const challenge = await decodeChallenge(request.cookies.get(AUTH_CHALLENGE_COOKIE_NAME)?.value);
     if (!challenge) {
       return NextResponse.json({ error: 'Authentication challenge expired' }, { status: 401 });
     }
 
     // C1: Validate issuedAt age server-side (reject > 5 min)
     if (!isChallengeAgeFresh(challenge.issuedAt)) {
+      // Log failed auth attempt (fire and forget)
+      supabase.from('audit_logs').insert({
+        action: 'auth_failed',
+        actor_wallet: parsed.walletAddress,
+        target_wallet: parsed.walletAddress,
+        details: { reason: 'expired_challenge' },
+        created_at: new Date().toISOString(),
+      }).then(() => {}, () => {});
       return NextResponse.json({ error: 'Authentication challenge expired' }, { status: 401 });
     }
 
     // M4: Validate that the wallet address matches the one bound to the challenge
     if (challenge.walletAddress !== parsed.walletAddress) {
+      // Log failed auth attempt (fire and forget)
+      supabase.from('audit_logs').insert({
+        action: 'auth_failed',
+        actor_wallet: parsed.walletAddress,
+        target_wallet: parsed.walletAddress,
+        details: { reason: 'wallet_mismatch' },
+        created_at: new Date().toISOString(),
+      }).then(() => {}, () => {});
       return NextResponse.json({ error: 'Wallet address does not match challenge' }, { status: 401 });
     }
 
@@ -63,39 +97,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
     }
 
-    // C1: Check nonce in database and mark as used atomically
-    const supabase = createServerClient();
-
-    const { data: nonceRow, error: nonceError } = await supabase
-      .from('auth_nonces')
-      .select('nonce, wallet_address, used, issued_at')
-      .eq('nonce', challenge.nonce)
-      .eq('wallet_address', parsed.walletAddress)
-      .maybeSingle();
-
-    if (nonceError || !nonceRow) {
-      return NextResponse.json({ error: 'Invalid or expired nonce' }, { status: 401 });
-    }
-
-    if (nonceRow.used) {
-      return NextResponse.json({ error: 'Nonce has already been used' }, { status: 401 });
-    }
-
-    // Validate nonce age server-side from DB record
-    const nonceIssuedAt = new Date(nonceRow.issued_at).getTime();
-    if (Number.isNaN(nonceIssuedAt) || Date.now() - nonceIssuedAt > 5 * 60 * 1000) {
-      return NextResponse.json({ error: 'Nonce has expired' }, { status: 401 });
-    }
-
-    // Mark nonce as used immediately before proceeding
-    const { error: markUsedError } = await supabase
+    // C1: Atomically mark nonce as used — prevents TOCTOU race condition
+    const { data: markedNonce, error: markUsedError } = await supabase
       .from('auth_nonces')
       .update({ used: true, used_at: new Date().toISOString() })
       .eq('nonce', challenge.nonce)
-      .eq('used', false);
+      .eq('wallet_address', parsed.walletAddress)
+      .eq('used', false)
+      .select('nonce')
+      .maybeSingle();
 
-    if (markUsedError) {
-      return NextResponse.json({ error: 'Failed to validate nonce' }, { status: 500 });
+    if (markUsedError || !markedNonce) {
+      // Log failed auth attempt (fire and forget)
+      supabase.from('audit_logs').insert({
+        action: 'auth_failed',
+        actor_wallet: parsed.walletAddress,
+        target_wallet: parsed.walletAddress,
+        details: { reason: 'nonce_already_consumed' },
+        created_at: new Date().toISOString(),
+      }).then(() => {}, () => {});
+      return NextResponse.json({ error: 'Nonce already consumed' }, { status: 401 });
     }
 
     const message = buildSignInMessage(parsed.walletAddress, challenge.nonce, challenge.issuedAt);
@@ -103,6 +124,14 @@ export async function POST(request: NextRequest) {
     const isSignatureValid = verifySignature(message, signatureBytes, publicKey);
 
     if (!isSignatureValid) {
+      // Log failed auth attempt (fire and forget)
+      supabase.from('audit_logs').insert({
+        action: 'auth_failed',
+        actor_wallet: parsed.walletAddress,
+        target_wallet: parsed.walletAddress,
+        details: { reason: 'invalid_signature' },
+        created_at: new Date().toISOString(),
+      }).then(() => {}, () => {});
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -142,6 +171,14 @@ export async function POST(request: NextRequest) {
           .update({ is_holder: false, holder_verified_at: now, updated_at: now })
           .eq('wallet_address', parsed.walletAddress);
       }
+      // Log failed auth attempt (fire and forget)
+      supabase.from('audit_logs').insert({
+        action: 'auth_failed',
+        actor_wallet: parsed.walletAddress,
+        target_wallet: parsed.walletAddress,
+        details: { reason: 'not_nft_holder' },
+        created_at: new Date().toISOString(),
+      }).then(() => {}, () => {});
       return NextResponse.json(
         { error: 'Wallet does not hold a Jito Cabal NFT' },
         { status: 403 }
@@ -162,6 +199,20 @@ export async function POST(request: NextRequest) {
     // M7: isAdminWallet now checks both env and DB
     const isAdmin = await isAdminWallet(parsed.walletAddress);
     const token = await createSessionToken(parsed.walletAddress, true, isAdmin);
+
+    // Log successful authentication
+    const heliusApiKey = process.env.HELIUS_API_KEY || '';
+    await supabase.from('audit_logs').insert({
+      action: 'auth_login',
+      actor_wallet: parsed.walletAddress,
+      target_wallet: parsed.walletAddress,
+      details: {
+        is_holder: isHolder,
+        is_admin: isAdmin,
+        nft_verified: !!heliusApiKey,
+      },
+      created_at: new Date().toISOString(),
+    }).then(() => {}, () => {}); // Fire and forget, don't block auth
 
     const response = NextResponse.json({
       session: {

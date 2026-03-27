@@ -8,7 +8,7 @@ import { canChangeRole, ensureSeasonMemberState, getLiveSeason } from '@/lib/sea
 export const dynamic = 'force-dynamic';
 
 const roleSchema = z.object({
-  role: z.string().min(1).max(40),
+  role: z.string().regex(/^[a-z0-9_]+$/, 'Role key must contain only lowercase letters, numbers, and underscores').min(1).max(40),
 });
 
 export async function POST(request: NextRequest) {

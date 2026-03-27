@@ -122,7 +122,7 @@ export async function GET(
   return NextResponse.json({
     wallet_address: walletAddress,
     user,
-    rewards,
+    rewards: (isSelf || isAdmin) ? rewards : [],
     contributions: submissions,
     points_history: visiblePoints,
     stats: {

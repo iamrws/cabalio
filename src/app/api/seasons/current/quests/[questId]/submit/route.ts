@@ -242,6 +242,25 @@ export async function POST(
         created_at: nowIso,
       });
 
+      if (pointsReward > 0) {
+        // Update user's total_xp to reflect quest bonus
+        const { data: currentUser } = await supabase
+          .from('users')
+          .select('total_xp')
+          .eq('wallet_address', session.walletAddress)
+          .single();
+
+        if (currentUser) {
+          await supabase
+            .from('users')
+            .update({
+              total_xp: (currentUser.total_xp || 0) + pointsReward,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('wallet_address', session.walletAddress);
+        }
+      }
+
       await trackEngagementEvent(supabase, 'season_quest_approved', session.walletAddress, {
         season_id: season.id,
         quest_id: questId,

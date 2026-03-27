@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
 import { scoreSubmission } from '@/lib/scoring';
 import { calculatePoints, calculateStreak } from '@/lib/points';
 
@@ -21,17 +21,35 @@ export async function POST(
   }
 
   const session = await getSessionFromRequest(request);
-  if (!session || session.role !== 'admin') {
+  if (!session) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  const isAdmin = await verifyAdminStatus(session.walletAddress);
+  if (!isAdmin) {
+    const supabaseAudit = createServerClient();
+    supabaseAudit.from('audit_logs').insert({
+      action: 'admin_access_denied',
+      actor_wallet: session.walletAddress,
+      target_wallet: session.walletAddress,
+      details: { endpoint: '/api/admin/submissions/review', reason: 'not_admin' },
+      created_at: new Date().toISOString(),
+    }).then(() => {}, () => {});
+
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const { id } = await params;
+  if (!uuidRegex.test(id)) {
+    return NextResponse.json({ error: 'Invalid submission ID format' }, { status: 400 });
+  }
 
   try {
     const body = await request.json();
     const parsed = reviewSchema.parse(body);
 
     const supabase = createServerClient();
+    // Status is validated below in each action branch via .in('status', [...]) guards
     const { data: submission, error: submissionError } = await supabase
       .from('submissions')
       .select('*')
@@ -70,17 +88,27 @@ export async function POST(
     if (parsed.action === 'reject') {
       const now = new Date().toISOString();
 
-      const { error } = await supabase
+      const { data: rejectedSubmission, error } = await supabase
         .from('submissions')
         .update({
           status: 'rejected',
           scored_at: now,
         })
-        .eq('id', id);
+        .eq('id', id)
+        .in('status', ['submitted', 'queued', 'ai_scored', 'human_review', 'flagged'])
+        .select('id')
+        .maybeSingle();
 
       if (error) {
         console.error('Submission reject update error:', error);
         return NextResponse.json({ error: 'Failed to reject submission' }, { status: 500 });
+      }
+
+      if (!rejectedSubmission) {
+        return NextResponse.json(
+          { error: 'Submission has already been reviewed or is in a terminal state' },
+          { status: 409 }
+        );
       }
 
       await logAdminReviewAction('rejected', id, submission.wallet_address);
@@ -141,17 +169,27 @@ export async function POST(
     }
 
     if (parsed.action === 'flag') {
-      const { error } = await supabase
+      const { data: flaggedSubmission, error } = await supabase
         .from('submissions')
         .update({
           status: 'flagged',
           scored_at: new Date().toISOString(),
         })
-        .eq('id', id);
+        .eq('id', id)
+        .in('status', ['submitted', 'queued', 'ai_scored', 'human_review'])
+        .select('id')
+        .maybeSingle();
 
       if (error) {
         console.error('Submission flag update error:', error);
         return NextResponse.json({ error: 'Failed to flag submission' }, { status: 500 });
+      }
+
+      if (!flaggedSubmission) {
+        return NextResponse.json(
+          { error: 'Submission has already been reviewed or is in a terminal state' },
+          { status: 409 }
+        );
       }
 
       await logAdminReviewAction('flagged', id, submission.wallet_address);
@@ -168,6 +206,20 @@ export async function POST(
       submission.type as 'x_post' | 'blog' | 'art'
     );
 
+    if (!scoringBreakdown) {
+      // Anomaly detected — flag for human review instead of auto-scoring
+      await supabase.from('submissions').update({
+        status: 'human_review',
+        scored_at: new Date().toISOString(),
+      }).eq('id', id);
+
+      return NextResponse.json({
+        success: true,
+        action: 'flagged_for_review',
+        message: 'Scoring anomaly detected — submission flagged for manual review',
+      });
+    }
+
     const { data: userData } = await supabase
       .from('users')
       .select('current_streak, last_submission_date, total_xp, longest_streak')
@@ -183,7 +235,7 @@ export async function POST(
     const now = new Date().toISOString();
     const today = now.split('T')[0];
 
-    const { error: updateSubmissionError } = await supabase
+    const { data: updatedSubmission, error: updateSubmissionError } = await supabase
       .from('submissions')
       .update({
         raw_score: scoringBreakdown.weighted_total,
@@ -193,26 +245,59 @@ export async function POST(
         status: 'approved',
         scored_at: now,
       })
-      .eq('id', id);
+      .eq('id', id)
+      .in('status', ['submitted', 'queued', 'ai_scored', 'human_review'])
+      .select('id')
+      .maybeSingle();
 
     if (updateSubmissionError) {
       console.error('Submission approve update error:', updateSubmissionError);
       return NextResponse.json({ error: 'Failed to approve submission' }, { status: 500 });
     }
 
-    const newTotalXp = (userData?.total_xp || 0) + points;
-    const previousLongestStreak = userData?.longest_streak || 0;
+    if (!updatedSubmission) {
+      return NextResponse.json(
+        { error: 'Submission has already been reviewed or is in a terminal state' },
+        { status: 409 }
+      );
+    }
 
-    await supabase
+    const previousLongestStreak = userData?.longest_streak || 0;
+    const newStreak = streakInfo.newStreak;
+
+    // Use optimistic lock: only update if total_xp hasn't changed since we read it
+    const { data: updatedUser, error: xpError } = await supabase
       .from('users')
       .update({
-        current_streak: streakInfo.newStreak,
-        longest_streak: Math.max(streakInfo.newStreak, previousLongestStreak),
+        total_xp: (userData?.total_xp || 0) + points,
+        current_streak: newStreak,
+        longest_streak: Math.max(newStreak, previousLongestStreak),
         last_submission_date: today,
-        total_xp: newTotalXp,
         updated_at: now,
       })
-      .eq('wallet_address', submission.wallet_address);
+      .eq('wallet_address', submission.wallet_address)
+      .eq('total_xp', userData?.total_xp || 0)  // Optimistic lock: only update if XP hasn't changed
+      .select('total_xp')
+      .maybeSingle();
+
+    if (!updatedUser && !xpError) {
+      // Concurrent modification detected — re-read and retry once
+      const { data: freshUser } = await supabase
+        .from('users')
+        .select('total_xp, current_streak, longest_streak')
+        .eq('wallet_address', submission.wallet_address)
+        .single();
+
+      if (freshUser) {
+        await supabase.from('users').update({
+          total_xp: freshUser.total_xp + points,
+          current_streak: newStreak,
+          longest_streak: Math.max(newStreak, freshUser.longest_streak || 0),
+          last_submission_date: today,
+          updated_at: now,
+        }).eq('wallet_address', submission.wallet_address);
+      }
+    }
 
     await supabase.from('points_ledger').insert({
       wallet_address: submission.wallet_address,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +27,21 @@ export async function POST(request: NextRequest) {
   }
 
   const session = await getSessionFromRequest(request);
-  if (!session || session.role !== 'admin') {
+  if (!session) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  const isAdmin = await verifyAdminStatus(session.walletAddress);
+  if (!isAdmin) {
+    // Log failed admin access attempt
+    const supabaseAudit = createServerClient();
+    supabaseAudit.from('audit_logs').insert({
+      action: 'admin_access_denied',
+      actor_wallet: session.walletAddress,
+      target_wallet: session.walletAddress,
+      details: { endpoint: '/api/admin/points', reason: 'not_admin' },
+      created_at: new Date().toISOString(),
+    }).then(() => {}, () => {});
+
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
@@ -146,17 +160,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to record points adjustment' }, { status: 500 });
     }
 
-    const { error: userUpdateError } = await supabase
+    // Use optimistic lock: only update if total_xp hasn't changed since we read it
+    const { data: updatedUser, error: userUpdateError } = await supabase
       .from('users')
       .update({
         total_xp: (existingUser.total_xp || 0) + parsed.points_delta,
         updated_at: now,
       })
-      .eq('wallet_address', walletAddress);
+      .eq('wallet_address', walletAddress)
+      .eq('total_xp', existingUser.total_xp || 0)  // Optimistic lock
+      .select('total_xp')
+      .maybeSingle();
 
     if (userUpdateError) {
       console.error('User XP update failed:', userUpdateError);
       return NextResponse.json({ error: 'Failed to update user points' }, { status: 500 });
+    }
+
+    if (!updatedUser) {
+      // Concurrent modification detected — re-read and retry once
+      const { data: freshUser } = await supabase
+        .from('users')
+        .select('total_xp')
+        .eq('wallet_address', walletAddress)
+        .single();
+
+      if (freshUser) {
+        const { error: retryError } = await supabase
+          .from('users')
+          .update({
+            total_xp: freshUser.total_xp + parsed.points_delta,
+            updated_at: now,
+          })
+          .eq('wallet_address', walletAddress);
+
+        if (retryError) {
+          console.error('User XP retry update failed:', retryError);
+          return NextResponse.json({ error: 'Failed to update user points (concurrent modification)' }, { status: 500 });
+        }
+      }
     }
 
     return NextResponse.json({

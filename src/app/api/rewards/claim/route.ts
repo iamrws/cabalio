@@ -24,26 +24,15 @@ const claimSchema = z.object({
   idempotencyKey: z.string().min(16).max(64),
 });
 
-// In-memory rate limiter: max 5 claims per wallet per hour
-const CLAIM_WINDOW_MS = 60 * 60 * 1000;
-const CLAIM_WINDOW_MAX = 5;
-const claimRateWindow = new Map<string, { count: number; resetAt: number }>();
+async function isClaimRateLimited(supabase: ReturnType<typeof createServerClient>, walletAddress: string): Promise<boolean> {
+  const windowStart = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from('reward_claims')
+    .select('id', { count: 'exact', head: true })
+    .eq('wallet_address', walletAddress)
+    .gte('created_at', windowStart);
 
-function isClaimRateLimited(walletAddress: string): boolean {
-  const now = Date.now();
-  const state = claimRateWindow.get(walletAddress);
-
-  if (!state || now > state.resetAt) {
-    claimRateWindow.set(walletAddress, { count: 1, resetAt: now + CLAIM_WINDOW_MS });
-    return false;
-  }
-
-  if (state.count >= CLAIM_WINDOW_MAX) {
-    return true;
-  }
-
-  state.count += 1;
-  return false;
+  return count !== null && count >= 5;
 }
 
 export async function POST(request: NextRequest) {
@@ -68,7 +57,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
   }
 
-  if (isClaimRateLimited(session.walletAddress)) {
+  const supabase = createServerClient();
+  if (await isClaimRateLimited(supabase, session.walletAddress)) {
     return NextResponse.json(
       { error: 'Too many claim attempts. Try again later.' },
       { status: 429 }
@@ -78,8 +68,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsed = claimSchema.parse(body);
-
-    const supabase = createServerClient();
     const walletAddress = session.walletAddress;
     const now = new Date().toISOString();
 
@@ -177,6 +165,19 @@ export async function POST(request: NextRequest) {
       // correctly marked as claimed - the claim record is for tracking only.
       console.error('Claim record insert error:', claimInsertError);
     }
+
+    // Audit log for financial operation (fire and forget)
+    supabase.from('audit_logs').insert({
+      action: 'reward_claimed',
+      actor_wallet: walletAddress,
+      target_wallet: walletAddress,
+      details: {
+        reward_id: parsed.rewardId,
+        amount_lamports: updatedReward.reward_amount_lamports,
+        idempotency_key: parsed.idempotencyKey,
+      },
+      created_at: now,
+    }).then(() => {}, () => {});
 
     // NOTE: Actual SOL transfer is handled by a separate payout worker
     // that reads from the reward_claims table. This endpoint only marks

@@ -10,26 +10,15 @@ const voteSchema = z.object({
   vote: z.enum(['ai', 'human']),
 });
 
-// In-memory rate limiter: max 30 votes per wallet per 10 minutes
-const VOTE_WINDOW_MS = 10 * 60 * 1000;
-const VOTE_WINDOW_MAX = 30;
-const voteRateWindow = new Map<string, { count: number; resetAt: number }>();
+async function isVoteRateLimited(supabase: ReturnType<typeof createServerClient>, walletAddress: string): Promise<boolean> {
+  const windowStart = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from('game_votes')
+    .select('id', { count: 'exact', head: true })
+    .eq('wallet_address', walletAddress)
+    .gte('created_at', windowStart);
 
-function isVoteRateLimited(walletAddress: string): boolean {
-  const now = Date.now();
-  const state = voteRateWindow.get(walletAddress);
-
-  if (!state || now > state.resetAt) {
-    voteRateWindow.set(walletAddress, { count: 1, resetAt: now + VOTE_WINDOW_MS });
-    return false;
-  }
-
-  if (state.count >= VOTE_WINDOW_MAX) {
-    return true;
-  }
-
-  state.count += 1;
-  return false;
+  return count !== null && count >= 30;
 }
 
 /**
@@ -51,7 +40,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
   }
 
-  if (isVoteRateLimited(session.walletAddress)) {
+  const supabase = createServerClient();
+  if (await isVoteRateLimited(supabase, session.walletAddress)) {
     return NextResponse.json({ error: 'Too many votes. Slow down.' }, { status: 429 });
   }
 
@@ -59,7 +49,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = voteSchema.parse(body);
 
-    const supabase = createServerClient();
     const walletAddress = session.walletAddress;
 
     // Prevent duplicate votes on the same video
@@ -140,22 +129,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to record vote' }, { status: 500 });
     }
 
-    // Upsert player game state
-    const { error: upsertError } = await supabase
+    // Update player game state with optimistic lock
+    // Try to update existing row first, checking current points haven't changed
+    const { data: updatedGameState } = await supabase
       .from('game_player_state')
-      .upsert(
-        {
-          wallet_address: walletAddress,
-          points: newPoints,
-          streak: newStreak,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'wallet_address' }
-      );
+      .update({
+        points: newPoints,
+        streak: newStreak,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('wallet_address', walletAddress)
+      .eq('points', currentPoints)  // Optimistic lock
+      .select('points')
+      .maybeSingle();
 
-    if (upsertError) {
-      console.error('game state upsert error:', upsertError);
-      // Vote was recorded; state update is non-critical
+    if (!updatedGameState) {
+      // Either no row exists (first vote) or concurrent modification
+      // Use upsert as fallback — for first vote this creates the row
+      const { error: upsertError } = await supabase
+        .from('game_player_state')
+        .upsert(
+          {
+            wallet_address: walletAddress,
+            points: newPoints,
+            streak: newStreak,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'wallet_address' }
+        );
+
+      if (upsertError) {
+        console.error('game state upsert error:', upsertError);
+        // Vote was recorded; state update is non-critical
+      }
     }
 
     return NextResponse.json({

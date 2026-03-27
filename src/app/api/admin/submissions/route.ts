@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, verifyAdminStatus } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const session = await getSessionFromRequest(request);
-  if (!session || session.role !== 'admin') {
+  if (!session) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  const isAdmin = await verifyAdminStatus(session.walletAddress);
+  if (!isAdmin) {
+    const supabaseAudit = createServerClient();
+    supabaseAudit.from('audit_logs').insert({
+      action: 'admin_access_denied',
+      actor_wallet: session.walletAddress,
+      target_wallet: session.walletAddress,
+      details: { endpoint: '/api/admin/submissions', reason: 'not_admin' },
+      created_at: new Date().toISOString(),
+    }).then(() => {}, () => {});
+
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 

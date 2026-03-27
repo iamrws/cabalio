@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,12 +24,30 @@ export async function POST(
   }
 
   const session = await getSessionFromRequest(request);
-  if (!session || session.role !== 'admin') {
+  if (!session) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  const isAdmin = await verifyAdminStatus(session.walletAddress);
+  if (!isAdmin) {
+    const supabaseAudit = createServerClient();
+    supabaseAudit.from('audit_logs').insert({
+      action: 'admin_access_denied',
+      actor_wallet: session.walletAddress,
+      target_wallet: session.walletAddress,
+      details: { endpoint: '/api/admin/seasons/world-boss/progress', reason: 'not_admin' },
+      created_at: new Date().toISOString(),
+    }).then(() => {}, () => {});
+
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   try {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const { seasonId } = await params;
+    if (!uuidRegex.test(seasonId)) {
+      return NextResponse.json({ error: 'Invalid season ID format' }, { status: 400 });
+    }
+
     const body = await request.json();
     const parsed = worldBossProgressSchema.parse(body);
 

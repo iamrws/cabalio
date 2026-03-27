@@ -83,6 +83,6 @@ export function verifySignature(
 
 // Get a Solana connection
 export function getConnection(): Connection {
-  const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+  const rpcUrl = process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
   return new Connection(rpcUrl, 'confirmed');
 }

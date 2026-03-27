@@ -38,6 +38,21 @@ export async function POST(request: NextRequest) {
 
     // C1: Store nonce in Supabase for server-side validation and single-use enforcement
     const supabase = createServerClient();
+
+    // Rate limit: max 10 nonce requests per wallet per 5 minutes
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { count: recentNonces } = await supabase
+      .from('auth_nonces')
+      .select('id', { count: 'exact', head: true })
+      .eq('wallet_address', parsed.walletAddress)
+      .gte('issued_at', fiveMinAgo);
+
+    if (recentNonces !== null && recentNonces >= 10) {
+      return NextResponse.json(
+        { error: 'Too many authentication requests. Please wait a few minutes.' },
+        { status: 429 }
+      );
+    }
     const { error: insertError } = await supabase.from('auth_nonces').insert({
       nonce,
       wallet_address: parsed.walletAddress,
@@ -51,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     // M4: Include wallet address in challenge cookie so it's bound to the requesting wallet
-    const challenge = encodeChallenge({ nonce, issuedAt, walletAddress: parsed.walletAddress });
+    const challenge = await encodeChallenge({ nonce, issuedAt, walletAddress: parsed.walletAddress });
     const message = buildSignInMessage(parsed.walletAddress, nonce, issuedAt);
 
     const response = NextResponse.json({ message, issuedAt });

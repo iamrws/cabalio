@@ -60,7 +60,7 @@ export async function scoreSubmission(
   content: string,
   type: SubmissionType,
   xMetrics?: { likes: number; retweets: number; replies: number; impressions: number }
-): Promise<ScoringBreakdown> {
+): Promise<ScoringBreakdown | null> {
   const metricsContext = xMetrics
     ? `\n\nEngagement metrics: ${xMetrics.likes} likes, ${xMetrics.retweets} retweets, ${xMetrics.replies} replies, ${xMetrics.impressions} impressions.`
     : '';
@@ -146,8 +146,11 @@ Score this submission using the score_submission tool.`;
     console.warn(
       `[scoring] Anomaly detected: all scores identical or perfect for submission. ` +
       `Scores: ${SCORING_DIMENSIONS.map((d) => breakdown[d].score).join(', ')}. ` +
-      `Content length: ${content.length}`
+      `Content length: ${content.length}` +
+      ` — flagging for human review`
     );
+    // Return null to signal that the submission should be flagged for human review
+    return null;
   }
 
   return breakdown;
