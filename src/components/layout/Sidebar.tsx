@@ -43,7 +43,6 @@ export default function Sidebar() {
 
   useEffect(() => {
     let cancelled = false;
-
     const loadSummary = async () => {
       try {
         const response = await fetch('/api/me/summary', { cache: 'no-store' });
@@ -51,31 +50,24 @@ export default function Sidebar() {
         if (!response.ok || cancelled) return;
         setWeeklyPoints(data.stats?.weekly_points || 0);
         setLevel(data.user?.level || 1);
-      } catch {
-        // Sidebar keeps fallback values.
-      }
+      } catch { /* keep defaults */ }
     };
-
     void loadSummary();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-[260px] bg-bg-secondary border-r border-border-subtle flex flex-col z-40 hidden lg:flex">
-      {/* Logo */}
-      <div className="p-6 border-b border-border-subtle">
+    <aside className="fixed left-0 top-0 h-full w-[260px] bg-[#f5f0e8] border-r border-stone-200/60 flex flex-col z-40 hidden lg:flex">
+      <div className="p-6 border-b border-stone-200/60">
         <Link href="/" className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg gradient-bg flex items-center justify-center text-white font-bold text-sm">
+          <div className="h-8 w-8 rounded-lg bg-[#b45309] flex items-center justify-center text-white font-bold text-sm" style={{ fontFamily: '"Charter", Georgia, serif' }}>
             JC
           </div>
-          <span className="text-lg font-bold gradient-text">JITO CABAL</span>
+          <span className="text-lg font-bold text-[#1c1917] tracking-tight" style={{ fontFamily: '"Charter", Georgia, serif' }}>JITO CABAL</span>
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1" style={{ fontFamily: '"Avenir Next", "Segoe UI", system-ui, sans-serif' }}>
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -83,18 +75,18 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
+                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'
+                  ? 'bg-white/80 text-[#92400e] border-l-[3px] border-[#b45309] shadow-[0_2px_8px_rgba(28,25,23,0.06)]'
+                  : 'text-stone-600 hover:text-[#1c1917] hover:bg-white/50 border-l-[3px] border-transparent'
                 }
               `}
             >
-              <span className={isActive ? 'text-neon-cyan' : ''}>{icons[item.icon]}</span>
+              <span className={isActive ? 'text-[#b45309]' : ''}>{icons[item.icon]}</span>
               {item.label}
               {item.icon === 'plus' && (
-                <span className="ml-auto text-xs bg-neon-purple/20 text-neon-purple px-2 py-0.5 rounded-full">
+                <span className="ml-auto text-xs bg-[#0f766e]/10 text-[#0f766e] px-2 py-0.5 rounded-full border border-[#0f766e]/20">
                   New
                 </span>
               )}
@@ -103,7 +95,6 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* AI or Not game toggle */}
       <div className="px-4 pb-2">
         <button
           onClick={toggleGame}
@@ -111,40 +102,33 @@ export default function Sidebar() {
             w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold
             transition-all duration-200 group
             ${gameOpen
-              ? 'bg-neon-purple/15 text-neon-purple border border-neon-purple/30'
-              : 'bg-bg-tertiary/50 text-text-secondary hover:text-neon-purple hover:bg-neon-purple/10 border border-transparent hover:border-neon-purple/20'
+              ? 'bg-violet-50 text-[#7c3aed] border border-violet-200'
+              : 'bg-white/50 text-stone-500 hover:text-[#7c3aed] hover:bg-violet-50 border border-transparent hover:border-violet-200/60'
             }
           `}
-          style={gameOpen ? { boxShadow: '0 0 20px rgba(179,71,217,0.15)' } : {}}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
           </svg>
           AI or Not?
           <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-            gameOpen
-              ? 'bg-neon-purple/20 text-neon-purple'
-              : 'bg-neon-purple/10 text-neon-purple/70 group-hover:bg-neon-purple/20 group-hover:text-neon-purple'
+            gameOpen ? 'bg-violet-100 text-[#7c3aed]' : 'bg-stone-100 text-stone-500 group-hover:bg-violet-100 group-hover:text-[#7c3aed]'
           }`}>
             {gameOpen ? 'On' : 'Play'}
           </span>
         </button>
       </div>
 
-      {/* Bottom section */}
-      <div className="p-4 border-t border-border-subtle space-y-3">
+      <div className="p-4 border-t border-stone-200/60 space-y-3">
         <div className="flex items-center justify-between px-2">
-          <span className="text-xs text-text-muted uppercase tracking-wider">This Week</span>
+          <span className="text-xs text-stone-400 uppercase tracking-wider font-medium">This Week</span>
           <PointsBadge points={weeklyPoints} size="sm" />
         </div>
-        <Link
-          href="/profile/me"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-bg-tertiary transition-colors"
-        >
-          <div className="h-8 w-8 rounded-full bg-bg-tertiary border border-border-subtle" />
+        <Link href="/profile/me" className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/60 transition-colors">
+          <div className="h-8 w-8 rounded-full bg-stone-200 border border-stone-300/60" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-text-primary truncate">Your Profile</div>
-            <div className="text-xs text-text-muted font-mono">Level {level}</div>
+            <div className="text-sm font-medium text-stone-800 truncate">Your Profile</div>
+            <div className="text-xs text-stone-400 font-mono">Level {level}</div>
           </div>
         </Link>
       </div>

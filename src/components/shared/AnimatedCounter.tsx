@@ -33,7 +33,6 @@ export default function AnimatedCounter({
     const animate = () => {
       const elapsed = (Date.now() - startTime) / 1000;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setDisplayValue(startValue + (value - startValue) * eased);
 
@@ -50,7 +49,10 @@ export default function AnimatedCounter({
       ref={ref}
       initial={{ opacity: 0, y: 10 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      className={`font-mono tabular-nums ${className}`}
+      role="status"
+      aria-live="polite"
+      aria-label={`${prefix}${value.toFixed(decimals)}${suffix}`}
+      className={`font-mono tabular-nums text-[#0f766e] ${className}`}
     >
       {prefix}
       {displayValue.toFixed(decimals)}

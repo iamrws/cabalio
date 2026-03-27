@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       .select('id, entry_type, points_delta, metadata, created_at, submission_id')
       .eq('wallet_address', session.walletAddress)
       .order('created_at', { ascending: false })
-      .limit(100),
+      .limit(1000),
   ]);
 
   if (submissionsResult.error) {

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000 --connect-timeout 3)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001 --connect-timeout 3)",
+      "Bash(netstat -ano)",
+      "Bash(npm run:*)",
+      "Bash(echo $PATH)",
+      "Bash(bun --version)",
+      "Bash(bash \"C:\\\\Users\\\\grzeg\\\\.claude\\\\plugins\\\\marketplaces\\\\superpowers-dev\\\\skills\\\\brainstorming\\\\scripts\\\\start-server.sh\" --project-dir \"D:\\\\Drive_C\\\\Development\\\\cabal\\\\jito-cabal\")",
+      "Bash(while read:*)",
+      "Bash(do cat:*)",
+      "Bash(bun --help)",
+      "Bash(bun /c/Users/grzeg/.claude/plugins/marketplaces/superpowers-dev/skills/brainstorming/scripts/server.cjs --help)",
+      "Bash(SESSION_DIR=\"/d/Drive_C/Development/cabal/jito-cabal/.superpowers/brainstorm/1025-1774587849\")",
+      "Bash(BRAINSTORM_DIR=\"$SESSION_DIR\" BRAINSTORM_HOST=\"127.0.0.1\" BRAINSTORM_URL_HOST=\"localhost\" BRAINSTORM_OWNER_PID=\"$$\" bun /c/Users/grzeg/.claude/plugins/marketplaces/superpowers-dev/skills/brainstorming/scripts/server.cjs)",
+      "Bash(find D:Drive_CDevelopmentcabaljito-cabal -maxdepth 2 -type f \\\\\\(-name *.config.* -o -name postcss.config.* \\\\\\))",
+      "Bash(find D:Drive_CDevelopmentcabaljito-cabal -name *.css -type f)",
+      "Bash(bun run:*)",
+      "Allow All"
+    ]
+  }
+}

@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
     });
 
     // L1: Add cache headers to reduce repeated identical requests in serverless
-    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=60`);
+    response.headers.set('Cache-Control', `private, max-age=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=60`);
 
     return response;
   } catch (err) {
@@ -382,7 +382,7 @@ async function fallbackLeaderboard(
     current_year: getISOWeekYear(new Date()),
   });
 
-  response.headers.set('Cache-Control', `public, s-maxage=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=60`);
+  response.headers.set('Cache-Control', `private, max-age=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=60`);
 
   return response;
 }

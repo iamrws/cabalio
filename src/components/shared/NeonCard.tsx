@@ -1,44 +1,57 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { KeyboardEvent } from 'react';
 
 interface NeonCardProps {
   children: React.ReactNode;
   className?: string;
   glowColor?: 'cyan' | 'purple' | 'green' | 'orange' | 'gold';
+  variant?: 'default' | 'elevated' | 'dark' | 'accent';
+  accent?: string;
   hover?: boolean;
   onClick?: () => void;
 }
 
-const glowMap = {
-  cyan: { border: 'border-neon-cyan/20', hover: 'hover:border-neon-cyan/60 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]' },
-  purple: { border: 'border-neon-purple/20', hover: 'hover:border-neon-purple/60 hover:shadow-[0_0_20px_rgba(179,71,217,0.2)]' },
-  green: { border: 'border-neon-green/20', hover: 'hover:border-neon-green/60 hover:shadow-[0_0_20px_rgba(57,255,20,0.2)]' },
-  orange: { border: 'border-neon-orange/20', hover: 'hover:border-neon-orange/60 hover:shadow-[0_0_20px_rgba(255,107,53,0.2)]' },
-  gold: { border: 'border-yellow-500/20', hover: 'hover:border-yellow-500/60 hover:shadow-[0_0_20px_rgba(255,215,0,0.2)]' },
+const variantStyles = {
+  default: 'bg-white/80 border border-stone-200/60 shadow-[0_4px_20px_rgba(28,25,23,0.06)]',
+  elevated: 'bg-white border border-stone-200/80 shadow-[0_8px_30px_rgba(28,25,23,0.1)]',
+  dark: 'bg-[#1c1917] border border-stone-700/40 text-stone-100 shadow-[0_8px_30px_rgba(28,25,23,0.2)]',
+  accent: 'bg-white/80 border border-stone-200/60 shadow-[0_4px_20px_rgba(28,25,23,0.06)]',
 };
 
 export default function NeonCard({
   children,
   className = '',
-  glowColor = 'cyan',
+  variant = 'default',
+  accent,
   hover = true,
   onClick,
 }: NeonCardProps) {
-  const glow = glowMap[glowColor];
+  const isInteractive = !!onClick;
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick?.();
+    }
+  };
 
   return (
     <motion.div
-      whileHover={hover ? { y: -2 } : undefined}
+      whileHover={hover ? { y: -1 } : undefined}
       transition={{ duration: 0.2 }}
       onClick={onClick}
+      onKeyDown={isInteractive ? handleKeyDown : undefined}
+      role={isInteractive ? 'button' : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
       className={`
-        bg-bg-secondary rounded-xl border ${glow.border}
-        ${hover ? glow.hover : ''}
-        transition-all duration-300
-        ${onClick ? 'cursor-pointer' : ''}
+        rounded-2xl ${variantStyles[variant]}
+        ${hover ? 'transition-all duration-200 hover:shadow-[0_8px_30px_rgba(28,25,23,0.1)]' : ''}
+        ${isInteractive ? 'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]' : ''}
         ${className}
       `}
+      style={accent ? { borderLeftWidth: '3px', borderLeftColor: accent } : undefined}
     >
       {children}
     </motion.div>

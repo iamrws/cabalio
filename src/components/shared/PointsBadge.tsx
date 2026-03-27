@@ -19,18 +19,20 @@ export default function PointsBadge({ points, size = 'md', showLabel = true }: P
     <motion.div
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
+      role="status"
+      aria-label={`${points.toLocaleString()} points`}
       className={`
         inline-flex items-center gap-1.5 rounded-full
-        bg-neon-cyan/10 border border-neon-cyan/30
-        font-mono font-bold text-neon-cyan
+        bg-amber-50 border border-amber-200/60
+        font-mono font-bold text-[#b45309]
         ${sizeMap[size]}
       `}
     >
-      <svg viewBox="0 0 16 16" className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} fill="currentColor">
+      <svg viewBox="0 0 16 16" className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} fill="currentColor" aria-hidden="true">
         <path d="M8 0L10.2 5.3L16 6.2L11.9 10.1L12.9 16L8 13.3L3.1 16L4.1 10.1L0 6.2L5.8 5.3L8 0Z" />
       </svg>
       {points.toLocaleString()}
-      {showLabel && <span className="text-neon-cyan/60 font-normal">pts</span>}
+      {showLabel && <span className="text-[#b45309]/60 font-normal">pts</span>}
     </motion.div>
   );
 }
