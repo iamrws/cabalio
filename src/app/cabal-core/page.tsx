@@ -315,7 +315,7 @@ export default function CabalCorePage() {
             </Link>
             <Link
               href="/leaderboard"
-              className="rounded-lg border border-[rgba(59,130,246,0.15)] bg-accent-muted px-3 py-2 text-xs text-accent-text"
+              className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text"
             >
               View Leaderboard
             </Link>
@@ -349,7 +349,7 @@ export default function CabalCorePage() {
             <button
               type="submit"
               disabled={adjusting}
-              className="md:col-span-4 rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] px-3 py-2 text-sm text-accent-text font-medium disabled:opacity-60"
+              className="md:col-span-4 rounded-lg bg-accent-muted border border-accent-border px-3 py-2 text-sm text-accent-text font-medium disabled:opacity-60"
             >
               {adjusting ? 'Applying points...' : 'Apply Manual Adjustment'}
             </button>
@@ -414,7 +414,7 @@ export default function CabalCorePage() {
               <button
                 type="submit"
                 disabled={creatingSeason}
-                className="w-full rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] px-3 py-2 text-sm text-accent-text disabled:opacity-60"
+                className="w-full rounded-lg bg-accent-muted border border-accent-border px-3 py-2 text-sm text-accent-text disabled:opacity-60"
               >
                 {creatingSeason ? 'Creating season...' : 'Create Season'}
               </button>
@@ -481,7 +481,7 @@ export default function CabalCorePage() {
               <button
                 type="submit"
                 disabled={signalBusy}
-                className="w-full rounded-lg bg-caution-muted border border-[rgba(234,179,8,0.12)] px-3 py-2 text-sm text-caution disabled:opacity-60"
+                className="w-full rounded-lg bg-caution-muted border border-caution-border px-3 py-2 text-sm text-caution disabled:opacity-60"
               >
                 {signalBusy ? 'Updating...' : 'Apply Signal Storm Action'}
               </button>
@@ -538,7 +538,7 @@ export default function CabalCorePage() {
             <button
               type="submit"
               disabled={bossBusy}
-              className="md:col-span-3 rounded-lg bg-positive-muted border border-[rgba(34,197,94,0.12)] px-3 py-2 text-sm text-positive disabled:opacity-60"
+              className="md:col-span-3 rounded-lg bg-positive-muted border border-positive-border px-3 py-2 text-sm text-positive disabled:opacity-60"
             >
               {bossBusy ? 'Updating boss progress...' : 'Apply Boss Progress Update'}
             </button>
@@ -554,7 +554,7 @@ export default function CabalCorePage() {
                 onClick={() => setStatusFilter(status)}
                 className={`rounded-full px-3 py-1 text-xs border ${
                   statusFilter === status
-                    ? 'bg-accent-muted border-[rgba(59,130,246,0.15)] text-accent-text'
+                    ? 'bg-accent-muted border-accent-border text-accent-text'
                     : 'bg-bg-raised border-border-subtle text-text-secondary'
                 }`}
               >
@@ -566,8 +566,8 @@ export default function CabalCorePage() {
         </NeonCard>
 
         {error ? (
-          <NeonCard hover={false} className="p-4 border border-red-500/30">
-            <div className="text-sm text-red-400">{error}</div>
+          <NeonCard hover={false} className="p-4 border border-negative-border">
+            <div className="text-sm text-negative">{error}</div>
           </NeonCard>
         ) : null}
 
@@ -619,21 +619,21 @@ export default function CabalCorePage() {
                   <button
                     onClick={() => handleReview(submission.id, 'approve')}
                     disabled={processingId === submission.id}
-                    className="rounded-lg bg-positive-muted border border-[rgba(34,197,94,0.12)] text-positive px-3 py-1.5 text-xs disabled:opacity-60"
+                    className="rounded-lg bg-positive-muted border border-positive-border text-positive px-3 py-1.5 text-xs disabled:opacity-60"
                   >
                     Approve + Score
                   </button>
                   <button
                     onClick={() => handleReview(submission.id, 'flag')}
                     disabled={processingId === submission.id}
-                    className="rounded-lg bg-caution-muted border border-[rgba(234,179,8,0.12)] text-caution px-3 py-1.5 text-xs disabled:opacity-60"
+                    className="rounded-lg bg-caution-muted border border-caution-border text-caution px-3 py-1.5 text-xs disabled:opacity-60"
                   >
                     Flag
                   </button>
                   <button
                     onClick={() => handleReview(submission.id, 'reject')}
                     disabled={processingId === submission.id}
-                    className="rounded-lg bg-red-500/15 border border-red-500/40 text-red-400 px-3 py-1.5 text-xs disabled:opacity-60"
+                    className="rounded-lg bg-negative-muted border border-negative-border text-negative px-3 py-1.5 text-xs disabled:opacity-60"
                   >
                     Reject
                   </button>

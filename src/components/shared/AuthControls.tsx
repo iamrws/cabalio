@@ -102,7 +102,7 @@ export default function AuthControls({
   }, []);
 
   if (loading) {
-    return <div className={`text-sm text-stone-400 ${className}`}>Checking access...</div>;
+    return <div className={`text-sm text-text-muted ${className}`}>Checking access...</div>;
   }
 
   if (!session) {
@@ -115,32 +115,32 @@ export default function AuthControls({
             onClick={handleVerify}
             disabled={authenticating}
             aria-label="Verify NFT ownership and log in"
-            className="bg-[#1c1917] rounded-xl px-5 py-2.5 font-semibold text-[#faf7f2] disabled:opacity-60 transition-colors hover:bg-[#292524]"
+            className="bg-bg-base rounded-xl px-5 py-2.5 font-semibold text-text-primary disabled:opacity-60 transition-colors hover:bg-bg-raised"
           >
             {authenticating ? 'Verifying...' : 'Verify NFT & Login'}
           </button>
         )}
-        {error ? <div role="alert" className="text-xs text-red-600">{error}</div> : null}
+        {error ? <div role="alert" className="text-xs text-negative">{error}</div> : null}
       </div>
     );
   }
 
   return (
     <div className={`flex ${compact ? 'items-center gap-2' : 'flex-col gap-3'} ${className}`}>
-      <div className="rounded-xl border border-emerald-200/60 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 font-mono">
+      <div className="rounded-xl border border-positive-border bg-positive-muted px-3 py-2 text-xs text-positive font-mono">
         Holder verified: {session.walletAddress.slice(0, 4)}...{session.walletAddress.slice(-4)}
       </div>
       <div className={`flex ${compact ? 'items-center gap-2' : 'items-center gap-3'}`}>
         <Link
           href="/dashboard"
-          className="rounded-xl border border-[#0f766e]/30 bg-[#0f766e]/10 px-3 py-2 text-xs text-[#0f766e] font-medium hover:bg-[#0f766e]/15 transition-colors"
+          className="rounded-xl border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 transition-colors"
         >
           Enter Dashboard
         </Link>
         {session.role === 'admin' ? (
           <Link
             href="/cabal-core"
-            className="rounded-xl border border-[#7c3aed]/30 bg-[#7c3aed]/10 px-3 py-2 text-xs text-[#7c3aed] font-medium hover:bg-[#7c3aed]/15 transition-colors"
+            className="rounded-xl border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 transition-colors"
           >
             Admin
           </Link>
@@ -148,7 +148,7 @@ export default function AuthControls({
         <button
           onClick={handleLogout}
           aria-label="Log out of current session"
-          className="rounded-xl border border-stone-200/60 px-3 py-2 text-xs text-stone-500 hover:text-[#1c1917] transition-colors"
+          className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
           Logout
         </button>

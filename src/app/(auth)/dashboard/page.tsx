@@ -180,14 +180,8 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold text-text-primary">Dashboard</h2>
           <p className="text-text-secondary text-sm">Holder-only community activity and review status</p>
         </div>
-        <Link href="/submit">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="bg-accent px-6 py-3 rounded-[var(--radius-xs)] font-semibold text-white transition-colors hover:bg-accent-dim"
-          >
-            + Submit Content
-          </motion.button>
+        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-xs)] font-semibold text-white transition-colors hover:bg-accent-dim">
+          + Submit Content
         </Link>
       </div>
 
@@ -259,7 +253,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] p-3">
+            <div className="rounded-lg bg-accent-muted border border-accent-border p-3">
               <div className="text-xs text-accent-text font-mono uppercase tracking-wide">Next Best Action</div>
               <div className="text-sm text-text-primary font-medium mt-1">
                 {commandCenter.next_best_action.title}
@@ -306,8 +300,8 @@ export default function DashboardPage() {
       ) : null}
 
       {error ? (
-        <NeonCard hover={false} className="p-4 border border-red-500/30">
-          <div className="text-sm text-red-400">{error}</div>
+        <NeonCard hover={false} className="p-4 border border-negative-border">
+          <div className="text-sm text-negative">{error}</div>
         </NeonCard>
       ) : null}
 

@@ -75,7 +75,7 @@ ${content}
 Score this submission using the score_submission tool.`;
 
   const message = await getAnthropicClient().messages.create({
-    model: 'claude-sonnet-4-5-20250514',
+    model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250514',
     max_tokens: 1024,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userMessage }],

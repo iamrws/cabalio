@@ -21,13 +21,18 @@ export const supabase = {
   from: (table: string) => getSupabase().from(table),
 };
 
-// Server-side client with service role key for admin operations
+// Server-side client with service role key — cached as singleton
+let _serviceClient: SupabaseClient | null = null;
+
 export function createServerClient(): SupabaseClient {
+  if (_serviceClient) return _serviceClient;
+
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   if (!supabaseUrl || !serviceKey) {
     throw new Error('Supabase URL and Service Role Key must be set');
   }
-  return createClient(supabaseUrl, serviceKey);
+  _serviceClient = createClient(supabaseUrl, serviceKey);
+  return _serviceClient;
 }
 
 // ============================================================

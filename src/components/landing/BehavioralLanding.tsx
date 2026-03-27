@@ -20,7 +20,7 @@ const pillarCards = [
     insight: 'Choice keeps motivation intrinsic.',
     mechanics: 'Opt-in challenges, profile control, and skippable events.',
     guardrail: 'No forced continuity or hidden enrollment.',
-    accent: '#b45309',
+    accent: 'var(--accent)',
   },
   {
     num: '02',
@@ -28,7 +28,7 @@ const pillarCards = [
     insight: 'Progress must feel earned and clear.',
     mechanics: 'Transparent point reasons, tier unlocks, and visible quality signals.',
     guardrail: 'No opaque scoring jumps or mystery penalties.',
-    accent: '#0f766e',
+    accent: 'var(--positive)',
   },
   {
     num: '03',
@@ -36,7 +36,7 @@ const pillarCards = [
     insight: 'Community proof beats solo grinding.',
     mechanics: 'Props, mentorship roles, and team quests with shared wins.',
     guardrail: 'No zero-sum status monopolies.',
-    accent: '#7c3aed',
+    accent: 'var(--accent)',
   },
 ];
 
@@ -144,9 +144,9 @@ const bracketRows = [
 /* ─────────────── HELPERS ─────────────── */
 
 function metricBarColor(kind: 'retention' | 'trust' | 'signal') {
-  if (kind === 'retention') return '#b45309';
-  if (kind === 'trust') return '#0f766e';
-  return '#7c3aed';
+  if (kind === 'retention') return 'var(--accent)';
+  if (kind === 'trust') return 'var(--positive)';
+  return 'var(--accent-text)';
 }
 
 const fadeUp = {
@@ -180,7 +180,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
     []
   );
 
-  const heatmapPalette = ['#f5f0e8', '#e8dfd0', '#d4a574', '#b45309', '#92400e'];
+  const heatmapPalette = ['#e4e4e7', '#d4d4d8', '#93c5fd', '#3b82f6', '#1d4ed8'];
 
   const retentionLift =
     12 +
@@ -202,63 +202,52 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
   const maxBracketPoints = Math.max(...bracketRows.map((row) => row.points));
 
   return (
-    <main
-      className="relative min-h-screen overflow-hidden bg-[#faf7f2] text-[#1c1917]"
-      style={{
-        fontFamily: '"Charter", "Bitstream Charter", "Sitka Text", Georgia, serif',
-      }}
-    >
+    <main className="relative min-h-screen overflow-hidden bg-bg-light text-text-light-primary">
       {/* Ambient background — CSS-only generative mesh */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div
           className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(ellipse at 15% 30%, rgba(180, 83, 9, 0.06), transparent 55%),
-              radial-gradient(ellipse at 85% 15%, rgba(15, 118, 110, 0.05), transparent 50%),
-              radial-gradient(ellipse at 50% 80%, rgba(124, 58, 237, 0.04), transparent 50%),
-              #faf7f2
+              radial-gradient(ellipse at 15% 30%, rgba(59, 130, 246, 0.06), transparent 55%),
+              radial-gradient(ellipse at 85% 15%, rgba(34, 197, 94, 0.05), transparent 50%),
+              radial-gradient(ellipse at 50% 80%, rgba(59, 130, 246, 0.04), transparent 50%),
+              var(--bg-light)
             `,
           }}
         />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231c1917' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2309090b' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
       </div>
 
       <div className="relative z-10">
         {/* ─── NAV ─── */}
-        <header
-          className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6"
-          style={{ fontFamily: '"Avenir Next", "Segoe UI", system-ui, sans-serif' }}
-        >
+        <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6">
           <div className="flex items-center gap-3">
-            <div
-              className="h-9 w-9 rounded-lg bg-[#1c1917] text-center text-sm font-bold leading-9 text-[#faf7f2]"
-              style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}
-            >
+            <div className="h-9 w-9 rounded-lg bg-bg-base text-center text-sm font-bold leading-9 text-text-primary">
               JC
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#b45309]">Jito Cabal</p>
-              <p className="text-xs text-[#78716c]">Backed by real yield. Built with humane loops.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">Jito Cabal</p>
+              <p className="text-xs text-text-light-tertiary">Backed by real yield. Built with humane loops.</p>
             </div>
           </div>
-          <nav className="hidden items-center gap-6 text-sm text-[#57534e] md:flex" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
-            <a href="#pillars" className="transition hover:text-[#1c1917]">Pillars</a>
-            <a href="#engine" className="transition hover:text-[#1c1917]">Engine</a>
-            <a href="#roadmap" className="transition hover:text-[#1c1917]">Roadmap</a>
-            <a href="#simulator" className="transition hover:text-[#1c1917]">Simulator</a>
+          <nav className="hidden items-center gap-6 text-sm text-text-light-secondary md:flex">
+            <a href="#pillars" className="transition hover:text-text-light-primary">Pillars</a>
+            <a href="#engine" className="transition hover:text-text-light-primary">Engine</a>
+            <a href="#roadmap" className="transition hover:text-text-light-primary">Roadmap</a>
+            <a href="#simulator" className="transition hover:text-text-light-primary">Simulator</a>
           </nav>
         </header>
 
         {/* Auth warning banner */}
         {authState === 'required' ? (
           <div className="mx-auto mb-4 max-w-7xl px-6">
-            <div className="rounded-2xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="rounded-2xl border border-caution/40 bg-caution/10 px-4 py-3 text-sm text-caution">
               Wallet verification is required before accessing member routes. Sign in to continue.
             </div>
           </div>
@@ -272,25 +261,22 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="space-y-8"
           >
-            <p
-              className="inline-flex rounded-full border border-[#b45309]/25 bg-amber-50/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-[#b45309]"
-              style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}
-            >
+            <p className="inline-flex rounded-full border border-accent/25 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-accent">
               Community Points, Reimagined
             </p>
 
-            <h1 className="text-4xl font-normal leading-[1.12] tracking-tight text-[#1c1917] md:text-6xl lg:text-7xl">
+            <h1 className="text-4xl font-normal leading-[1.12] tracking-tight text-text-light-primary md:text-6xl lg:text-7xl">
               The inner circle doesn&apos;t grind.{' '}
-              <em className="not-italic text-[#b45309]">It builds.</em>
+              <em className="not-italic text-accent">It builds.</em>
             </h1>
 
-            <p className="max-w-2xl text-lg leading-relaxed text-[#57534e]">
+            <p className="max-w-2xl text-lg leading-relaxed text-text-light-secondary">
               A behavioral operating system for a holder-gated community. Ethical motivation loops,
               contribution-first scoring, and anti-burnout safeguards — wired directly into the
               Jito Cabal workflow.
             </p>
 
-            <div className="grid gap-3 sm:grid-cols-2" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+            <div className="grid gap-3 sm:grid-cols-2">
               {[
                 'Transparent Point Reasons',
                 'Weekly Bracket Resets',
@@ -299,7 +285,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
               ].map((chip) => (
                 <div
                   key={chip}
-                  className="rounded-xl border border-stone-200/60 bg-white/70 px-4 py-3 text-sm font-medium text-[#44403c]"
+                  className="rounded-xl border border-border-light bg-bg-light-surface/70 px-4 py-3 text-sm font-medium text-text-light-secondary"
                 >
                   {chip}
                 </div>
@@ -307,24 +293,24 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
             </div>
 
             {/* Auth card */}
-            <div className="rounded-2xl border border-stone-200/60 bg-white/80 p-5 shadow-[0_8px_30px_rgba(28,25,23,0.06)]">
-              <div className="mb-3 flex items-center justify-between" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b45309]">Member Access</p>
-                <p className="text-xs text-[#78716c]">Wallet-signature auth flow</p>
+            <div className="rounded-2xl border border-border-light bg-bg-light-surface/80 p-5 shadow-sm">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Member Access</p>
+                <p className="text-xs text-text-light-tertiary">Wallet-signature auth flow</p>
               </div>
               <AuthControls compact />
             </div>
 
-            <div className="flex flex-wrap gap-3 text-sm" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+            <div className="flex flex-wrap gap-3 text-sm">
               <a
                 href="#simulator"
-                className="rounded-full bg-[#1c1917] px-6 py-2.5 font-semibold text-[#faf7f2] transition hover:bg-[#292524] shadow-[0_4px_15px_rgba(28,25,23,0.15)]"
+                className="rounded-full bg-bg-base px-6 py-2.5 font-semibold text-text-primary transition hover:bg-bg-raised shadow-sm"
               >
                 Test the Engagement Simulator
               </a>
               <Link
                 href="/dashboard"
-                className="rounded-full border border-stone-300/60 bg-white/80 px-6 py-2.5 font-semibold text-[#1c1917] transition hover:border-stone-400/60"
+                className="rounded-full border border-border-light-strong bg-bg-light-surface/80 px-6 py-2.5 font-semibold text-text-light-primary transition hover:border-border-light"
               >
                 Open Member Dashboard
               </Link>
@@ -339,15 +325,15 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
             className="space-y-5"
           >
             {/* Heatmap */}
-            <div className="rounded-3xl border border-stone-200/60 bg-white/80 p-6 shadow-[0_8px_30px_rgba(28,25,23,0.06)]">
-              <div className="mb-4 flex items-end justify-between" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+            <div className="rounded-3xl border border-border-light bg-bg-light-surface/80 p-6 shadow-sm">
+              <div className="mb-4 flex items-end justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b45309]">Profile Heatmap</p>
-                  <h2 className="text-xl font-semibold text-[#1c1917]" style={{ fontFamily: 'inherit' }}>Low-Pressure Consistency</h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Profile Heatmap</p>
+                  <h2 className="text-xl font-semibold text-text-light-primary">Low-Pressure Consistency</h2>
                 </div>
-                <p className="text-xs text-[#78716c]">26-week snapshot</p>
+                <p className="text-xs text-text-light-tertiary">26-week snapshot</p>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-stone-200/60 bg-[#f5f0e8] p-3">
+              <div className="overflow-hidden rounded-2xl border border-border-light bg-bg-light p-3">
                 <div className="grid gap-[3px]" style={{ gridTemplateColumns: 'repeat(26, minmax(0, 1fr))' }}>
                   {heatmapCells.map((value, idx) => (
                     <div
@@ -358,35 +344,35 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                   ))}
                 </div>
               </div>
-              <p className="mt-3 text-xs text-[#78716c]">No rank shaming — just visible momentum.</p>
+              <p className="mt-3 text-xs text-text-light-tertiary">No rank shaming — just visible momentum.</p>
             </div>
 
             {/* Bracket leaderboard preview */}
-            <div className="rounded-3xl border border-stone-700/20 bg-[#1c1917] p-6 text-stone-200 shadow-[0_8px_30px_rgba(28,25,23,0.2)]">
-              <div className="mb-5 flex items-end justify-between" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+            <div className="rounded-3xl border border-border-light/20 bg-bg-base p-6 text-text-secondary shadow-md">
+              <div className="mb-5 flex items-end justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b45309]">Bracket Preview</p>
-                  <h2 className="text-xl font-semibold text-white" style={{ fontFamily: 'inherit' }}>Weekly Cohort Leaderboard</h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Bracket Preview</p>
+                  <h2 className="text-xl font-semibold text-text-primary">Weekly Cohort Leaderboard</h2>
                 </div>
-                <p className="text-xs text-stone-400">Reset every Monday</p>
+                <p className="text-xs text-text-secondary">Reset every Monday</p>
               </div>
               <div className="space-y-3">
                 {bracketRows.map((row) => (
                   <div key={row.name}>
-                    <div className="mb-1 flex items-center justify-between text-sm" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
-                      <p className={row.highlight ? 'font-semibold text-amber-200' : 'text-stone-300'}>{row.name}</p>
-                      <p className="font-mono text-xs text-[#0f766e]">
-                        {row.points} pts <span className="text-emerald-400">{row.delta}</span>
+                    <div className="mb-1 flex items-center justify-between text-sm">
+                      <p className={row.highlight ? 'font-semibold text-accent-text' : 'text-text-secondary'}>{row.name}</p>
+                      <p className="font-mono text-xs text-positive">
+                        {row.points} pts <span className="text-positive">{row.delta}</span>
                       </p>
                     </div>
-                    <div className="h-2 rounded-full bg-stone-700/50">
+                    <div className="h-2 rounded-full bg-bg-overlay">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${(row.points / maxBracketPoints) * 100}%`,
                           background: row.highlight
-                            ? 'linear-gradient(90deg, #fbbf24, #b45309)'
-                            : 'linear-gradient(90deg, #6ee7b7, #0f766e)',
+                            ? 'linear-gradient(90deg, #60a5fa, #3b82f6)'
+                            : 'linear-gradient(90deg, #86efac, #22c55e)',
                         }}
                       />
                     </div>
@@ -401,12 +387,12 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
         <section id="pillars" className="mx-auto w-full max-w-7xl px-6 py-20">
           <motion.div {...fadeUp} className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f766e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>Psychology Core</p>
-              <h2 className="text-3xl text-[#1c1917] md:text-5xl" style={{ lineHeight: 1.15 }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-positive">Psychology Core</p>
+              <h2 className="text-3xl text-text-light-primary md:text-5xl" style={{ lineHeight: 1.15 }}>
                 Three motivation systems,<br />one product language
               </h2>
             </div>
-            <p className="max-w-md text-sm leading-relaxed text-[#57534e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+            <p className="max-w-md text-sm leading-relaxed text-text-light-secondary">
               Autonomy, competence, and relatedness are treated as engineering requirements, not marketing copy.
             </p>
           </motion.div>
@@ -419,20 +405,20 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.25 }}
                 transition={{ duration: 0.5, delay: idx * 0.08 }}
-                className="group rounded-3xl border border-stone-200/60 bg-white/80 p-7 shadow-[0_4px_20px_rgba(28,25,23,0.05)] transition-shadow hover:shadow-[0_8px_30px_rgba(28,25,23,0.1)]"
+                className="group rounded-3xl border border-border-light bg-bg-light-surface/80 p-7 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="mb-4 flex items-center gap-3" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
-                  <span className="font-mono text-2xl font-light text-stone-300">{pillar.num}</span>
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="font-mono text-2xl font-light text-text-light-tertiary">{pillar.num}</span>
                   <span
                     className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em]"
-                    style={{ backgroundColor: `${pillar.accent}18`, color: pillar.accent }}
+                    style={{ backgroundColor: `color-mix(in srgb, ${pillar.accent} 10%, transparent)`, color: pillar.accent }}
                   >
                     {pillar.title}
                   </span>
                 </div>
-                <h3 className="text-xl text-[#1c1917] mb-3">{pillar.insight}</h3>
-                <p className="text-sm leading-relaxed text-[#57534e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>{pillar.mechanics}</p>
-                <p className="mt-5 border-t border-stone-200/60 pt-4 text-xs font-medium uppercase tracking-[0.1em] text-[#78716c]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+                <h3 className="text-xl text-text-light-primary mb-3">{pillar.insight}</h3>
+                <p className="text-sm leading-relaxed text-text-light-secondary">{pillar.mechanics}</p>
+                <p className="mt-5 border-t border-border-light pt-4 text-xs font-medium uppercase tracking-[0.1em] text-text-light-tertiary">
                   Guardrail — {pillar.guardrail}
                 </p>
               </motion.article>
@@ -443,21 +429,18 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
         {/* ═══════════════════ SECTION 3: THE ENGINE ═══════════════════ */}
         <section id="engine" className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-20 lg:grid-cols-2">
           {/* Pipeline */}
-          <motion.div {...fadeUp} className="rounded-3xl border border-stone-200/60 bg-white/80 p-7 shadow-[0_4px_20px_rgba(28,25,23,0.05)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f766e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>Engineering Flow</p>
-            <h2 className="mt-2 text-3xl text-[#1c1917]">Contribution Pipeline</h2>
+          <motion.div {...fadeUp} className="rounded-3xl border border-border-light bg-bg-light-surface/80 p-7 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-positive">Engineering Flow</p>
+            <h2 className="mt-2 text-3xl text-text-light-primary">Contribution Pipeline</h2>
             <div className="mt-6 space-y-4">
               {engineSteps.map((step) => (
-                <div key={step.step} className="grid grid-cols-[auto_1fr] gap-4 rounded-2xl border border-stone-200/60 bg-[#f5f0e8]/50 p-4">
-                  <div
-                    className="h-10 w-10 rounded-xl bg-[#1c1917] text-center font-mono text-sm leading-10 text-[#faf7f2]"
-                    style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}
-                  >
+                <div key={step.step} className="grid grid-cols-[auto_1fr] gap-4 rounded-2xl border border-border-light bg-bg-light p-4">
+                  <div className="h-10 w-10 rounded-xl bg-bg-base text-center font-mono text-sm leading-10 text-text-primary">
                     {step.step}
                   </div>
                   <div>
-                    <p className="font-semibold text-[#1c1917]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>{step.label}</p>
-                    <p className="text-sm leading-relaxed text-[#57534e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>{step.detail}</p>
+                    <p className="font-semibold text-text-light-primary">{step.label}</p>
+                    <p className="text-sm leading-relaxed text-text-light-secondary">{step.detail}</p>
                   </div>
                 </div>
               ))}
@@ -465,16 +448,16 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
           </motion.div>
 
           {/* Anti-patterns */}
-          <motion.div {...fadeUp} className="rounded-3xl border border-stone-700/20 bg-[#1c1917] p-7 text-stone-200 shadow-[0_8px_30px_rgba(28,25,23,0.2)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b45309]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>Ethical Safety Rails</p>
-            <h2 className="mt-2 text-3xl text-white">What We Refuse to Ship</h2>
+          <motion.div {...fadeUp} className="rounded-3xl border border-border-light/20 bg-bg-base p-7 text-text-secondary shadow-md">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Ethical Safety Rails</p>
+            <h2 className="mt-2 text-3xl text-text-primary">What We Refuse to Ship</h2>
             <div className="mt-6 space-y-4">
               {antiPatterns.map((pattern) => (
-                <div key={pattern.risk} className="rounded-2xl border border-stone-600/30 bg-stone-800/50 p-5">
-                  <p className="text-sm font-semibold uppercase tracking-[0.1em] text-amber-300" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+                <div key={pattern.risk} className="rounded-2xl border border-border-light/10 bg-bg-surface p-5">
+                  <p className="text-sm font-semibold uppercase tracking-[0.1em] text-caution">
                     Risk — {pattern.risk}
                   </p>
-                  <p className="mt-2 text-sm leading-relaxed text-stone-300" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+                  <p className="mt-2 text-sm leading-relaxed text-text-secondary">
                     Countermeasure — {pattern.fix}
                   </p>
                 </div>
@@ -487,12 +470,12 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
         <section id="roadmap" className="mx-auto w-full max-w-7xl px-6 py-20">
           <motion.div {...fadeUp} className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>Build Plan</p>
-              <h2 className="text-3xl text-[#1c1917] md:text-5xl" style={{ lineHeight: 1.15 }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-text">Build Plan</p>
+              <h2 className="text-3xl text-text-light-primary md:text-5xl" style={{ lineHeight: 1.15 }}>
                 18 features by impact
               </h2>
             </div>
-            <p className="max-w-md text-sm leading-relaxed text-[#57534e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+            <p className="max-w-md text-sm leading-relaxed text-text-light-secondary">
               Foundation first, novelty second: trust and clarity before high-variance mechanics.
             </p>
           </motion.div>
@@ -505,20 +488,19 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45, delay: idx * 0.06 }}
-                className="rounded-3xl border border-stone-200/60 bg-white/80 p-6 shadow-[0_4px_20px_rgba(28,25,23,0.05)]"
+                className="rounded-3xl border border-border-light bg-bg-light-surface/80 p-6 shadow-sm"
               >
-                <div className="mb-4 flex items-center justify-between" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
-                  <span className="rounded-full bg-[#1c1917] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#faf7f2]">
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="rounded-full bg-bg-base px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-text-primary">
                     {phase.phase}
                   </span>
-                  <span className="text-xs font-medium text-[#78716c]">{phase.title}</span>
+                  <span className="text-xs font-medium text-text-light-tertiary">{phase.title}</span>
                 </div>
                 <div className="space-y-2">
                   {phase.items.map((item) => (
                     <p
                       key={item}
-                      className="rounded-xl border border-stone-200/60 bg-[#f5f0e8]/50 px-3 py-2 text-sm text-[#44403c]"
-                      style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}
+                      className="rounded-xl border border-border-light bg-bg-light px-3 py-2 text-sm text-text-light-secondary"
                     >
                       {item}
                     </p>
@@ -531,21 +513,21 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
         {/* ═══════════════════ SECTION 5: SIMULATOR ═══════════════════ */}
         <section id="simulator" className="mx-auto w-full max-w-7xl px-6 py-20">
-          <motion.div {...fadeUp} className="rounded-[2rem] border border-stone-200/60 bg-white/80 p-6 shadow-[0_8px_30px_rgba(28,25,23,0.08)] md:p-8">
+          <motion.div {...fadeUp} className="rounded-[2rem] border border-border-light bg-bg-light-surface/80 p-6 shadow-sm md:p-8">
             <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>Scenario Builder</p>
-                <h2 className="text-3xl text-[#1c1917] md:text-4xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-text">Scenario Builder</p>
+                <h2 className="text-3xl text-text-light-primary md:text-4xl">
                   Engagement Simulator
                 </h2>
               </div>
-              <p className="max-w-md text-sm leading-relaxed text-[#57534e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+              <p className="max-w-md text-sm leading-relaxed text-text-light-secondary">
                 Flip safeguards on or off to see how retention, trust, and quality shift.
               </p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-              <div className="space-y-3" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+              <div className="space-y-3">
                 {simulatorControls.map((control) => (
                   <button
                     key={control.key}
@@ -559,26 +541,26 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                     }
                     className={`w-full rounded-2xl border p-4 text-left transition-all duration-200 ${
                       flags[control.key]
-                        ? 'border-[#0f766e]/40 bg-emerald-50/60'
-                        : 'border-stone-200/60 bg-white'
+                        ? 'border-accent/40 bg-accent/10'
+                        : 'border-border-light bg-bg-light-surface'
                     }`}
                   >
                     <div className="mb-1 flex items-center justify-between">
-                      <p className="font-semibold text-[#1c1917]">{control.label}</p>
+                      <p className="font-semibold text-text-light-primary">{control.label}</p>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] transition-colors ${
-                          flags[control.key] ? 'bg-[#0f766e] text-white' : 'bg-stone-200 text-[#78716c]'
+                          flags[control.key] ? 'bg-accent text-white' : 'bg-border-light text-text-light-tertiary'
                         }`}
                       >
                         {flags[control.key] ? 'Enabled' : 'Disabled'}
                       </span>
                     </div>
-                    <p className="text-sm text-[#57534e]">{control.description}</p>
+                    <p className="text-sm text-text-light-secondary">{control.description}</p>
                   </button>
                 ))}
               </div>
 
-              <div className="space-y-4 rounded-3xl border border-stone-200/60 bg-[#f5f0e8]/50 p-5" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+              <div className="space-y-4 rounded-3xl border border-border-light bg-bg-light p-5">
                 {[
                   { label: 'Predicted 14-Day Retention Lift', value: retentionLift, kind: 'retention' as const, suffix: '%' },
                   { label: 'Perceived Trust Score', value: trustScore, kind: 'trust' as const, suffix: '/100' },
@@ -586,12 +568,12 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                 ].map((metric) => (
                   <div key={metric.label}>
                     <div className="mb-1.5 flex items-center justify-between text-sm">
-                      <p className="font-medium text-[#1c1917]">{metric.label}</p>
-                      <p className="font-mono text-xs text-[#57534e]">
+                      <p className="font-medium text-text-light-primary">{metric.label}</p>
+                      <p className="font-mono text-xs text-text-light-secondary">
                         {metric.value}{metric.suffix}
                       </p>
                     </div>
-                    <div className="h-3 rounded-full bg-stone-200/80">
+                    <div className="h-3 rounded-full bg-border-light">
                       <motion.div
                         className="h-full rounded-full"
                         style={{ backgroundColor: metricBarColor(metric.kind) }}
@@ -602,11 +584,11 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                   </div>
                 ))}
 
-                <div className="rounded-2xl border border-stone-200/60 bg-white p-4 mt-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#78716c]">
+                <div className="rounded-2xl border border-border-light bg-bg-light-surface p-4 mt-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-light-tertiary">
                     Engineering Note
                   </p>
-                  <p className="mt-2 text-sm leading-relaxed text-[#57534e]">
+                  <p className="mt-2 text-sm leading-relaxed text-text-light-secondary">
                     These feature flags will be instrumented with event telemetry for A/B testing behavior outcomes
                     before fully rolling out across the holder base.
                   </p>
@@ -618,27 +600,27 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
         {/* ═══════════════════ SECTION 6: CTA ═══════════════════ */}
         <section className="mx-auto w-full max-w-7xl px-6 pb-20 pt-8">
-          <div className="rounded-[2rem] border border-stone-700/20 bg-[#1c1917] p-8 text-stone-200 shadow-[0_8px_30px_rgba(28,25,23,0.25)] md:flex md:items-center md:justify-between">
+          <div className="rounded-[2rem] border border-border-light/20 bg-bg-base p-8 text-text-secondary shadow-md md:flex md:items-center md:justify-between">
             <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b45309]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>Launch Direction</p>
-              <h2 className="mt-2 text-3xl text-white md:text-4xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Launch Direction</p>
+              <h2 className="mt-2 text-3xl text-text-primary md:text-4xl">
                 Build a community worth returning to
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-stone-400" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+              <p className="mt-3 text-sm leading-relaxed text-text-secondary">
                 The system rewards contribution quality, preserves member dignity, and maps cleanly to your
                 production stack: wallet auth, admin moderation, immutable ledger, and bracketed progression.
               </p>
             </div>
-            <div className="mt-6 flex flex-wrap gap-3 md:mt-0" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+            <div className="mt-6 flex flex-wrap gap-3 md:mt-0">
               <Link
                 href="/submit"
-                className="rounded-full bg-[#b45309] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#92400e]"
+                className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-accent/90"
               >
                 Submit Contribution
               </Link>
               <Link
                 href="/leaderboard"
-                className="rounded-full border border-stone-500/40 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                className="rounded-full border border-border-light/30 px-6 py-2.5 text-sm font-semibold text-text-primary transition hover:bg-bg-surface"
               >
                 View Leaderboard
               </Link>
@@ -647,26 +629,26 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
         </section>
 
         {/* ─── FOOTER ─── */}
-        <footer className="border-t border-stone-200/60 px-6 py-10">
+        <footer className="border-t border-border-light px-6 py-10">
           <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="h-card flex items-center gap-3">
-              <span className="p-name text-lg font-bold text-[#1c1917]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+              <span className="p-name text-lg font-bold text-text-light-primary">
                 Jito Cabal
               </span>
-              <span className="text-xs text-[#a8a29e] font-mono">v2</span>
+              <span className="text-xs text-text-light-tertiary font-mono">v2</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-[#57534e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
-              <a href="https://x.com/JitoCabalNFT" target="_blank" rel="noopener noreferrer" className="transition hover:text-[#1c1917]">
+            <div className="flex items-center gap-6 text-sm text-text-light-secondary">
+              <a href="https://x.com/JitoCabalNFT" target="_blank" rel="noopener noreferrer" className="transition hover:text-text-light-primary">
                 X / Twitter
               </a>
-              <a href="https://jitocabal.com/" target="_blank" rel="noopener noreferrer" className="transition hover:text-[#1c1917]">
+              <a href="https://jitocabal.com/" target="_blank" rel="noopener noreferrer" className="transition hover:text-text-light-primary">
                 Jito Cabal
               </a>
-              <a href="https://jitocabal.factorylabs.space/" target="_blank" rel="noopener noreferrer" className="transition hover:text-[#1c1917]">
+              <a href="https://jitocabal.factorylabs.space/" target="_blank" rel="noopener noreferrer" className="transition hover:text-text-light-primary">
                 Governance
               </a>
             </div>
-            <p className="text-xs text-[#a8a29e] font-mono">
+            <p className="text-xs text-text-light-tertiary font-mono">
               Humane mechanics. Contribution over manipulation.
             </p>
           </div>

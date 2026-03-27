@@ -9,11 +9,14 @@ import AiOrNotPanel, { AiOrNotProvider } from '@/components/game/AiOrNotPanel';
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <AiOrNotProvider>
-      <div className="min-h-screen bg-[#faf7f2]">
+      <div className="min-h-screen bg-bg-base">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2 focus:bg-accent focus:text-white focus:rounded-md">
+          Skip to main content
+        </a>
         <Sidebar />
-        <div className="lg:ml-[260px]">
+        <div className="lg:ml-[var(--sidebar-width)]">
           <Header />
-          <main className="px-4 sm:px-6 py-6 pb-24 lg:pb-6 space-y-4">
+          <main id="main-content" className="px-4 sm:px-6 py-6 pb-24 lg:pb-6 space-y-4">
             <div className="lg:hidden">
               <AuthControls compact />
             </div>

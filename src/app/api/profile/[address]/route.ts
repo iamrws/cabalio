@@ -40,7 +40,7 @@ export async function GET(
 
   const { data: user, error: userError } = await supabase
     .from('users')
-    .select('*')
+    .select('wallet_address, display_name, avatar_url, level, total_xp, current_streak, longest_streak, badges, created_at')
     .eq('wallet_address', walletAddress)
     .single();
 

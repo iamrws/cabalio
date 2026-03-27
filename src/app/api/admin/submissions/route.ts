@@ -12,8 +12,10 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status') || 'submitted';
-  const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
-  const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
+  const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
+  const limit = Number.isFinite(rawLimit) ? Math.min(rawLimit, 100) : 50;
+  const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+  const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
 
   // L2: Whitelist allowed status values
   const ALLOWED_STATUSES = ['all', 'submitted', 'queued', 'ai_scored', 'human_review', 'approved', 'flagged', 'rejected'];

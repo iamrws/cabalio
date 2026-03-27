@@ -121,7 +121,7 @@ export default function SubmitPage() {
             }}
             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-bg-raised text-accent-text border border-[rgba(59,130,246,0.15)]'
+                ? 'bg-bg-raised text-accent-text border border-accent-border'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
@@ -138,8 +138,8 @@ export default function SubmitPage() {
       ) : null}
 
       {error ? (
-        <NeonCard hover={false} className="p-4 border border-red-500/30">
-          <div className="text-sm text-red-400">{error}</div>
+        <NeonCard hover={false} className="p-4 border border-negative-border">
+          <div className="text-sm text-negative">{error}</div>
         </NeonCard>
       ) : null}
 

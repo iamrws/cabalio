@@ -123,8 +123,8 @@ export default function ProfilePage() {
   if (error || !profile) {
     return (
       <div className="max-w-4xl mx-auto">
-        <NeonCard hover={false} className="p-5 border border-red-500/30">
-          <div className="text-sm text-red-400">{error || 'Profile unavailable'}</div>
+        <NeonCard hover={false} className="p-5 border border-negative-border">
+          <div className="text-sm text-negative">{error || 'Profile unavailable'}</div>
         </NeonCard>
       </div>
     );
@@ -137,7 +137,7 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <NeonCard hover={false} className="p-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          <div className="h-20 w-20 rounded-2xl bg-bg-raised border-2 border-[rgba(59,130,246,0.15)] flex items-center justify-center text-2xl font-mono font-bold text-accent-text">
+          <div className="h-20 w-20 rounded-2xl bg-bg-raised border-2 border-accent-border flex items-center justify-center text-2xl font-mono font-bold text-accent-text">
             {displayName.slice(0, 2)}
           </div>
 
@@ -145,12 +145,12 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-bold text-text-primary mb-1">{displayName}</h2>
             <div className="text-sm text-text-muted font-mono mb-3">{profile.wallet_address}</div>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-muted border border-[rgba(59,130,246,0.15)]">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-muted border border-accent-border">
                 <span className="text-xs font-mono text-accent-text font-bold">Lv.{levelInfo.level}</span>
                 <span className="text-xs text-accent-text/70">{levelInfo.name}</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-caution-muted border border-[rgba(234,179,8,0.12)]">
-                <span>??</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-caution-muted border border-caution-border">
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-caution" fill="currentColor" aria-hidden="true"><path d="M8 1c-.6 0-1 .5-1.3 1L4 7c-.8 1.5-.2 3 1 4 .8.7 1.8 1.2 3 1.2s2.2-.5 3-1.2c1.2-1 1.8-2.5 1-4L9.3 2C9 1.5 8.6 1 8 1zm0 2.5L9.8 7c.4.8.1 1.5-.5 2-.4.3-1 .5-1.3.5s-.9-.2-1.3-.5c-.6-.5-.9-1.2-.5-2L8 3.5z"/></svg>
                 <span className="text-xs font-mono text-caution font-bold">
                   {profile.user.current_streak} day streak
                 </span>
@@ -245,7 +245,7 @@ export default function ProfilePage() {
                   <div className="text-sm text-text-primary">{formatEntryType(entry.entry_type)}</div>
                   <div className="text-xs text-text-muted">{new Date(entry.created_at).toLocaleString()}</div>
                 </div>
-                <div className={`font-mono font-bold ${entry.points_delta >= 0 ? 'text-positive' : 'text-red-400'}`}>
+                <div className={`font-mono font-bold ${entry.points_delta >= 0 ? 'text-positive' : 'text-negative'}`}>
                   {entry.points_delta >= 0 ? '+' : ''}{entry.points_delta}
                 </div>
               </div>
@@ -266,7 +266,7 @@ export default function ProfilePage() {
                 key={badge.id}
                 className={`text-center p-3 rounded-lg border transition-all ${
                   earned
-                    ? 'bg-accent-muted border-[rgba(59,130,246,0.15)]'
+                    ? 'bg-accent-muted border-accent-border'
                     : 'bg-bg-raised/50 border-border-subtle opacity-40'
                 }`}
               >

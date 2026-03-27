@@ -50,7 +50,7 @@ export default function MobileNav() {
         onClick={toggleGame}
         aria-label={gameOpen ? 'Close AI or Not game' : 'Open AI or Not game'}
         className={`fixed bottom-20 right-4 z-[51] lg:hidden w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${
-          gameOpen ? 'bg-[#7c3aed] text-white' : 'bg-white border border-violet-200 text-[#7c3aed]'
+          gameOpen ? 'bg-accent text-white' : 'bg-bg-surface border border-accent-border text-accent-text'
         }`}
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -58,7 +58,7 @@ export default function MobileNav() {
         </svg>
       </button>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#faf7f2]/95 backdrop-blur-xl border-t border-stone-200/60 lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-surface/95 backdrop-blur-xl border-t border-border-subtle lg:hidden">
         <div className="flex items-center justify-around h-16">
           {items.map((item) => {
             const isActive = pathname === item.href;
@@ -67,12 +67,12 @@ export default function MobileNav() {
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
-                  isActive ? 'text-[#b45309]' : 'text-stone-400'
+                  isActive ? 'text-accent-text' : 'text-text-muted'
                 }`}
               >
                 <span>{mobileIcons[item.icon]}</span>
-                <span className={`text-[10px] font-medium ${isActive ? 'text-[#b45309]' : ''}`}>{item.label}</span>
-                {isActive && <span className="w-1 h-1 rounded-full bg-[#b45309] mt-0.5" />}
+                <span className={`text-[10px] font-medium ${isActive ? 'text-accent-text' : ''}`}>{item.label}</span>
+                {isActive && <span className="w-1 h-1 rounded-full bg-accent mt-0.5" />}
               </Link>
             );
           })}

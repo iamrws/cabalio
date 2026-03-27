@@ -23,8 +23,8 @@ export default function PointsBadge({ points, size = 'md', showLabel = true }: P
       aria-label={`${points.toLocaleString()} points`}
       className={`
         inline-flex items-center gap-1.5 rounded-full
-        bg-amber-50 border border-amber-200/60
-        font-mono font-bold text-[#b45309]
+        bg-accent-muted border border-accent-border
+        font-mono font-bold text-accent-text
         ${sizeMap[size]}
       `}
     >
@@ -32,7 +32,7 @@ export default function PointsBadge({ points, size = 'md', showLabel = true }: P
         <path d="M8 0L10.2 5.3L16 6.2L11.9 10.1L12.9 16L8 13.3L3.1 16L4.1 10.1L0 6.2L5.8 5.3L8 0Z" />
       </svg>
       {points.toLocaleString()}
-      {showLabel && <span className="text-[#b45309]/60 font-normal">pts</span>}
+      {showLabel && <span className="text-accent-text/60 font-normal">pts</span>}
     </motion.div>
   );
 }

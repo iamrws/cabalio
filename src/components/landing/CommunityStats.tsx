@@ -11,7 +11,7 @@ const stats = [
 
 export default function CommunityStats() {
   return (
-    <section className="py-24 px-6 bg-[#f0ebe0]/50">
+    <section className="py-24 px-6 bg-bg-light">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -19,13 +19,10 @@ export default function CommunityStats() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2
-            className="text-3xl md:text-5xl mb-4 text-[#1c1917]"
-            style={{ fontFamily: '"Charter", "Bitstream Charter", Georgia, serif' }}
-          >
+          <h2 className="text-3xl md:text-5xl mb-4 text-text-light-primary font-semibold">
             Community Pulse
           </h2>
-          <p className="text-[#57534e] text-lg" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+          <p className="text-text-light-secondary text-lg">
             Real-time stats from the Cabal engagement platform
           </p>
         </motion.div>
@@ -38,19 +35,19 @@ export default function CommunityStats() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="text-center p-6 rounded-2xl bg-white/80 border border-stone-200/60 shadow-[0_4px_20px_rgba(28,25,23,0.06)]"
+              className="text-center p-6 rounded-2xl bg-bg-light-surface/80 border border-border-light shadow-sm"
             >
               <div className="text-3xl md:text-4xl font-bold mb-2">
                 <AnimatedCounter
                   value={stat.value}
                   suffix={stat.suffix}
-                  className="text-[#0f766e]"
+                  className="text-accent-text"
                 />
               </div>
-              <div className="text-sm font-semibold text-[#1c1917] mb-1" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+              <div className="text-sm font-semibold text-text-light-primary mb-1">
                 {stat.label}
               </div>
-              <div className="text-xs text-[#a8a29e]" style={{ fontFamily: '"Avenir Next", system-ui, sans-serif' }}>
+              <div className="text-xs text-text-light-tertiary">
                 {stat.description}
               </div>
             </motion.div>

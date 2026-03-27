@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#faf7f2' },
-    { media: '(prefers-color-scheme: dark)', color: '#1c1917' },
+    { media: '(prefers-color-scheme: light)', color: '#f4f4f5' },
+    { media: '(prefers-color-scheme: dark)', color: '#111113' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -57,12 +57,9 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="font-serif antialiased bg-surface-ground text-ink-primary">
+      <body className="font-sans antialiased bg-bg-base text-text-primary">
         <Providers>
-          {/* h-feed wrapper: microformat root for the content feed */}
-          <div className="h-feed">
-            {children}
-          </div>
+          {children}
         </Providers>
       </body>
     </html>

@@ -57,17 +57,17 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-[260px] bg-[#f5f0e8] border-r border-stone-200/60 flex flex-col z-40 hidden lg:flex">
-      <div className="p-6 border-b border-stone-200/60">
+    <aside className="fixed left-0 top-0 h-full w-[260px] bg-bg-surface border-r border-border-subtle flex flex-col z-40 hidden lg:flex">
+      <div className="p-6 border-b border-border-subtle">
         <Link href="/" className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-[#b45309] flex items-center justify-center text-white font-bold text-sm" style={{ fontFamily: '"Charter", Georgia, serif' }}>
+          <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-sm">
             JC
           </div>
-          <span className="text-lg font-bold text-[#1c1917] tracking-tight" style={{ fontFamily: '"Charter", Georgia, serif' }}>JITO CABAL</span>
+          <span className="text-lg font-bold text-text-primary tracking-tight">JITO CABAL</span>
         </Link>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1" style={{ fontFamily: '"Avenir Next", "Segoe UI", system-ui, sans-serif' }}>
+      <nav className="flex-1 p-4 space-y-1">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -78,15 +78,15 @@ export default function Sidebar() {
                 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-white/80 text-[#92400e] border-l-[3px] border-[#b45309] shadow-[0_2px_8px_rgba(28,25,23,0.06)]'
-                  : 'text-stone-600 hover:text-[#1c1917] hover:bg-white/50 border-l-[3px] border-transparent'
+                  ? 'bg-accent-muted text-accent-text border-l-[3px] border-accent shadow-[0_2px_8px_rgba(0,0,0,0.12)]'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-bg-raised border-l-[3px] border-transparent'
                 }
               `}
             >
-              <span className={isActive ? 'text-[#b45309]' : ''}>{icons[item.icon]}</span>
+              <span className={isActive ? 'text-accent-text' : ''}>{icons[item.icon]}</span>
               {item.label}
               {item.icon === 'plus' && (
-                <span className="ml-auto text-xs bg-[#0f766e]/10 text-[#0f766e] px-2 py-0.5 rounded-full border border-[#0f766e]/20">
+                <span className="ml-auto text-xs bg-positive-muted text-positive px-2 py-0.5 rounded-full border border-positive/20">
                   New
                 </span>
               )}
@@ -102,8 +102,8 @@ export default function Sidebar() {
             w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold
             transition-all duration-200 group
             ${gameOpen
-              ? 'bg-violet-50 text-[#7c3aed] border border-violet-200'
-              : 'bg-white/50 text-stone-500 hover:text-[#7c3aed] hover:bg-violet-50 border border-transparent hover:border-violet-200/60'
+              ? 'bg-accent-muted text-accent-text border border-accent-border'
+              : 'bg-bg-raised text-text-secondary hover:text-accent-text hover:bg-accent-muted border border-transparent hover:border-accent-border'
             }
           `}
         >
@@ -112,23 +112,23 @@ export default function Sidebar() {
           </svg>
           AI or Not?
           <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-            gameOpen ? 'bg-violet-100 text-[#7c3aed]' : 'bg-stone-100 text-stone-500 group-hover:bg-violet-100 group-hover:text-[#7c3aed]'
+            gameOpen ? 'bg-accent-muted text-accent-text' : 'bg-bg-raised text-text-secondary group-hover:bg-accent-muted group-hover:text-accent-text'
           }`}>
             {gameOpen ? 'On' : 'Play'}
           </span>
         </button>
       </div>
 
-      <div className="p-4 border-t border-stone-200/60 space-y-3">
+      <div className="p-4 border-t border-border-subtle space-y-3">
         <div className="flex items-center justify-between px-2">
-          <span className="text-xs text-stone-400 uppercase tracking-wider font-medium">This Week</span>
+          <span className="text-xs text-text-muted uppercase tracking-wider font-medium">This Week</span>
           <PointsBadge points={weeklyPoints} size="sm" />
         </div>
-        <Link href="/profile/me" className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/60 transition-colors">
-          <div className="h-8 w-8 rounded-full bg-stone-200 border border-stone-300/60" />
+        <Link href="/profile/me" className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-bg-raised transition-colors">
+          <div className="h-8 w-8 rounded-full bg-border-default border border-border-subtle" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-stone-800 truncate">Your Profile</div>
-            <div className="text-xs text-stone-400 font-mono">Level {level}</div>
+            <div className="text-sm font-medium text-text-primary truncate">Your Profile</div>
+            <div className="text-xs text-text-muted font-mono">Level {level}</div>
           </div>
         </Link>
       </div>

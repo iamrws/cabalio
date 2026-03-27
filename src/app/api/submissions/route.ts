@@ -164,8 +164,10 @@ export async function GET(request: NextRequest) {
   const wallet = searchParams.get('wallet');
   const week = searchParams.get('week');
   const status = searchParams.get('status');
-  const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
-  const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
+  const rawLimit = parseInt(searchParams.get('limit') || '20', 10);
+  const limit = Number.isFinite(rawLimit) ? Math.min(rawLimit, 100) : 20;
+  const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+  const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
 
   const supabase = createServerClient();
   let query = supabase
@@ -199,7 +201,11 @@ export async function GET(request: NextRequest) {
     query = query.eq('status', status);
   }
   if (week) {
-    query = query.eq('week_number', parseInt(week, 10));
+    const weekNum = parseInt(week, 10);
+    if (!Number.isFinite(weekNum)) {
+      return NextResponse.json({ error: 'Invalid week parameter' }, { status: 400 });
+    }
+    query = query.eq('week_number', weekNum);
   }
 
   const { data, error } = await query;

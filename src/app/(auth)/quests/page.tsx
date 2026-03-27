@@ -198,8 +198,8 @@ export default function QuestsPage() {
       </div>
 
       {error ? (
-        <NeonCard hover={false} className="p-4 border border-red-500/30">
-          <div className="text-sm text-red-400">{error}</div>
+        <NeonCard hover={false} className="p-4 border border-negative-border">
+          <div className="text-sm text-negative">{error}</div>
         </NeonCard>
       ) : null}
 
@@ -230,7 +230,7 @@ export default function QuestsPage() {
                     disabled={busyRole || season.status !== 'live'}
                     className={`w-full text-left rounded-lg border px-3 py-2 transition ${
                       active
-                        ? 'border-[rgba(59,130,246,0.15)] bg-accent-muted text-accent-text'
+                        ? 'border-accent-border bg-accent-muted text-accent-text'
                         : 'border-border-subtle bg-bg-raised text-text-secondary'
                     }`}
                   >
@@ -253,7 +253,7 @@ export default function QuestsPage() {
                 type="button"
                 onClick={() => handleOptOutToggle(!(memberState?.opt_out || false))}
                 disabled={busyOptOut || season.status !== 'live'}
-                className="rounded-lg border border-[rgba(59,130,246,0.15)] bg-accent-muted px-3 py-2 text-accent-text text-xs"
+                className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-accent-text text-xs"
               >
                 {memberState?.opt_out ? 'Disable calm mode (opt back in)' : 'Enable calm mode (opt out)'}
               </button>
@@ -335,7 +335,7 @@ export default function QuestsPage() {
                       type="button"
                       onClick={() => handleQuestSubmit(quest.id)}
                       disabled={!quest.can_submit || questSubmittingId === quest.id}
-                      className="w-full rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] px-3 py-2 text-xs text-accent-text disabled:opacity-50"
+                      className="w-full rounded-lg bg-accent-muted border border-accent-border px-3 py-2 text-xs text-accent-text disabled:opacity-50"
                     >
                       {questSubmittingId === quest.id
                         ? 'Submitting...'

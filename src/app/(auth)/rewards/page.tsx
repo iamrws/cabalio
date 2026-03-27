@@ -135,7 +135,7 @@ export default function RewardsPage() {
               {claimLoading ? 'Processing...' : 'Claim Rewards'}
             </motion.button>
             {claimError ? (
-              <div className="mt-2 text-sm text-red-400">{claimError}</div>
+              <div className="mt-2 text-sm text-negative">{claimError}</div>
             ) : null}
           </div>
         ) : (
@@ -158,8 +158,8 @@ export default function RewardsPage() {
       </NeonCard>
 
       {error ? (
-        <NeonCard hover={false} className="p-4 border border-red-500/30">
-          <div className="text-sm text-red-400">{error}</div>
+        <NeonCard hover={false} className="p-4 border border-negative-border">
+          <div className="text-sm text-negative">{error}</div>
         </NeonCard>
       ) : null}
 

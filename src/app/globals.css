@@ -54,6 +54,12 @@
   --negative:       #ef4444;
   --negative-muted: rgba(239,68,68,0.08);
 
+  /* --- Accent borders (used in 20+ components) --- */
+  --accent-border: rgba(59,130,246,0.15);
+  --positive-border: rgba(34,197,94,0.12);
+  --caution-border: rgba(234,179,8,0.12);
+  --negative-border: rgba(239,68,68,0.12);
+
   /* --- Tier --- */
   --tier-elite:    #eab308;
   --tier-member:   #22c55e;
@@ -138,6 +144,11 @@
   --color-caution-muted: var(--caution-muted);
   --color-negative: var(--negative);
   --color-negative-muted: var(--negative-muted);
+
+  --color-accent-border: var(--accent-border);
+  --color-positive-border: var(--positive-border);
+  --color-caution-border: var(--caution-border);
+  --color-negative-border: var(--negative-border);
 
   --color-tier-elite: var(--tier-elite);
   --color-tier-member: var(--tier-member);

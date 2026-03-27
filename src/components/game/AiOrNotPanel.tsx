@@ -433,7 +433,7 @@ export default function AiOrNotPanel() {
             {/* ─── Header ─── */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-accent-muted border border-[rgba(59,130,246,0.15)] flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg bg-accent-muted border border-accent-border flex items-center justify-center">
                   <svg className="w-4 h-4 text-accent-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
                   </svg>
@@ -476,7 +476,7 @@ export default function AiOrNotPanel() {
                     <p className="text-text-secondary mb-3">{error}</p>
                     <button
                       onClick={fetchShorts}
-                      className="px-4 py-2 rounded-lg bg-accent-muted text-accent-text border border-[rgba(59,130,246,0.15)] hover:bg-accent-muted/80 transition-colors text-sm"
+                      className="px-4 py-2 rounded-lg bg-accent-muted text-accent-text border border-accent-border hover:bg-accent-muted/80 transition-colors text-sm"
                     >
                       Retry
                     </button>
@@ -659,7 +659,7 @@ export default function AiOrNotPanel() {
                               initial={{ opacity: 0, scale: 0 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.5, type: 'spring' }}
-                              className="mt-3 px-4 py-1.5 rounded-full border border-[rgba(234,179,8,0.12)] bg-caution-muted"
+                              className="mt-3 px-4 py-1.5 rounded-full border border-caution-border bg-caution-muted"
                             >
                               <span className="text-caution font-bold text-sm">
                                 🔥 {streak} Streak!
@@ -681,7 +681,7 @@ export default function AiOrNotPanel() {
                         onClick={() => submitVote('human')}
                         disabled={!!showResult}
                         className="flex-1 group relative py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all duration-200 disabled:opacity-40
-                          bg-positive-muted text-positive border border-[rgba(34,197,94,0.12)]
+                          bg-positive-muted text-positive border border-positive-border
                           hover:bg-positive-muted/80 hover:border-positive/50 active:scale-[0.97]"
                       >
                         <span className="flex items-center justify-center gap-2">
@@ -709,7 +709,7 @@ export default function AiOrNotPanel() {
                         onClick={() => submitVote('ai')}
                         disabled={!!showResult}
                         className="flex-1 group relative py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all duration-200 disabled:opacity-40
-                          bg-accent-muted text-accent-text border border-[rgba(59,130,246,0.15)]
+                          bg-accent-muted text-accent-text border border-accent-border
                           hover:bg-accent-muted/80 hover:border-accent/50 active:scale-[0.97]"
                       >
                         <span className="flex items-center justify-center gap-2">

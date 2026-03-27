@@ -41,20 +41,20 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 bg-[#faf7f2]/85 backdrop-blur-xl border-b border-stone-200/60">
+    <header className="sticky top-0 z-30 bg-bg-surface/85 backdrop-blur-xl border-b border-border-subtle">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6">
         <div className="flex items-center gap-4">
           <div className="lg:hidden">
-            <span className="text-lg font-bold text-[#b45309]" style={{ fontFamily: '"Charter", Georgia, serif' }}>JC</span>
+            <span className="text-lg font-bold text-accent-text">JC</span>
           </div>
-          <h1 className="text-lg font-semibold text-[#1c1917] tracking-tight" style={{ fontFamily: '"Charter", Georgia, serif' }}>{title}</h1>
+          <h1 className="text-lg font-semibold text-text-primary tracking-tight">{title}</h1>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200/60">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-muted border border-accent-border">
             <span className="text-base leading-none">{'\uD83D\uDD25'}</span>
-            <span className="font-mono text-sm text-[#b45309] font-bold">{streak}</span>
-            <span className="text-xs text-stone-500">day streak</span>
+            <span className="font-mono text-sm text-accent-text font-bold">{streak}</span>
+            <span className="text-xs text-text-tertiary">day streak</span>
           </div>
 
           <div className="hidden sm:block">

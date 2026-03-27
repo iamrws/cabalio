@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getSessionFromRequest } from '@/lib/auth';
 
 // L7: Validate required env vars at module load time (startup).
 // Log a warning instead of crashing so the fallback path still works.
@@ -174,7 +175,12 @@ async function fetchYouTubeShorts(apiKey: string): Promise<YouTubeShort[]> {
   return shuffle(Array.from(results.values()));
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const session = await getSessionFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
   try {
     const apiKey = process.env.YOUTUBE_API_KEY;
 
