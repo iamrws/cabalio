@@ -20,32 +20,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f4f4f5' },
-    { media: '(prefers-color-scheme: dark)', color: '#111113' },
-  ],
+  themeColor: '#08080a',
   width: 'device-width',
   initialScale: 1,
 };
-
-/**
- * Theme initialization script.
- * Runs before React hydration to prevent flash of wrong theme.
- * Reads localStorage for manual override; otherwise follows system preference.
- * Adds `.dark` or `.light` class to <html> only when user has explicitly chosen.
- */
-const themeScript = `
-(function() {
-  try {
-    var stored = localStorage.getItem('theme');
-    if (stored === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (stored === 'light') {
-      document.documentElement.classList.add('light');
-    }
-  } catch (e) {}
-})();
-`;
 
 export default function RootLayout({
   children,
@@ -55,7 +33,15 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <link
+          rel="preconnect"
+          href="https://api.fontshare.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&f[]=satoshi@300,400,500,600,700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="font-sans antialiased bg-bg-base text-text-primary">
         <Providers>

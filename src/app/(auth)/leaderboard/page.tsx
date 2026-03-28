@@ -130,7 +130,7 @@ export default function LeaderboardPage() {
                 className="h-3 w-3 rounded-full"
                 style={{ backgroundColor: tierConfig.color }}
               />
-              <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: tierConfig.color }}>
+              <h3 className="text-sm font-semibold uppercase tracking-wider font-display" style={{ color: tierConfig.color }}>
                 {tierConfig.label}
               </h3>
             </div>

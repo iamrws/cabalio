@@ -117,7 +117,7 @@ export default function RewardsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <NeonCard hover={false} className="p-8 text-center">
-        <div className="text-sm text-text-muted uppercase tracking-wider mb-2">Claimable Rewards</div>
+        <div className="text-sm text-text-muted uppercase tracking-wider mb-2 font-display">Claimable Rewards</div>
         <div className="text-5xl font-mono font-bold text-positive mb-1">
           <AnimatedCounter value={totalClaimable / 1e9} decimals={4} className="text-positive" />
         </div>
@@ -130,7 +130,7 @@ export default function RewardsPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleClaim}
               disabled={claimLoading}
-              className="bg-accent px-8 py-3 rounded-xl font-semibold text-white transition-shadow disabled:opacity-50"
+              className="bg-accent px-8 py-3 rounded-xl font-semibold text-[#08080a] transition-shadow disabled:opacity-50"
             >
               {claimLoading ? 'Processing...' : 'Claim Rewards'}
             </motion.button>
@@ -164,7 +164,7 @@ export default function RewardsPage() {
       ) : null}
 
       <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Reward History</h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Reward History</h3>
         {loading ? (
           <NeonCard hover={false} className="p-4">
             <div className="text-sm text-text-muted">Loading rewards...</div>

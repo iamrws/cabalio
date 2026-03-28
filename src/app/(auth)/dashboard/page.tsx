@@ -177,10 +177,10 @@ export default function DashboardPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary">Dashboard</h2>
+          <h2 className="text-2xl font-bold text-text-primary font-display">Dashboard</h2>
           <p className="text-text-secondary text-sm">Holder-only community activity and review status</p>
         </div>
-        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-xs)] font-semibold text-white transition-colors hover:bg-accent-dim">
+        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[#08080a] transition-colors hover:bg-accent-dim">
           + Submit Content
         </Link>
       </div>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <NeonCard hover={false} className="p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-text-primary">Command Center</h3>
+              <h3 className="text-base font-semibold text-text-primary font-display">Command Center</h3>
               <span className="text-xs font-mono text-accent-text">{commandCenter.tier.current}</span>
             </div>
 
@@ -273,7 +273,7 @@ export default function DashboardPage() {
           </NeonCard>
 
           <NeonCard hover={false} className="p-5">
-            <h3 className="text-base font-semibold text-text-primary mb-3">Why You Earned Points</h3>
+            <h3 className="text-base font-semibold text-text-primary mb-3 font-display">Why You Earned Points</h3>
             <div className="space-y-3 max-h-72 overflow-auto pr-1">
               {pointsFeed.length === 0 ? (
                 <div className="text-sm text-text-muted">No point events yet.</div>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
       ) : null}
 
       <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Your Recent Contributions</h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Your Recent Contributions</h3>
         {!loading && mySubmissions.length === 0 ? (
           <NeonCard hover={false} className="p-4">
             <div className="text-sm text-text-muted">No submissions yet. Start with your first contribution.</div>
@@ -343,7 +343,7 @@ export default function DashboardPage() {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Community Feed</h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Community Feed</h3>
         <div className="space-y-4">
           {!loading && communitySubmissions.length === 0 ? (
             <NeonCard hover={false} className="p-4">

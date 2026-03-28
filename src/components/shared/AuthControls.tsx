@@ -115,7 +115,7 @@ export default function AuthControls({
             onClick={handleVerify}
             disabled={authenticating}
             aria-label="Verify NFT ownership and log in"
-            className="bg-bg-base rounded-xl px-5 py-2.5 font-semibold text-text-primary disabled:opacity-60 transition-colors hover:bg-bg-raised"
+            className="bg-bg-base border border-accent-border rounded-lg px-5 py-2.5 font-semibold text-text-primary disabled:opacity-60 transition-colors hover:bg-bg-raised"
           >
             {authenticating ? 'Verifying...' : 'Verify NFT & Login'}
           </button>
@@ -127,20 +127,20 @@ export default function AuthControls({
 
   return (
     <div className={`flex ${compact ? 'items-center gap-2' : 'flex-col gap-3'} ${className}`}>
-      <div className="rounded-xl border border-positive-border bg-positive-muted px-3 py-2 text-xs text-positive font-mono">
+      <div className="rounded-lg border border-positive-border bg-positive-muted px-3 py-2 text-xs text-positive font-mono">
         Holder verified: {session.walletAddress.slice(0, 4)}...{session.walletAddress.slice(-4)}
       </div>
       <div className={`flex ${compact ? 'items-center gap-2' : 'items-center gap-3'}`}>
         <Link
           href="/dashboard"
-          className="rounded-xl border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 transition-colors"
+          className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 transition-colors"
         >
           Enter Dashboard
         </Link>
         {session.role === 'admin' ? (
           <Link
             href="/cabal-core"
-            className="rounded-xl border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 transition-colors"
+            className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 transition-colors"
           >
             Admin
           </Link>
@@ -148,7 +148,7 @@ export default function AuthControls({
         <button
           onClick={handleLogout}
           aria-label="Log out of current session"
-          className="rounded-xl border border-border-subtle px-3 py-2 text-xs text-text-secondary hover:text-text-primary transition-colors"
+          className="rounded-lg border border-border-subtle px-3 py-2 text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
           Logout
         </button>

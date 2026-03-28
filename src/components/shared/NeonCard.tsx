@@ -48,7 +48,7 @@ export default function NeonCard({
       tabIndex={isInteractive ? 0 : undefined}
       className={`
         rounded-2xl ${variantStyles[variant]}
-        ${hover ? 'transition-all duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)]' : ''}
+        ${hover ? 'transition-all duration-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_16px_rgba(212,168,83,0.04)]' : ''}
         ${isInteractive ? 'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent' : ''}
         ${className}
       `}

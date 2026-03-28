@@ -342,7 +342,7 @@ export default function CabalCorePage() {
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Cabal Core</h1>
+            <h1 className="text-2xl font-bold text-text-primary font-display">Cabal Core</h1>
             <p className="text-sm text-text-secondary">Private moderation and points operations portal</p>
           </div>
           <div className="flex items-center gap-2">
@@ -362,7 +362,7 @@ export default function CabalCorePage() {
         </div>
 
         <NeonCard hover={false} className="p-4">
-          <h2 className="text-sm font-semibold text-text-primary mb-3">Manual Points Distribution</h2>
+          <h2 className="text-sm font-semibold text-text-primary mb-3 font-display">Manual Points Distribution</h2>
           <form onSubmit={handleManualAdjustment} className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <input
               value={walletAddressInput}
@@ -398,7 +398,7 @@ export default function CabalCorePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <NeonCard hover={false} className="p-4">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Create Season</h2>
+            <h2 className="text-sm font-semibold text-text-primary mb-3 font-display">Create Season</h2>
             <form onSubmit={handleCreateSeason} className="space-y-3">
               <input
                 value={seasonName}
@@ -462,7 +462,7 @@ export default function CabalCorePage() {
           </NeonCard>
 
           <NeonCard hover={false} className="p-4">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Signal Storm Control</h2>
+            <h2 className="text-sm font-semibold text-text-primary mb-3 font-display">Signal Storm Control</h2>
             <form onSubmit={handleSignalStorm} className="space-y-3">
               <select
                 value={signalSeasonId}
@@ -530,7 +530,7 @@ export default function CabalCorePage() {
         </div>
 
         <NeonCard hover={false} className="p-4">
-          <h2 className="text-sm font-semibold text-text-primary mb-3">World Boss Progress</h2>
+          <h2 className="text-sm font-semibold text-text-primary mb-3 font-display">World Boss Progress</h2>
           <form onSubmit={handleBossProgress} className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <select
               value={bossSeasonId}
@@ -630,7 +630,7 @@ export default function CabalCorePage() {
                   <div className="text-xs text-text-muted font-mono mb-1">
                     {submission.users?.display_name || submission.wallet_address}
                   </div>
-                  <h2 className="text-lg font-semibold text-text-primary">{submission.title}</h2>
+                  <h2 className="text-lg font-semibold text-text-primary font-display">{submission.title}</h2>
                   <div className="text-xs text-text-muted mt-1">
                     {submission.type} | {new Date(submission.created_at).toLocaleString()}
                   </div>

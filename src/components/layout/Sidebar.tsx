@@ -33,10 +33,10 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 h-full w-[260px] bg-bg-surface border-r border-border-subtle flex flex-col z-40 hidden lg:flex">
       <div className="p-6 border-b border-border-subtle">
         <Link href="/" className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-sm">
+          <div className="h-8 w-8 rounded-lg bg-accent-text flex items-center justify-center text-bg-base font-bold text-sm">
             JC
           </div>
-          <span className="text-lg font-bold text-text-primary tracking-tight">JITO CABAL</span>
+          <span className="text-lg font-display font-bold text-text-primary tracking-tight">JITO CABAL</span>
         </Link>
       </div>
 

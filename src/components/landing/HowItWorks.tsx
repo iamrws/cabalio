@@ -20,7 +20,7 @@ const steps = [
     number: '03',
     title: 'AI Scores Your Work',
     description: 'Claude AI evaluates your content on 5 dimensions: relevance, originality, effort, engagement, and accuracy.',
-    accent: 'var(--positive)',
+    accent: 'var(--accent-text)',
   },
   {
     number: '04',
@@ -40,10 +40,10 @@ export default function HowItWorks() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl mb-4 text-text-light-primary font-semibold">
+          <h2 className="font-display text-3xl md:text-5xl mb-4 text-text-primary font-semibold">
             How it works
           </h2>
-          <p className="text-text-light-secondary text-lg max-w-2xl mx-auto">
+          <p className="text-text-secondary text-lg max-w-2xl mx-auto">
             A new way to engage with the Jito ecosystem. Create value, get recognized, earn rewards.
           </p>
         </motion.div>
@@ -58,11 +58,11 @@ export default function HowItWorks() {
               transition={{ delay: i * 0.15 }}
             >
               <NeonCard accent={step.accent} className="p-6 h-full">
-                <span className="font-mono text-sm text-text-light-tertiary">{step.number}</span>
-                <h3 className="text-lg font-semibold mb-2 text-text-light-primary mt-2">
+                <span className="font-mono text-sm text-text-tertiary">{step.number}</span>
+                <h3 className="text-lg font-semibold mb-2 text-text-primary mt-2">
                   {step.title}
                 </h3>
-                <p className="text-sm text-text-light-secondary leading-relaxed">
+                <p className="text-sm text-text-secondary leading-relaxed">
                   {step.description}
                 </p>
               </NeonCard>

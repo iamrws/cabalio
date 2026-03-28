@@ -42,12 +42,12 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-30 bg-bg-surface/85 backdrop-blur-xl border-b border-border-subtle">
-      <div className="flex items-center justify-between h-16 px-4 sm:px-6">
+      <div className="flex items-center justify-between h-14 px-4 sm:px-6">
         <div className="flex items-center gap-4">
           <div className="lg:hidden">
             <span className="text-lg font-bold text-accent-text">JC</span>
           </div>
-          <h1 className="text-lg font-semibold text-text-primary tracking-tight">{title}</h1>
+          <h1 className="text-lg font-display font-semibold text-text-primary tracking-tight">{title}</h1>
         </div>
 
         <div className="flex items-center gap-3">

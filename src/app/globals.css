@@ -1,79 +1,69 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   Jito Cabal Design System — Clean Web3 / Palantir-inspired
-   Zinc neutrals, single blue accent, tight radii, minimal motion.
+   Jito Cabal Design System — "Vault" Aesthetic
+   Deep black, warm amber/gold accent, Clash Display + Satoshi typography.
+   Exclusive, secretive, premium. Unified dark theme everywhere.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
    1. CUSTOM PROPERTIES
    -------------------------------------------------------------------------- */
 :root {
-  /* --- Surfaces (Dark — App Shell) --- */
-  --bg-base:           #111113;
-  --bg-surface:        #18181b;
-  --bg-raised:         #1f1f23;
-  --bg-overlay:        #27272b;
-  --bg-hover:          rgba(255,255,255,0.04);
-  --bg-active:         rgba(255,255,255,0.06);
-
-  /* --- Surfaces (Light — Landing) --- */
-  --bg-light:          #f4f4f5;
-  --bg-light-surface:  #ffffff;
-  --bg-light-raised:   #fafafa;
+  /* --- Surfaces --- */
+  --bg-base:           #08080a;
+  --bg-surface:        #121216;
+  --bg-raised:         #1a1a20;
+  --bg-overlay:        #222228;
+  --bg-hover:          rgba(212,168,83,0.04);
+  --bg-active:         rgba(212,168,83,0.08);
 
   /* --- Borders --- */
-  --border-subtle:       rgba(255,255,255,0.06);
-  --border-default:      rgba(255,255,255,0.09);
-  --border-strong:       rgba(255,255,255,0.14);
-  --border-light:        #e4e4e7;
-  --border-light-strong: #d4d4d8;
+  --border-subtle:       rgba(212,168,83,0.06);
+  --border-default:      rgba(212,168,83,0.10);
+  --border-strong:       rgba(212,168,83,0.18);
 
-  /* --- Text (Dark) --- */
-  --text-primary:   #fafafa;
-  --text-secondary:  #a1a1aa;
-  --text-tertiary:   #71717a;
-  --text-muted:      #52525b;
+  /* --- Text --- */
+  --text-primary:   #F0ECE4;
+  --text-secondary:  #9B9689;
+  --text-tertiary:   #6B6660;
+  --text-muted:      #4A4640;
 
-  /* --- Text (Light) --- */
-  --text-light-primary:   #09090b;
-  --text-light-secondary: #3f3f46;
-  --text-light-tertiary:  #71717a;
-
-  /* --- Accent --- */
-  --accent:       #3b82f6;
-  --accent-dim:   #2563eb;
-  --accent-muted: rgba(59,130,246,0.10);
-  --accent-text:  #60a5fa;
+  /* --- Accent (Gold) --- */
+  --accent:       #D4A853;
+  --accent-dim:   #B8923F;
+  --accent-muted: rgba(212,168,83,0.10);
+  --accent-text:  #E8C475;
 
   /* --- Semantic --- */
-  --positive:       #22c55e;
-  --positive-muted: rgba(34,197,94,0.10);
-  --caution:        #eab308;
-  --caution-muted:  rgba(234,179,8,0.08);
-  --negative:       #ef4444;
-  --negative-muted: rgba(239,68,68,0.08);
+  --positive:       #4ADE80;
+  --positive-muted: rgba(74,222,128,0.10);
+  --caution:        #FBBF24;
+  --caution-muted:  rgba(251,191,36,0.08);
+  --negative:       #F87171;
+  --negative-muted: rgba(248,113,113,0.08);
 
-  /* --- Accent borders (used in 20+ components) --- */
-  --accent-border: rgba(59,130,246,0.15);
-  --positive-border: rgba(34,197,94,0.12);
-  --caution-border: rgba(234,179,8,0.12);
-  --negative-border: rgba(239,68,68,0.12);
+  /* --- Accent borders --- */
+  --accent-border: rgba(212,168,83,0.18);
+  --positive-border: rgba(74,222,128,0.15);
+  --caution-border: rgba(251,191,36,0.15);
+  --negative-border: rgba(248,113,113,0.15);
 
   /* --- Tier --- */
-  --tier-elite:    #eab308;
-  --tier-member:   #22c55e;
-  --tier-initiate: #a1a1aa;
+  --tier-elite:    #D4A853;
+  --tier-member:   #4ADE80;
+  --tier-initiate: #9B9689;
 
   /* --- Typography --- */
-  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+  --font-display: 'Clash Display', 'Inter', sans-serif;
+  --font-sans: 'Satoshi', 'Inter', -apple-system, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
   /* --- Radii --- */
-  --radius-xs: 3px;
-  --radius-sm: 5px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 
   /* --- Spacing (4px base) --- */
   --space-1: 4px;
@@ -87,15 +77,16 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* --- Shadows --- */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+  /* --- Shadows (warm-tinted) --- */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-gold: 0 0 20px rgba(212,168,83,0.08);
 
   /* --- Motion --- */
-  --duration-fast: 100ms;
-  --duration-normal: 150ms;
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* --- Z-index --- */
   --z-base: 0;
@@ -106,8 +97,8 @@
   --z-toast: 400;
 
   /* --- Layout --- */
-  --sidebar-width: 220px;
-  --header-height: 48px;
+  --sidebar-width: 260px;
+  --header-height: 56px;
   --content-max: 1400px;
 }
 
@@ -120,13 +111,9 @@
   --color-bg-raised: var(--bg-raised);
   --color-bg-overlay: var(--bg-overlay);
 
-  --color-bg-light: var(--bg-light);
-  --color-bg-light-surface: var(--bg-light-surface);
-
   --color-border-subtle: var(--border-subtle);
   --color-border-default: var(--border-default);
   --color-border-strong: var(--border-strong);
-  --color-border-light: var(--border-light);
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
@@ -155,6 +142,7 @@
   --color-tier-initiate: var(--tier-initiate);
 
   --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
   --font-mono: var(--font-mono);
 
   --radius-xs: var(--radius-xs);
@@ -188,32 +176,46 @@ body {
   font-size: 14px;
 }
 
+/* Noise texture overlay for depth */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* --------------------------------------------------------------------------
    4. TYPOGRAPHY UTILITIES
    -------------------------------------------------------------------------- */
 .text-display {
-  font-size: 44px;
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
 }
 
 .text-h1 {
-  font-size: 24px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
   letter-spacing: -0.025em;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .text-h2 {
-  font-size: 18px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .text-h3 {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.3;
@@ -241,7 +243,7 @@ body {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   line-height: 1.4;
   color: var(--text-muted);
 }
@@ -263,11 +265,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 7px 14px;
+  padding: 8px 16px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   font-family: var(--font-sans);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
@@ -279,16 +281,17 @@ body {
 }
 
 .btn-primary {
-  background: var(--text-primary);
+  background: var(--accent);
   color: var(--bg-base);
 }
 .btn-primary:hover {
-  background: #e4e4e7;
+  background: var(--accent-dim);
+  box-shadow: var(--shadow-gold);
 }
 
 .btn-accent {
   background: var(--accent);
-  color: white;
+  color: var(--bg-base);
 }
 .btn-accent:hover {
   background: var(--accent-dim);
@@ -320,7 +323,7 @@ body {
   gap: 4px;
   padding: 2px 8px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   font-family: var(--font-mono);
   border-radius: var(--radius-xs);
 }
@@ -332,22 +335,22 @@ body {
 .badge-accent {
   background: var(--accent-muted);
   color: var(--accent-text);
-  border: 1px solid rgba(59,130,246,0.15);
+  border: 1px solid var(--accent-border);
 }
 .badge-positive {
   background: var(--positive-muted);
   color: var(--positive);
-  border: 1px solid rgba(34,197,94,0.12);
+  border: 1px solid var(--positive-border);
 }
 .badge-caution {
   background: var(--caution-muted);
   color: var(--caution);
-  border: 1px solid rgba(234,179,8,0.12);
+  border: 1px solid var(--caution-border);
 }
 .badge-negative {
   background: var(--negative-muted);
   color: var(--negative);
-  border: 1px solid rgba(239,68,68,0.12);
+  border: 1px solid var(--negative-border);
 }
 
 /* Stat card */
@@ -359,10 +362,10 @@ body {
 }
 .stat-label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   margin-bottom: var(--space-1);
 }
 .stat-value {
@@ -383,7 +386,7 @@ body {
 .progress-fill {
   height: 100%;
   border-radius: 2px;
-  background: var(--text-primary);
+  background: var(--accent);
   transition: width var(--duration-normal) var(--ease-out);
 }
 
@@ -391,7 +394,7 @@ body {
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: var(--space-4);
   transition: border-color var(--duration-fast) var(--ease-out);
 }
@@ -404,13 +407,29 @@ body {
 
 /* Skeleton */
 @keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
 }
 .skeleton {
   background: var(--bg-raised);
   border-radius: var(--radius-xs);
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+}
+
+/* Gold shimmer animation */
+@keyframes gold-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212,168,83,0.06) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: gold-shimmer 3s ease-in-out infinite;
 }
 
 /* Scrollbar */
@@ -438,5 +457,5 @@ body {
 /* Selection */
 ::selection {
   background: var(--accent-muted);
-  color: var(--text-primary);
+  color: var(--accent-text);
 }

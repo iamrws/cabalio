@@ -227,7 +227,7 @@ export default function SubmitPage() {
             whileTap={{ scale: 0.99 }}
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-white hover:bg-accent-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-[#08080a] hover:bg-accent-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploadingImage ? 'Scanning & Uploading Image...' : isSubmitting ? 'Submitting...' : 'Submit For Review'}
           </motion.button>
@@ -235,7 +235,7 @@ export default function SubmitPage() {
       </form>
 
       <NeonCard hover={false} className="p-5">
-        <h3 className="text-sm font-semibold text-text-primary mb-3">Review Pipeline</h3>
+        <h3 className="text-sm font-semibold text-text-primary mb-3 font-display">Review Pipeline</h3>
         <div className="space-y-2 text-sm text-text-secondary">
           <div>1. Submission enters moderation queue.</div>
           <div>2. Admin review approves, rejects, or flags content.</div>

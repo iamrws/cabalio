@@ -142,7 +142,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex-1 text-center sm:text-left">
-            <h2 className="text-2xl font-bold text-text-primary mb-1">{displayName}</h2>
+            <h2 className="text-2xl font-bold text-text-primary mb-1 font-display">{displayName}</h2>
             <div className="text-sm text-text-muted font-mono mb-3">{profile.wallet_address}</div>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-muted border border-accent-border">
@@ -194,7 +194,7 @@ export default function ProfilePage() {
       </div>
 
       <NeonCard hover={false} className="p-5">
-        <h3 className="text-sm font-semibold text-text-primary mb-4">
+        <h3 className="text-sm font-semibold text-text-primary mb-4 font-display">
           Contributions ({profile.contributions.length})
         </h3>
         {profile.contributions.length === 0 ? (
@@ -232,7 +232,7 @@ export default function ProfilePage() {
       </NeonCard>
 
       <NeonCard hover={false} className="p-5">
-        <h3 className="text-sm font-semibold text-text-primary mb-4">
+        <h3 className="text-sm font-semibold text-text-primary mb-4 font-display">
           Points History ({profile.points_history.length})
         </h3>
         {profile.points_history.length === 0 ? (
@@ -255,7 +255,7 @@ export default function ProfilePage() {
       </NeonCard>
 
       <NeonCard hover={false} className="p-5">
-        <h3 className="text-sm font-semibold text-text-primary mb-4">
+        <h3 className="text-sm font-semibold text-text-primary mb-4 font-display">
           Badges ({earnedBadgeIds.size}/{BADGE_DEFINITIONS.length})
         </h3>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">

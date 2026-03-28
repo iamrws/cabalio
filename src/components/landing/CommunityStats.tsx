@@ -51,7 +51,7 @@ export default function CommunityStats() {
     { label: 'Points Distributed', value: data.pointsDistributed, suffix: '', description: 'Total points earned by community' },
   ];
   return (
-    <section className="py-24 px-6 bg-bg-light">
+    <section className="py-24 px-6 bg-bg-base">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -59,10 +59,10 @@ export default function CommunityStats() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl mb-4 text-text-light-primary font-semibold">
+          <h2 className="font-display text-3xl md:text-5xl mb-4 text-text-primary font-semibold">
             Community Pulse
           </h2>
-          <p className="text-text-light-secondary text-lg">
+          <p className="text-text-secondary text-lg">
             Real-time stats from the Cabal engagement platform
           </p>
         </motion.div>
@@ -75,7 +75,7 @@ export default function CommunityStats() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="text-center p-6 rounded-2xl bg-bg-light-surface/80 border border-border-light shadow-sm"
+              className="text-center p-6 rounded-2xl bg-bg-surface/80 border border-border-subtle shadow-sm"
             >
               <div className="text-3xl md:text-4xl font-bold mb-2">
                 <AnimatedCounter
@@ -84,10 +84,10 @@ export default function CommunityStats() {
                   className="text-accent-text"
                 />
               </div>
-              <div className="text-sm font-semibold text-text-light-primary mb-1">
+              <div className="text-sm font-semibold text-text-primary mb-1">
                 {stat.label}
               </div>
-              <div className="text-xs text-text-light-tertiary">
+              <div className="text-xs text-text-tertiary">
                 {stat.description}
               </div>
             </motion.div>

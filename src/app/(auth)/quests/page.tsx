@@ -185,7 +185,7 @@ export default function QuestsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-text-primary">Season Quests</h2>
+          <h2 className="text-xl font-bold text-text-primary font-display">Season Quests</h2>
           <p className="text-sm text-text-secondary">Live role-based quests and collaborative milestones</p>
         </div>
         {season ? (
