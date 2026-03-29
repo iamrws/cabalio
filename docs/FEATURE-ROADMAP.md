@@ -372,9 +372,9 @@ seasons 1:N → season_world_boss_progress
 
 | # | Feature | Scope | Impact | Status |
 |---|---------|-------|--------|--------|
-| 4.1 | **Treasury setup docs** — SOL wallet, funding, security | 1d | High | Pending |
-| 4.2 | **Enable rewards claiming** — payout worker, tx tracking | 2-3d | High | Pending |
-| 4.3 | **Reward projections** — show estimated earnings based on current pace | 1d | Medium | Pending |
+| 4.1 | **Treasury setup docs** — SOL wallet, funding, security | 1d | High | ✅ Done |
+| 4.2 | **Enable rewards claiming** — payout worker, tx tracking | 2-3d | High | ✅ Done |
+| 4.3 | **Reward projections** — show estimated earnings based on current pace | 1d | Medium | ✅ Done |
 
 ### Phase 5: Real-Time & Polish (3-4 days)
 
