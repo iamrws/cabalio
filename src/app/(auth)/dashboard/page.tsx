@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import PointsBadge from '@/components/shared/PointsBadge';
+import ActivityFeed from '@/components/shared/ActivityFeed';
+import SearchBar from '@/components/shared/SearchBar';
 
 interface SubmissionRow {
   id: string;
@@ -324,6 +326,9 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {/* --- Search --- */}
+      <SearchBar />
+
       {/* --- Stat Cards --- */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
@@ -590,6 +595,14 @@ export default function DashboardPage() {
             );
           })}
         </div>
+      </div>
+
+      {/* --- Recent Activity Feed --- */}
+      <div>
+        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Recent Activity</h3>
+        <NeonCard hover={false} className="p-5">
+          <ActivityFeed />
+        </NeonCard>
       </div>
     </div>
   );

@@ -45,4 +45,5 @@ export const NAV_ITEMS = [
   { label: 'Leaderboard', href: '/leaderboard', icon: 'trophy' },
   { label: 'Quests', href: '/quests', icon: 'target' },
   { label: 'Rewards', href: '/rewards', icon: 'gift' },
+  { label: 'Settings', href: '/settings', icon: 'settings' },
 ] as const;

@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/db';
 import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 import { trackEngagementEvent } from '@/lib/analytics';
 import { ensureSeasonMemberState, getLiveSeason } from '@/lib/seasons';
+import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -267,6 +268,13 @@ export async function POST(
         points_awarded: pointsReward,
       });
     }
+
+    void createNotification({
+      wallet_address: session.walletAddress,
+      type: 'quest_completed',
+      title: 'Quest Evidence Submitted',
+      body: `Your evidence for "${questResult.data.title}" has been submitted for review.`,
+    });
 
     return NextResponse.json({
       success: true,

@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/db';
 import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
 import { scoreSubmission } from '@/lib/scoring';
 import { calculatePoints, calculateStreak } from '@/lib/points';
+import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -165,6 +166,13 @@ export async function POST(
         }
       }
 
+      void createNotification({
+        wallet_address: submission.wallet_address,
+        type: 'submission_rejected',
+        title: 'Submission Not Approved',
+        body: `Your submission "${submission.title}" was not approved.`,
+      });
+
       return NextResponse.json({ success: true, status: 'rejected' });
     }
 
@@ -193,6 +201,13 @@ export async function POST(
       }
 
       await logAdminReviewAction('flagged', id, submission.wallet_address);
+
+      void createNotification({
+        wallet_address: submission.wallet_address,
+        type: 'submission_flagged',
+        title: 'Submission Flagged for Review',
+        body: `Your submission "${submission.title}" has been flagged for additional review.`,
+      });
 
       return NextResponse.json({ success: true, status: 'flagged' });
     }
@@ -366,6 +381,14 @@ export async function POST(
     await logAdminReviewAction('approved', id, submission.wallet_address, {
       points_awarded: points,
       scoring_weighted_total: scoringBreakdown.weighted_total,
+    });
+
+    void createNotification({
+      wallet_address: submission.wallet_address,
+      type: 'submission_approved',
+      title: 'Submission Approved',
+      body: `Your submission "${submission.title}" has been approved and scored.`,
+      metadata: { submission_id: id, points: points },
     });
 
     return NextResponse.json({

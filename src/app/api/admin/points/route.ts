@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
 import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
+import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -200,6 +201,14 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+
+    void createNotification({
+      wallet_address: walletAddress,
+      type: 'manual_adjustment',
+      title: 'Points Adjusted',
+      body: `An admin adjusted your points by ${parsed.points_delta}. Reason: ${parsed.note}`,
+      metadata: { points_delta: parsed.points_delta, note: parsed.note },
+    });
 
     return NextResponse.json({
       success: true,
