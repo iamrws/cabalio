@@ -1,13 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import PointsBadge from '@/components/shared/PointsBadge';
-import ActivityFeed from '@/components/shared/ActivityFeed';
-import SearchBar from '@/components/shared/SearchBar';
 
 interface SubmissionRow {
   id: string;
@@ -71,66 +68,12 @@ const typeIcons: Record<string, { label: string; color: string; dotColor: string
 
 const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary', dotColor: 'bg-text-secondary' };
 
-const REACTION_TYPES = [
-  { type: 'fire', emoji: '\u{1F525}' },
-  { type: 'hundred', emoji: '\u{1F4AF}' },
-  { type: 'brain', emoji: '\u{1F9E0}' },
-  { type: 'art', emoji: '\u{1F3A8}' },
-  { type: 'clap', emoji: '\u{1F44F}' },
-] as const;
-
-type ReactionType = (typeof REACTION_TYPES)[number]['type'];
-
-interface ReactionData {
-  counts: Record<ReactionType, number>;
-  user_reactions: ReactionType[];
-}
-
-function ReactionBar({
-  submissionId,
-  data,
-  onToggle,
-}: {
-  submissionId: string;
-  data: ReactionData | undefined;
-  onToggle: (submissionId: string, type: ReactionType) => void;
-}) {
-  if (!data) return null;
-  return (
-    <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border-subtle">
-      {REACTION_TYPES.map(({ type, emoji }) => {
-        const count = data.counts[type] || 0;
-        const isActive = data.user_reactions.includes(type);
-        return (
-          <button
-            key={type}
-            type="button"
-            onClick={() => onToggle(submissionId, type)}
-            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border transition-colors duration-150 ${
-              isActive
-                ? 'bg-accent-muted border-accent-border text-accent-text'
-                : 'bg-bg-raised border-border-subtle text-text-secondary hover:border-text-muted'
-            }`}
-          >
-            <span className="text-xs leading-none">{emoji}</span>
-            {count > 0 && (
-              <span className="text-[10px] font-mono leading-none">{count}</span>
-            )}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function DashboardPage() {
-  const [communitySubmissions, setCommunitySubmissions] = useState<SubmissionRow[]>([]);
   const [mySubmissions, setMySubmissions] = useState<SubmissionRow[]>([]);
   const [myWeeklyPoints, setMyWeeklyPoints] = useState(0);
   const [myTotalPoints, setMyTotalPoints] = useState(0);
   const [commandCenter, setCommandCenter] = useState<CommandCenterResponse | null>(null);
   const [pointsFeed, setPointsFeed] = useState<PointsFeedItem[]>([]);
-  const [reactions, setReactions] = useState<Record<string, ReactionData>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -144,11 +87,6 @@ export default function DashboardPage() {
       setError('');
       try {
         const results = await Promise.allSettled([
-          fetch('/api/submissions?limit=15', { cache: 'no-store' }).then(async (r) => {
-            const d = await r.json();
-            if (!r.ok) throw new Error(d.error || 'Failed to load community feed');
-            return d;
-          }),
           fetch('/api/submissions?scope=mine&limit=50', { cache: 'no-store' }).then(async (r) => {
             const d = await r.json();
             if (!r.ok) throw new Error(d.error || 'Failed to load your submissions');
@@ -171,14 +109,12 @@ export default function DashboardPage() {
           }),
         ]);
 
-        const communityData = results[0].status === 'fulfilled' ? results[0].value : null;
-        const mineData = results[1].status === 'fulfilled' ? results[1].value : null;
-        const summaryData = results[2].status === 'fulfilled' ? results[2].value : null;
-        const commandCenterData = results[3].status === 'fulfilled' ? results[3].value : null;
-        const pointsFeedData = results[4].status === 'fulfilled' ? results[4].value : null;
+        const mineData = results[0].status === 'fulfilled' ? results[0].value : null;
+        const summaryData = results[1].status === 'fulfilled' ? results[1].value : null;
+        const commandCenterData = results[2].status === 'fulfilled' ? results[2].value : null;
+        const pointsFeedData = results[3].status === 'fulfilled' ? results[3].value : null;
 
         if (!cancelled) {
-          setCommunitySubmissions(communityData?.submissions || []);
           setMySubmissions(mineData?.submissions || []);
           setMyWeeklyPoints(summaryData?.stats?.weekly_points || 0);
           setMyTotalPoints(summaryData?.stats?.total_points || 0);
@@ -218,87 +154,6 @@ export default function DashboardPage() {
     });
   }, [commandCenter?.next_best_action?.action_id]);
 
-  // Fetch reactions for community submissions
-  useEffect(() => {
-    if (communitySubmissions.length === 0) return;
-    let cancelled = false;
-
-    const fetchReactions = async () => {
-      const results = await Promise.allSettled(
-        communitySubmissions.map((s) =>
-          fetch(`/api/submissions/${s.id}/react`, { cache: 'no-store' }).then(async (r) => {
-            if (!r.ok) return null;
-            const d = await r.json();
-            return { id: s.id, data: d as ReactionData };
-          })
-        )
-      );
-
-      if (cancelled) return;
-
-      const next: Record<string, ReactionData> = {};
-      for (const result of results) {
-        if (result.status === 'fulfilled' && result.value) {
-          next[result.value.id] = result.value.data;
-        }
-      }
-      setReactions(next);
-    };
-
-    void fetchReactions();
-    return () => {
-      cancelled = true;
-    };
-  }, [communitySubmissions]);
-
-  // Optimistic reaction toggle
-  const handleReactionToggle = useCallback(
-    async (submissionId: string, type: ReactionType) => {
-      const prev = reactions[submissionId];
-      if (!prev) return;
-
-      // Optimistic update
-      const isActive = prev.user_reactions.includes(type);
-      const optimistic: ReactionData = {
-        counts: {
-          ...prev.counts,
-          [type]: isActive
-            ? Math.max((prev.counts[type] || 0) - 1, 0)
-            : (prev.counts[type] || 0) + 1,
-        },
-        user_reactions: isActive
-          ? prev.user_reactions.filter((r) => r !== type)
-          : [...prev.user_reactions, type],
-      };
-      setReactions((r) => ({ ...r, [submissionId]: optimistic }));
-
-      try {
-        const res = await fetch(`/api/submissions/${submissionId}/react`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type }),
-        });
-        if (!res.ok) throw new Error('Failed');
-        const body = await res.json();
-        // Reconcile with server counts
-        setReactions((r) => ({
-          ...r,
-          [submissionId]: {
-            counts: body.counts,
-            user_reactions:
-              body.toggled === 'on'
-                ? [...(r[submissionId]?.user_reactions.filter((rt) => rt !== type) || []), type]
-                : (r[submissionId]?.user_reactions.filter((rt) => rt !== type) || []),
-          },
-        }));
-      } catch {
-        // Revert on failure
-        setReactions((r) => ({ ...r, [submissionId]: prev }));
-      }
-    },
-    [reactions]
-  );
-
   const approvedCount = useMemo(
     () => mySubmissions.filter((submission) => submission.points_awarded > 0).length,
     [mySubmissions]
@@ -325,9 +180,6 @@ export default function DashboardPage() {
           + Submit Content
         </Link>
       </div>
-
-      {/* --- Search --- */}
-      <SearchBar />
 
       {/* --- Stat Cards --- */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -364,7 +216,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* --- Command Center --- */}
+      {/* --- Command Center + Points Feed --- */}
       {commandCenter ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <NeonCard hover={false} className="p-5 space-y-4">
@@ -379,7 +231,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Tier progress bar - thicker with gold gradient */}
+            {/* Tier progress bar */}
             <div>
               <div className="flex items-center justify-between text-xs text-text-muted mb-1">
                 <span>Tier Progress</span>
@@ -417,7 +269,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Next Best Action with gold shimmer */}
+            {/* Next Best Action */}
             <div className="rounded-lg bg-accent-muted border border-accent-border p-3 relative overflow-hidden">
               <div className="gold-shimmer absolute inset-0 pointer-events-none opacity-30" />
               <div className="relative z-10">
@@ -501,7 +353,7 @@ export default function DashboardPage() {
               </p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg bg-bg-raised border border-border-subtle p-3 text-center">
-                  <div className="text-xl mb-1">𝕏</div>
+                  <div className="text-xl mb-1">{'\u{1D54F}'}</div>
                   <div className="text-xs text-text-secondary">X Post</div>
                 </div>
                 <div className="rounded-lg bg-bg-raised border border-border-subtle p-3 text-center">
@@ -547,63 +399,24 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* --- Community Feed --- */}
-      <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Community Feed</h3>
-        <div className="space-y-4">
-          {!loading && communitySubmissions.length === 0 ? (
-            <NeonCard hover={false} className="p-4">
-              <div className="text-sm text-text-muted">No approved submissions yet.</div>
-            </NeonCard>
-          ) : null}
-
-          {communitySubmissions.map((submission, index) => {
-            const typeInfo = typeIcons[submission.type] || fallbackTypeIcon;
-            return (
-              <motion.div
-                key={submission.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04 }}
-              >
-                <NeonCard className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-sm font-semibold text-text-primary">
-                        {submission.users?.display_name || submission.wallet_address}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
-                        <span className={`inline-block w-2 h-2 rounded-full ${typeInfo.dotColor}`} />
-                        <span className={typeInfo.color}>{typeInfo.label}</span>
-                        <span className="text-text-muted/50">|</span>
-                        <span>{new Date(submission.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <PointsBadge points={submission.points_awarded} size="sm" showLabel={false} />
-                  </div>
-
-                  <h4 className="text-base font-semibold text-text-primary mb-1">{submission.title}</h4>
-                  <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">{submission.content_text}</p>
-
-                  <ReactionBar
-                    submissionId={submission.id}
-                    data={reactions[submission.id]}
-                    onToggle={handleReactionToggle}
-                  />
-                </NeonCard>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* --- Recent Activity Feed --- */}
-      <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Recent Activity</h3>
-        <NeonCard hover={false} className="p-5">
-          <ActivityFeed />
+      {/* --- Community Feed Link --- */}
+      <Link href="/feed" className="block">
+        <NeonCard className="p-5 group">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-text-primary font-display group-hover:text-accent-text transition-colors">
+                Community Feed
+              </h3>
+              <p className="text-xs text-text-secondary mt-1">
+                See what the community is building, react to submissions, and discover new content
+              </p>
+            </div>
+            <svg className="w-5 h-5 text-text-muted group-hover:text-accent-text transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </div>
         </NeonCard>
-      </div>
+      </Link>
     </div>
   );
 }

@@ -41,6 +41,7 @@ export const TIER_COLORS = {
 // Navigation items for sidebar
 export const NAV_ITEMS = [
   { label: 'Dashboard', href: '/dashboard', icon: 'home' },
+  { label: 'Feed', href: '/feed', icon: 'feed' },
   { label: 'Submit', href: '/submit', icon: 'plus' },
   { label: 'Leaderboard', href: '/leaderboard', icon: 'trophy' },
   { label: 'Quests', href: '/quests', icon: 'target' },
