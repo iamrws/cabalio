@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
 import AnimatedCounter from '@/components/shared/AnimatedCounter';
 
@@ -15,10 +15,125 @@ interface Reward {
   created_at: string;
 }
 
+interface WeekHistory {
+  week_number: number;
+  year: number;
+  points: number;
+  reward_sol: number;
+}
+
+interface Projections {
+  avg_weekly_points: number;
+  current_week_points: number;
+  projected_week_points: number;
+  estimated_weekly_sol: number;
+  estimated_monthly_sol: number;
+  trend: 'up' | 'down' | 'stable';
+  trend_pct: number;
+  weeks_history: WeekHistory[];
+}
+
 function generateIdempotencyKey(): string {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* ── Trend arrow component ── */
+function TrendIndicator({ trend, pct }: { trend: 'up' | 'down' | 'stable'; pct: number }) {
+  const color =
+    trend === 'up' ? 'text-positive' : trend === 'down' ? 'text-negative' : 'text-text-muted';
+  const arrow = trend === 'up' ? '\u2191' : trend === 'down' ? '\u2193' : '\u2192';
+  return (
+    <span className={`inline-flex items-center gap-1 text-sm font-mono ${color}`}>
+      <span className="text-base">{arrow}</span>
+      {Math.abs(pct)}%
+    </span>
+  );
+}
+
+/* ── Earnings History Bar Chart (inline SVG) ── */
+function EarningsChart({ weeks }: { weeks: WeekHistory[] }) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const maxPoints = Math.max(...weeks.map((w) => w.points), 1);
+  const barCount = weeks.length;
+  const chartHeight = 160;
+  const barGap = 6;
+  const barWidth = `calc((100% - ${(barCount - 1) * barGap}px) / ${barCount})`;
+
+  return (
+    <div className="relative">
+      {/* Tooltip */}
+      <AnimatePresence>
+        {hoveredIdx !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.15 }}
+            className="absolute -top-12 left-1/2 -translate-x-1/2 bg-bg-raised border border-border-subtle rounded-lg px-3 py-1.5 text-xs font-mono shadow-lg z-10 whitespace-nowrap pointer-events-none"
+          >
+            <span className="text-text-primary">{weeks[hoveredIdx].points} pts</span>
+            <span className="text-text-muted mx-1">·</span>
+            <span className="text-accent-text">{weeks[hoveredIdx].reward_sol.toFixed(4)} SOL</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bars */}
+      <div
+        className="flex items-end"
+        style={{ height: chartHeight, gap: barGap }}
+      >
+        {weeks.map((week, idx) => {
+          const isCurrentWeek = idx === weeks.length - 1;
+          const heightPct = maxPoints > 0 ? (week.points / maxPoints) * 100 : 0;
+          const minHeight = week.points > 0 ? 4 : 1;
+          return (
+            <div
+              key={`${week.year}-${week.week_number}`}
+              className="flex flex-col items-center justify-end"
+              style={{ width: barWidth, height: '100%' }}
+            >
+              <motion.div
+                className={`w-full rounded-t-md cursor-pointer transition-opacity ${
+                  isCurrentWeek
+                    ? 'bg-accent'
+                    : hoveredIdx === idx
+                      ? 'bg-accent/70'
+                      : 'bg-accent/30'
+                }`}
+                style={{ minHeight }}
+                initial={{ height: 0 }}
+                animate={{ height: `${Math.max(heightPct, minHeight / chartHeight * 100)}%` }}
+                transition={{ duration: 0.6, delay: idx * 0.05, ease: 'easeOut' }}
+                onMouseEnter={() => setHoveredIdx(idx)}
+                onMouseLeave={() => setHoveredIdx(null)}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Week labels */}
+      <div className="flex mt-2" style={{ gap: barGap }}>
+        {weeks.map((week, idx) => {
+          const isCurrentWeek = idx === weeks.length - 1;
+          return (
+            <div
+              key={`label-${week.year}-${week.week_number}`}
+              className={`text-center text-[10px] font-mono ${
+                isCurrentWeek ? 'text-accent-text' : 'text-text-muted'
+              }`}
+              style={{ width: barWidth }}
+            >
+              {isCurrentWeek ? 'Now' : `W${week.week_number}`}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default function RewardsPage() {
@@ -28,6 +143,8 @@ export default function RewardsPage() {
   const [error, setError] = useState('');
   const [claimLoading, setClaimLoading] = useState(false);
   const [claimError, setClaimError] = useState('');
+  const [projections, setProjections] = useState<Projections | null>(null);
+  const [projectionsLoading, setProjectionsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +173,29 @@ export default function RewardsPage() {
     };
 
     void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadProjections = async () => {
+      setProjectionsLoading(true);
+      try {
+        const res = await fetch('/api/me/reward-projections', { cache: 'no-store' });
+        const data = await res.json();
+        if (res.ok && !cancelled) {
+          setProjections(data);
+        }
+      } catch {
+        // Projections are supplemental; don't block the page on failure
+      } finally {
+        if (!cancelled) setProjectionsLoading(false);
+      }
+    };
+
+    void loadProjections();
     return () => {
       cancelled = true;
     };
@@ -114,8 +254,154 @@ export default function RewardsPage() {
     }
   }, [claimableRewards, claimLoading]);
 
+  // Pace indicator values
+  const paceRatio =
+    projections && projections.avg_weekly_points > 0
+      ? projections.current_week_points / projections.avg_weekly_points
+      : 0;
+  const pacePercent = Math.min(paceRatio * 100, 100);
+  const isAheadOfPace = paceRatio >= 1;
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+
+      {/* ── Earnings Projection Card ── */}
+      {!projectionsLoading && projections && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <NeonCard hover={false} className="p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <div className="text-sm text-text-muted uppercase tracking-wider mb-1 font-display">
+                  Estimated Weekly Earnings
+                </div>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-mono font-bold text-accent-text">
+                    <AnimatedCounter
+                      value={projections.estimated_weekly_sol}
+                      decimals={4}
+                      className="text-accent-text"
+                    />
+                  </span>
+                  <span className="text-lg text-text-secondary font-display">SOL</span>
+                </div>
+                <div className="mt-1 text-sm text-text-muted font-mono">
+                  ~{projections.estimated_monthly_sol.toFixed(4)} SOL / month
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end gap-1">
+                <TrendIndicator trend={projections.trend} pct={projections.trend_pct} />
+                <div className="text-xs text-text-muted">vs prior 2 weeks</div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-border-subtle">
+              <div className="text-xs text-text-muted">
+                Based on your last 4 weeks of activity
+                <span className="mx-2 text-border-subtle">|</span>
+                <span className="font-mono text-text-secondary">
+                  {projections.avg_weekly_points} avg pts/week
+                </span>
+              </div>
+            </div>
+          </NeonCard>
+        </motion.div>
+      )}
+
+      {/* ── Earnings History Chart ── */}
+      {!projectionsLoading && projections && projections.weeks_history.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <NeonCard hover={false} className="p-6">
+            <h3 className="text-sm font-display text-text-muted uppercase tracking-wider mb-4">
+              Weekly Earnings — Last 8 Weeks
+            </h3>
+            <EarningsChart weeks={projections.weeks_history} />
+          </NeonCard>
+        </motion.div>
+      )}
+
+      {/* ── Pace Indicator ── */}
+      {!projectionsLoading && projections && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <NeonCard hover={false} className="p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-text-muted font-display">This Week So Far</div>
+              <div className="font-mono text-sm text-text-primary">
+                {projections.current_week_points} pts
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="relative h-2 bg-bg-raised rounded-full overflow-hidden">
+              <motion.div
+                className={`absolute inset-y-0 left-0 rounded-full ${
+                  isAheadOfPace ? 'bg-positive' : 'bg-accent'
+                }`}
+                initial={{ width: 0 }}
+                animate={{ width: `${pacePercent}%` }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+              />
+              {/* Average marker */}
+              {projections.avg_weekly_points > 0 && (
+                <div
+                  className="absolute top-0 h-full w-px bg-text-muted/50"
+                  style={{ left: '100%' }}
+                  title={`Weekly average: ${projections.avg_weekly_points} pts`}
+                />
+              )}
+            </div>
+
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-xs text-text-muted">
+                {isAheadOfPace
+                  ? "You're on track for a strong week"
+                  : 'Pick up the pace to match your average'}
+              </div>
+              <div className="text-xs font-mono text-text-muted">
+                avg {projections.avg_weekly_points}
+              </div>
+            </div>
+
+            {projections.projected_week_points > 0 && (
+              <div className="mt-2 pt-2 border-t border-border-subtle text-xs text-text-muted">
+                Projected this week:{' '}
+                <span className="font-mono text-text-secondary">
+                  {projections.projected_week_points} pts
+                </span>
+                <span className="mx-1">·</span>
+                <span className="font-mono text-accent-text">
+                  {(projections.projected_week_points * (projections.estimated_weekly_sol / (projections.avg_weekly_points || 1))).toFixed(4)} SOL
+                </span>
+              </div>
+            )}
+          </NeonCard>
+        </motion.div>
+      )}
+
+      {/* ── Projections skeleton ── */}
+      {projectionsLoading && (
+        <NeonCard hover={false} className="p-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-bg-raised rounded w-1/3" />
+            <div className="h-10 bg-bg-raised rounded w-1/2" />
+            <div className="h-2 bg-bg-raised rounded w-2/3" />
+          </div>
+        </NeonCard>
+      )}
+
+      {/* ── Claimable Rewards (existing) ── */}
       <NeonCard hover={false} className="p-8 text-center">
         <div className="text-sm text-text-muted uppercase tracking-wider mb-2 font-display">Claimable Rewards</div>
         <div className="text-5xl font-mono font-bold text-positive mb-1">

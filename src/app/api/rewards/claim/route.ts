@@ -2,20 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
 import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { isPayoutEnabled, executePayout, checkDailyLimit } from '@/lib/payout';
+import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/rewards/claim
  *
- * Claim a reward payout. This endpoint is currently DISABLED (gated behind
- * the REWARDS_CLAIM_ENABLED env var) but ships with all security measures
- * so it is safe to enable when the treasury and payout pipeline are ready.
+ * Claim a reward payout. Gated behind the REWARDS_CLAIM_ENABLED env var.
+ * When enabled, executes an on-chain SOL transfer from the treasury to the
+ * claimant's wallet and records the transaction.
  *
  * Security measures:
+ *  - Feature gate via REWARDS_CLAIM_ENABLED
  *  - Idempotency token to prevent accidental double-submits
  *  - Database-level claimed_at column check (double-claim prevention)
  *  - Per-wallet claim rate limit (max 5 claims per hour)
+ *  - Daily payout limit via REWARDS_DAILY_LIMIT_LAMPORTS
+ *  - Per-claim max via REWARDS_MAX_PAYOUT_LAMPORTS
  *  - Atomicity via single UPDATE ... WHERE status='claimable' pattern
  */
 
@@ -24,7 +29,10 @@ const claimSchema = z.object({
   idempotencyKey: z.string().min(16).max(64),
 });
 
-async function isClaimRateLimited(supabase: ReturnType<typeof createServerClient>, walletAddress: string): Promise<boolean> {
+async function isClaimRateLimited(
+  supabase: ReturnType<typeof createServerClient>,
+  walletAddress: string
+): Promise<boolean> {
   const windowStart = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { count } = await supabase
     .from('reward_claims')
@@ -36,9 +44,8 @@ async function isClaimRateLimited(supabase: ReturnType<typeof createServerClient
 }
 
 export async function POST(request: NextRequest) {
-  // ── Feature gate: disabled until treasury + payout pipeline is ready ──
-  const isEnabled = process.env.REWARDS_CLAIM_ENABLED === 'true';
-  if (!isEnabled) {
+  // ── Feature gate ──
+  if (!isPayoutEnabled()) {
     return NextResponse.json(
       { error: 'Reward claiming is not yet enabled. Stay tuned.' },
       { status: 503 }
@@ -71,10 +78,10 @@ export async function POST(request: NextRequest) {
     const walletAddress = session.walletAddress;
     const now = new Date().toISOString();
 
-    // ── Idempotency check: if this key was already processed, return success ──
+    // ── Idempotency check: if this key was already processed, return cached result ──
     const { data: existingClaim } = await supabase
       .from('reward_claims')
-      .select('id, reward_id, status')
+      .select('id, reward_id, status, tx_signature')
       .eq('idempotency_key', parsed.idempotencyKey)
       .eq('wallet_address', walletAddress)
       .maybeSingle();
@@ -85,6 +92,7 @@ export async function POST(request: NextRequest) {
         alreadyProcessed: true,
         claimId: existingClaim.id,
         status: existingClaim.status,
+        txSignature: existingClaim.tx_signature || null,
       });
     }
 
@@ -119,7 +127,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Atomically mark the reward as claimed ──
+    // ── Daily limit check ──
+    const dailyCheck = await checkDailyLimit(supabase);
+    if (!dailyCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Daily payout limit reached. Please try again tomorrow.',
+          todayTotal: dailyCheck.todayTotal,
+          limit: dailyCheck.limit,
+        },
+        { status: 429 }
+      );
+    }
+
+    // ── Atomically mark the reward as processing ──
     // The WHERE clause ensures only one concurrent request can succeed
     const { data: updatedReward, error: updateError } = await supabase
       .from('rewards')
@@ -147,6 +168,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ── Execute the on-chain payout ──
+    const payoutResult = await executePayout(
+      walletAddress,
+      updatedReward.reward_amount_lamports
+    );
+
+    if (!payoutResult.success) {
+      // Payout failed -- roll back the reward status so user can retry
+      await supabase
+        .from('rewards')
+        .update({ status: 'claimable', claimed_at: null })
+        .eq('id', parsed.rewardId);
+
+      console.error('Payout failed for reward', parsed.rewardId, payoutResult.error);
+      return NextResponse.json(
+        { error: payoutResult.error || 'Payout transaction failed' },
+        { status: 502 }
+      );
+    }
+
+    // ── Store the tx signature on the reward ──
+    await supabase
+      .from('rewards')
+      .update({ tx_signature: payoutResult.tx_signature })
+      .eq('id', parsed.rewardId);
+
     // ── Record the claim for idempotency tracking ──
     const { error: claimInsertError } = await supabase
       .from('reward_claims')
@@ -155,39 +202,54 @@ export async function POST(request: NextRequest) {
         wallet_address: walletAddress,
         idempotency_key: parsed.idempotencyKey,
         amount_lamports: updatedReward.reward_amount_lamports,
-        status: 'pending_payout',
+        status: 'paid',
+        tx_signature: payoutResult.tx_signature,
         claimed_at: now,
         created_at: now,
       });
 
     if (claimInsertError) {
-      // If this fails due to idempotency_key conflict, the reward is still
-      // correctly marked as claimed - the claim record is for tracking only.
+      // If this fails the payout already went through -- log but don't error to user
       console.error('Claim record insert error:', claimInsertError);
     }
 
-    // Audit log for financial operation (fire and forget)
-    supabase.from('audit_logs').insert({
-      action: 'reward_claimed',
-      actor_wallet: walletAddress,
-      target_wallet: walletAddress,
-      details: {
+    // ── Audit log (fire and forget) ──
+    supabase
+      .from('audit_logs')
+      .insert({
+        action: 'reward_claimed',
+        actor_wallet: walletAddress,
+        target_wallet: walletAddress,
+        details: {
+          reward_id: parsed.rewardId,
+          amount_lamports: updatedReward.reward_amount_lamports,
+          tx_signature: payoutResult.tx_signature,
+          idempotency_key: parsed.idempotencyKey,
+        },
+        created_at: now,
+      })
+      .then(() => {}, () => {});
+
+    // ── Notification ──
+    const solAmount = (updatedReward.reward_amount_lamports / 1_000_000_000).toFixed(4);
+    createNotification({
+      wallet_address: walletAddress,
+      type: 'reward_claimed',
+      title: 'Reward Claimed',
+      body: `${solAmount} SOL sent to your wallet`,
+      metadata: {
         reward_id: parsed.rewardId,
         amount_lamports: updatedReward.reward_amount_lamports,
-        idempotency_key: parsed.idempotencyKey,
+        tx_signature: payoutResult.tx_signature,
       },
-      created_at: now,
-    }).then(() => {}, () => {});
-
-    // NOTE: Actual SOL transfer is handled by a separate payout worker
-    // that reads from the reward_claims table. This endpoint only marks
-    // the intent and prevents double-claims.
+    });
 
     return NextResponse.json({
       success: true,
       claimId: updatedReward.id,
       amountLamports: updatedReward.reward_amount_lamports,
-      status: 'pending_payout',
+      txSignature: payoutResult.tx_signature,
+      status: 'paid',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
