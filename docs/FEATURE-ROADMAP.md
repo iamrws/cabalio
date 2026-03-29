@@ -323,14 +323,18 @@ seasons 1:N → season_world_boss_progress
 | POST | `/api/admin/seasons/[id]/signal-storm` | Working |
 | POST | `/api/admin/seasons/[id]/world-boss/progress` | Working |
 
-### Missing Endpoints (needed for roadmap)
+### New Endpoints (built 2026-03-29)
+| Method | Path | Status |
+|--------|------|--------|
+| GET/PATCH | `/api/me/profile` | **Working** — get/edit display name |
+| GET | `/api/community-stats` | **Working** — public aggregate stats |
+| GET/POST | `/api/submissions/[id]/react` | **Working** — reaction toggle |
+
+### Still Missing Endpoints
 | Method | Path | Purpose |
 |--------|------|---------|
-| PATCH | `/api/me/profile` | Edit display name, avatar, bio |
 | PUT | `/api/me/settings` | Notification prefs, privacy, theme |
-| GET | `/api/community-stats` | Public aggregate stats for landing |
 | GET/POST | `/api/notifications` | User notifications |
-| POST | `/api/submissions/[id]/react` | Add reaction to submission |
 | GET | `/api/search` | Full-text search |
 
 ---
@@ -339,30 +343,30 @@ seasons 1:N → season_world_boss_progress
 
 ### Phase 1: Account Page & Quick Wins (3-4 days)
 
-| # | Feature | Scope | Impact |
-|---|---------|-------|--------|
-| 1.1 | **Profile editing** — display name, avatar upload, X handle display | 2d | High |
-| 1.2 | **Community stats endpoint** — unblock landing page zeros | 0.5d | Medium |
-| 1.3 | **Show rewards on profile** — data exists, just wire UI | 0.5d | Medium |
-| 1.4 | **Show NFT holder badge + verification date** on profile | 0.5d | Low |
-| 1.5 | **Redesign account page** — match Vault aesthetic, add edit mode, rewards tab | 1d | High |
+| # | Feature | Scope | Impact | Status |
+|---|---------|-------|--------|--------|
+| 1.1 | **Profile editing** — display name, avatar upload, X handle display | 2d | High | ✅ Done (display name) |
+| 1.2 | **Community stats endpoint** — unblock landing page zeros | 0.5d | Medium | ✅ Done |
+| 1.3 | **Show rewards on profile** — data exists, just wire UI | 0.5d | Medium | ✅ Done |
+| 1.4 | **Show NFT holder badge + verification date** on profile | 0.5d | Low | ✅ Done |
+| 1.5 | **Redesign account page** — match Vault aesthetic, add edit mode, rewards tab | 1d | High | ✅ Done |
 
 ### Phase 2: Notifications & Social (4-5 days)
 
-| # | Feature | Scope | Impact |
-|---|---------|-------|--------|
-| 2.1 | **Notifications table + API** — submission decisions, tier ups, achievements | 2d | Critical |
-| 2.2 | **In-app notification bell** — unread count, dropdown, mark-read | 1d | Critical |
-| 2.3 | **Submission reactions** — wire existing `reactions` table to UI | 1-2d | Medium |
-| 2.4 | **Community activity feed** on dashboard — recent approvals, milestones | 1d | Medium |
+| # | Feature | Scope | Impact | Status |
+|---|---------|-------|--------|--------|
+| 2.1 | **Notifications table + API** — submission decisions, tier ups, achievements | 2d | Critical | Pending |
+| 2.2 | **In-app notification bell** — unread count, dropdown, mark-read | 1d | Critical | Pending |
+| 2.3 | **Submission reactions** — wire existing `reactions` table to UI | 1-2d | Medium | ✅ Done (API + dashboard UI) |
+| 2.4 | **Community activity feed** on dashboard — recent approvals, milestones | 1d | Medium | Pending |
 
 ### Phase 3: Engagement & Analytics (3-4 days)
 
-| # | Feature | Scope | Impact |
-|---|---------|-------|--------|
-| 3.1 | **Creator analytics** — scoring breakdown radar chart, submission trends | 2d | Medium |
-| 3.2 | **User settings page** — notification prefs, privacy toggle, theme | 1-2d | Medium |
-| 3.3 | **Content search & filtering** — full-text search, type/date filters | 1-2d | Medium |
+| # | Feature | Scope | Impact | Status |
+|---|---------|-------|--------|--------|
+| 3.1 | **Creator analytics** — scoring breakdown radar chart, submission trends | 2d | Medium | ✅ Partial (breakdown in profile tabs) |
+| 3.2 | **User settings page** — notification prefs, privacy toggle, theme | 1-2d | Medium | Pending |
+| 3.3 | **Content search & filtering** — full-text search, type/date filters | 1-2d | Medium | Pending |
 
 ### Phase 4: Commerce & Rewards (3-5 days)
 
