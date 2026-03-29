@@ -40,7 +40,7 @@ export async function GET(
 
   const { data: user, error: userError } = await supabase
     .from('users')
-    .select('wallet_address, display_name, avatar_url, level, total_xp, current_streak, longest_streak, badges, created_at')
+    .select('wallet_address, display_name, avatar_url, level, total_xp, current_streak, longest_streak, badges, is_holder, holder_verified_at, created_at')
     .eq('wallet_address', walletAddress)
     .single();
 
@@ -50,7 +50,7 @@ export async function GET(
 
   const submissionsQuery = supabase
     .from('submissions')
-    .select('id, type, title, url, points_awarded, normalized_score, status, created_at')
+    .select('id, type, title, url, points_awarded, normalized_score, scoring_breakdown, status, created_at')
     .eq('wallet_address', walletAddress)
     .order('created_at', { ascending: false })
     .limit(50);

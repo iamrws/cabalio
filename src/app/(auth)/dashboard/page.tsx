@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import NeonCard from '@/components/shared/NeonCard';
+import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import PointsBadge from '@/components/shared/PointsBadge';
 
 interface SubmissionRow {
@@ -60,13 +61,65 @@ interface PointsFeedItem {
   explanation: string;
 }
 
-const typeIcons: Record<string, { label: string; color: string }> = {
-  x_post: { label: 'Jito Content', color: 'text-accent-text' },
-  blog: { label: 'Blog', color: 'text-accent-text' },
-  art: { label: 'Art', color: 'text-caution' },
+const typeIcons: Record<string, { label: string; color: string; dotColor: string }> = {
+  x_post: { label: 'Jito Content', color: 'text-accent-text', dotColor: 'bg-[var(--accent)]' },
+  blog: { label: 'Blog', color: 'text-accent-text', dotColor: 'bg-emerald-500' },
+  art: { label: 'Art', color: 'text-caution', dotColor: 'bg-amber-500' },
 };
 
-const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary' };
+const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary', dotColor: 'bg-text-secondary' };
+
+const REACTION_TYPES = [
+  { type: 'fire', emoji: '\u{1F525}' },
+  { type: 'hundred', emoji: '\u{1F4AF}' },
+  { type: 'brain', emoji: '\u{1F9E0}' },
+  { type: 'art', emoji: '\u{1F3A8}' },
+  { type: 'clap', emoji: '\u{1F44F}' },
+] as const;
+
+type ReactionType = (typeof REACTION_TYPES)[number]['type'];
+
+interface ReactionData {
+  counts: Record<ReactionType, number>;
+  user_reactions: ReactionType[];
+}
+
+function ReactionBar({
+  submissionId,
+  data,
+  onToggle,
+}: {
+  submissionId: string;
+  data: ReactionData | undefined;
+  onToggle: (submissionId: string, type: ReactionType) => void;
+}) {
+  if (!data) return null;
+  return (
+    <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border-subtle">
+      {REACTION_TYPES.map(({ type, emoji }) => {
+        const count = data.counts[type] || 0;
+        const isActive = data.user_reactions.includes(type);
+        return (
+          <button
+            key={type}
+            type="button"
+            onClick={() => onToggle(submissionId, type)}
+            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border transition-colors duration-150 ${
+              isActive
+                ? 'bg-accent-muted border-accent-border text-accent-text'
+                : 'bg-bg-raised border-border-subtle text-text-secondary hover:border-text-muted'
+            }`}
+          >
+            <span className="text-xs leading-none">{emoji}</span>
+            {count > 0 && (
+              <span className="text-[10px] font-mono leading-none">{count}</span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const [communitySubmissions, setCommunitySubmissions] = useState<SubmissionRow[]>([]);
@@ -75,6 +128,7 @@ export default function DashboardPage() {
   const [myTotalPoints, setMyTotalPoints] = useState(0);
   const [commandCenter, setCommandCenter] = useState<CommandCenterResponse | null>(null);
   const [pointsFeed, setPointsFeed] = useState<PointsFeedItem[]>([]);
+  const [reactions, setReactions] = useState<Record<string, ReactionData>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -162,6 +216,87 @@ export default function DashboardPage() {
     });
   }, [commandCenter?.next_best_action?.action_id]);
 
+  // Fetch reactions for community submissions
+  useEffect(() => {
+    if (communitySubmissions.length === 0) return;
+    let cancelled = false;
+
+    const fetchReactions = async () => {
+      const results = await Promise.allSettled(
+        communitySubmissions.map((s) =>
+          fetch(`/api/submissions/${s.id}/react`, { cache: 'no-store' }).then(async (r) => {
+            if (!r.ok) return null;
+            const d = await r.json();
+            return { id: s.id, data: d as ReactionData };
+          })
+        )
+      );
+
+      if (cancelled) return;
+
+      const next: Record<string, ReactionData> = {};
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          next[result.value.id] = result.value.data;
+        }
+      }
+      setReactions(next);
+    };
+
+    void fetchReactions();
+    return () => {
+      cancelled = true;
+    };
+  }, [communitySubmissions]);
+
+  // Optimistic reaction toggle
+  const handleReactionToggle = useCallback(
+    async (submissionId: string, type: ReactionType) => {
+      const prev = reactions[submissionId];
+      if (!prev) return;
+
+      // Optimistic update
+      const isActive = prev.user_reactions.includes(type);
+      const optimistic: ReactionData = {
+        counts: {
+          ...prev.counts,
+          [type]: isActive
+            ? Math.max((prev.counts[type] || 0) - 1, 0)
+            : (prev.counts[type] || 0) + 1,
+        },
+        user_reactions: isActive
+          ? prev.user_reactions.filter((r) => r !== type)
+          : [...prev.user_reactions, type],
+      };
+      setReactions((r) => ({ ...r, [submissionId]: optimistic }));
+
+      try {
+        const res = await fetch(`/api/submissions/${submissionId}/react`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type }),
+        });
+        if (!res.ok) throw new Error('Failed');
+        const body = await res.json();
+        // Reconcile with server counts
+        setReactions((r) => ({
+          ...r,
+          [submissionId]: {
+            counts: body.counts,
+            user_reactions:
+              body.toggled === 'on'
+                ? [...(r[submissionId]?.user_reactions.filter((rt) => rt !== type) || []), type]
+                : (r[submissionId]?.user_reactions.filter((rt) => rt !== type) || []),
+          },
+        }));
+      } catch {
+        // Revert on failure
+        setReactions((r) => ({ ...r, [submissionId]: prev }));
+      }
+    },
+    [reactions]
+  );
+
   const approvedCount = useMemo(
     () => mySubmissions.filter((submission) => submission.points_awarded > 0).length,
     [mySubmissions]
@@ -172,6 +307,10 @@ export default function DashboardPage() {
   );
 
   const tierProgressPercent = Math.round((commandCenter?.tier.progress || 0) * 100);
+
+  /* Determine which stat has the highest value for the highlight gradient */
+  const statValues = [mySubmissions.length, approvedCount, pendingCount, myWeeklyPoints, myTotalPoints];
+  const maxStatIndex = statValues.reduce((maxIdx, val, idx, arr) => (val > arr[maxIdx] ? idx : maxIdx), 0);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -185,45 +324,65 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {/* --- Stat Cards --- */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <NeonCard hover={false} className="p-4 text-center">
-          <div className="text-lg font-mono font-bold text-text-primary">{mySubmissions.length}</div>
-          <div className="text-xs text-text-muted">Your Submissions</div>
-        </NeonCard>
-        <NeonCard hover={false} className="p-4 text-center">
-          <div className="text-lg font-mono font-bold text-positive">{approvedCount}</div>
-          <div className="text-xs text-text-muted">Approved</div>
-        </NeonCard>
-        <NeonCard hover={false} className="p-4 text-center">
-          <div className="text-lg font-mono font-bold text-caution">{pendingCount}</div>
-          <div className="text-xs text-text-muted">In Review</div>
-        </NeonCard>
-        <NeonCard hover={false} className="p-4 text-center">
-          <PointsBadge points={myWeeklyPoints} size="sm" />
-          <div className="text-xs text-text-muted mt-2">Weekly Points</div>
-        </NeonCard>
-        <NeonCard hover={false} className="p-4 text-center">
-          <div className="text-lg font-mono font-bold text-accent-text">{myTotalPoints}</div>
-          <div className="text-xs text-text-muted mt-2">Total Points</div>
-        </NeonCard>
+        {[
+          { value: mySubmissions.length, label: 'Your Submissions', colorClass: 'text-text-primary' },
+          { value: approvedCount, label: 'Approved', colorClass: 'text-positive' },
+          { value: pendingCount, label: 'In Review', colorClass: 'text-caution' },
+          { value: null, label: 'Weekly Points', colorClass: '', isWeeklyPoints: true },
+          { value: myTotalPoints, label: 'Total Points', colorClass: 'text-accent-text' },
+        ].map((stat, idx) => (
+          <NeonCard
+            key={stat.label}
+            hover={false}
+            className={`p-4 text-center group relative overflow-hidden border-t-2 border-t-transparent hover:border-t-[var(--accent)] transition-all duration-300 ${
+              idx === maxStatIndex && statValues[idx] > 0
+                ? 'bg-gradient-to-b from-[var(--accent-muted)] to-transparent'
+                : ''
+            }`}
+          >
+            {stat.isWeeklyPoints ? (
+              <>
+                <PointsBadge points={myWeeklyPoints} size="sm" />
+                <div className="text-xs text-text-muted mt-2">{stat.label}</div>
+              </>
+            ) : (
+              <>
+                <div className={`text-2xl font-display font-bold ${stat.colorClass}`}>
+                  {stat.value}
+                </div>
+                <div className="text-xs text-text-muted mt-1">{stat.label}</div>
+              </>
+            )}
+          </NeonCard>
+        ))}
       </div>
 
+      {/* --- Command Center --- */}
       {commandCenter ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <NeonCard hover={false} className="p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold text-text-primary font-display">Command Center</h3>
-              <span className="text-xs font-mono text-accent-text">{commandCenter.tier.current}</span>
             </div>
 
+            {/* Tier name as large heading */}
+            <div className="text-center py-1">
+              <div className="text-2xl font-display font-bold text-accent-text tracking-wide">
+                {commandCenter.tier.current}
+              </div>
+            </div>
+
+            {/* Tier progress bar - thicker with gold gradient */}
             <div>
               <div className="flex items-center justify-between text-xs text-text-muted mb-1">
                 <span>Tier Progress</span>
                 <span>{tierProgressPercent}%</span>
               </div>
-              <div className="h-2 rounded-full bg-bg-raised">
+              <div className="h-3 rounded-full bg-bg-raised overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-accent transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent)] via-[#e8c96a] to-[var(--accent)] transition-all duration-500"
                   style={{ width: `${tierProgressPercent}%` }}
                 />
               </div>
@@ -253,21 +412,25 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-lg bg-accent-muted border border-accent-border p-3">
-              <div className="text-xs text-accent-text font-mono uppercase tracking-wide">Next Best Action</div>
-              <div className="text-sm text-text-primary font-medium mt-1">
-                {commandCenter.next_best_action.title}
-              </div>
-              <div className="text-xs text-text-secondary mt-1">
-                {commandCenter.next_best_action.reason}
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-xs text-positive font-mono">
-                  +{commandCenter.next_best_action.estimated_points} est.
-                </span>
-                <Link href="/submit" className="text-xs text-accent-text hover:underline">
-                  Do it now
-                </Link>
+            {/* Next Best Action with gold shimmer */}
+            <div className="rounded-lg bg-accent-muted border border-accent-border p-3 relative overflow-hidden">
+              <div className="gold-shimmer absolute inset-0 pointer-events-none opacity-30" />
+              <div className="relative z-10">
+                <div className="text-xs text-accent-text font-mono uppercase tracking-wide">Next Best Action</div>
+                <div className="text-sm text-text-primary font-medium mt-1">
+                  {commandCenter.next_best_action.title}
+                </div>
+                <div className="text-xs text-text-secondary mt-1">
+                  {commandCenter.next_best_action.reason}
+                </div>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-xs text-positive font-mono">
+                    +{commandCenter.next_best_action.estimated_points} est.
+                  </span>
+                  <Link href="/submit" className="text-xs text-accent-text hover:underline">
+                    Do it now
+                  </Link>
+                </div>
               </div>
             </div>
           </NeonCard>
@@ -305,19 +468,56 @@ export default function DashboardPage() {
         </NeonCard>
       ) : null}
 
+      {/* --- Loading State with Skeleton Cards --- */}
       {loading ? (
-        <NeonCard hover={false} className="p-4">
-          <div className="text-sm text-text-muted">Loading activity feed...</div>
-        </NeonCard>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
       ) : null}
 
+      {/* --- Your Recent Contributions --- */}
       <div>
         <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Your Recent Contributions</h3>
+
+        {/* Empty state */}
         {!loading && mySubmissions.length === 0 ? (
-          <NeonCard hover={false} className="p-4">
-            <div className="text-sm text-text-muted">No submissions yet. Start with your first contribution.</div>
+          <NeonCard hover={false} className="p-8 border border-accent-border">
+            <div className="text-center max-w-md mx-auto space-y-5">
+              <p className="text-lg text-text-primary font-display">
+                Your journey begins with a single contribution
+              </p>
+              <p className="text-sm text-text-secondary">
+                Share your work with the community and start earning points. Pick a content type to get started.
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg bg-bg-raised border border-border-subtle p-3 text-center">
+                  <div className="text-xl mb-1">𝕏</div>
+                  <div className="text-xs text-text-secondary">X Post</div>
+                </div>
+                <div className="rounded-lg bg-bg-raised border border-border-subtle p-3 text-center">
+                  <div className="text-xl mb-1">&#9998;</div>
+                  <div className="text-xs text-text-secondary">Blog</div>
+                </div>
+                <div className="rounded-lg bg-bg-raised border border-border-subtle p-3 text-center">
+                  <div className="text-xl mb-1">&#9670;</div>
+                  <div className="text-xs text-text-secondary">Artwork</div>
+                </div>
+              </div>
+              <Link
+                href="/submit"
+                className="inline-block bg-accent px-8 py-3 rounded-[var(--radius-sm)] font-semibold text-[#08080a] transition-colors hover:bg-accent-dim"
+              >
+                Make Your First Submission
+              </Link>
+            </div>
           </NeonCard>
         ) : null}
+
         <div className="space-y-3">
           {mySubmissions.slice(0, 6).map((submission) => (
             <NeonCard key={submission.id} hover={false} className="p-4">
@@ -342,6 +542,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* --- Community Feed --- */}
       <div>
         <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Community Feed</h3>
         <div className="space-y-4">
@@ -351,33 +552,43 @@ export default function DashboardPage() {
             </NeonCard>
           ) : null}
 
-          {communitySubmissions.map((submission, index) => (
-            <motion.div
-              key={submission.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.04 }}
-            >
-              <NeonCard className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <div className="text-sm font-medium text-text-primary">
-                      {submission.users?.display_name || submission.wallet_address}
+          {communitySubmissions.map((submission, index) => {
+            const typeInfo = typeIcons[submission.type] || fallbackTypeIcon;
+            return (
+              <motion.div
+                key={submission.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04 }}
+              >
+                <NeonCard className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-sm font-semibold text-text-primary">
+                        {submission.users?.display_name || submission.wallet_address}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
+                        <span className={`inline-block w-2 h-2 rounded-full ${typeInfo.dotColor}`} />
+                        <span className={typeInfo.color}>{typeInfo.label}</span>
+                        <span className="text-text-muted/50">|</span>
+                        <span>{new Date(submission.created_at).toLocaleDateString()}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span className={(typeIcons[submission.type] || fallbackTypeIcon).color}>{(typeIcons[submission.type] || fallbackTypeIcon).label}</span>
-                      <span>|</span>
-                      <span>{new Date(submission.created_at).toLocaleDateString()}</span>
-                    </div>
+                    <PointsBadge points={submission.points_awarded} size="sm" showLabel={false} />
                   </div>
-                  <PointsBadge points={submission.points_awarded} size="sm" showLabel={false} />
-                </div>
 
-                <h4 className="text-base font-semibold text-text-primary mb-1">{submission.title}</h4>
-                <p className="text-sm text-text-secondary line-clamp-2">{submission.content_text}</p>
-              </NeonCard>
-            </motion.div>
-          ))}
+                  <h4 className="text-base font-semibold text-text-primary mb-1">{submission.title}</h4>
+                  <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">{submission.content_text}</p>
+
+                  <ReactionBar
+                    submissionId={submission.id}
+                    data={reactions[submission.id]}
+                    onToggle={handleReactionToggle}
+                  />
+                </NeonCard>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>
