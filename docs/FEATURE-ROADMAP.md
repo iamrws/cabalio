@@ -355,34 +355,34 @@ seasons 1:N → season_world_boss_progress
 
 | # | Feature | Scope | Impact | Status |
 |---|---------|-------|--------|--------|
-| 2.1 | **Notifications table + API** — submission decisions, tier ups, achievements | 2d | Critical | Pending |
-| 2.2 | **In-app notification bell** — unread count, dropdown, mark-read | 1d | Critical | Pending |
+| 2.1 | **Notifications table + API** — submission decisions, tier ups, achievements | 2d | Critical | ✅ Done |
+| 2.2 | **In-app notification bell** — unread count, dropdown, mark-read | 1d | Critical | ✅ Done |
 | 2.3 | **Submission reactions** — wire existing `reactions` table to UI | 1-2d | Medium | ✅ Done (API + dashboard UI) |
-| 2.4 | **Community activity feed** on dashboard — recent approvals, milestones | 1d | Medium | Pending |
+| 2.4 | **Community activity feed** on dashboard — recent approvals, milestones | 1d | Medium | ✅ Done |
 
 ### Phase 3: Engagement & Analytics (3-4 days)
 
 | # | Feature | Scope | Impact | Status |
 |---|---------|-------|--------|--------|
 | 3.1 | **Creator analytics** — scoring breakdown radar chart, submission trends | 2d | Medium | ✅ Partial (breakdown in profile tabs) |
-| 3.2 | **User settings page** — notification prefs, privacy toggle, theme | 1-2d | Medium | Pending |
-| 3.3 | **Content search & filtering** — full-text search, type/date filters | 1-2d | Medium | Pending |
+| 3.2 | **User settings page** — notification prefs, privacy toggle, theme | 1-2d | Medium | ✅ Done |
+| 3.3 | **Content search & filtering** — full-text search, type/date filters | 1-2d | Medium | ✅ Done |
 
 ### Phase 4: Commerce & Rewards (3-5 days)
 
-| # | Feature | Scope | Impact |
-|---|---------|-------|--------|
-| 4.1 | **Treasury setup docs** — SOL wallet, funding, security | 1d | High |
-| 4.2 | **Enable rewards claiming** — payout worker, tx tracking | 2-3d | High |
-| 4.3 | **Reward projections** — show estimated earnings based on current pace | 1d | Medium |
+| # | Feature | Scope | Impact | Status |
+|---|---------|-------|--------|--------|
+| 4.1 | **Treasury setup docs** — SOL wallet, funding, security | 1d | High | Pending |
+| 4.2 | **Enable rewards claiming** — payout worker, tx tracking | 2-3d | High | Pending |
+| 4.3 | **Reward projections** — show estimated earnings based on current pace | 1d | Medium | Pending |
 
 ### Phase 5: Real-Time & Polish (3-4 days)
 
-| # | Feature | Scope | Impact |
-|---|---------|-------|--------|
-| 5.1 | **Supabase Realtime** — live leaderboard, notification delivery | 2d | Medium |
-| 5.2 | **Data export** — CSV download for submissions, points | 0.5d | Low |
-| 5.3 | **Appeals process** — rejected submission appeal workflow | 1-2d | Medium |
+| # | Feature | Scope | Impact | Status |
+|---|---------|-------|--------|--------|
+| 5.1 | **Supabase Realtime** — live leaderboard, notification delivery | 2d | Medium | Pending |
+| 5.2 | **Data export** — CSV download for submissions, points | 0.5d | Low | Pending |
+| 5.3 | **Appeals process** — rejected submission appeal workflow | 1-2d | Medium | Pending |
 
 ### Future Phases
 - Governance/voting system
