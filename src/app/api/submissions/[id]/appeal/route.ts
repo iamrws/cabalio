@@ -122,6 +122,24 @@ export async function GET(
 
   const supabase = createServerClient();
 
+  // Verify submission exists and check ownership
+  const { data: submission, error: subError } = await supabase
+    .from('submissions')
+    .select('id, wallet_address')
+    .eq('id', id)
+    .single();
+
+  if (subError || !submission) {
+    return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+  }
+
+  const isOwner = submission.wallet_address === session.walletAddress;
+  const isAdmin = session.role === 'admin';
+
+  if (!isOwner && !isAdmin) {
+    return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+  }
+
   const { data: appeal, error } = await supabase
     .from('submission_appeals')
     .select('*')

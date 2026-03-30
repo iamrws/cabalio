@@ -128,7 +128,7 @@ export async function GET(
     stats: {
       total_submissions: submissions.length,
       approved_submissions: approvedSubmissions.length,
-      pending_submissions: submissions.filter((submission) => submission.status === 'submitted').length,
+      pending_submissions: (isSelf || isAdmin) ? submissions.filter((submission) => submission.status === 'submitted').length : 0,
       total_points: totalPoints,
       weekly_points: weeklyPoints,
       avg_score: avgScore,

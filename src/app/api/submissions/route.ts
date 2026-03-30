@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 const submissionSchema = z.object({
   type: z.enum(['x_post', 'blog', 'art']),
-  url: z.string().url().optional(),
+  url: z.string().url().refine(u => u.startsWith('https://'), { message: 'URL must use HTTPS' }).optional(),
   title: z.string().min(1).max(200),
   content_text: z.string().min(MIN_TEXT_LENGTH),
   image_path: z.string().optional(),
@@ -63,7 +63,7 @@ function isAllowedUploadedImagePath(imagePath: string): boolean {
 
 /** Compute a SHA-256 content hash for duplicate detection. */
 function computeContentHash(title: string, contentText: string, url: string | null): string {
-  const payload = JSON.stringify({ title: title.trim().toLowerCase(), content_text: contentText.trim().toLowerCase(), url: url || '' });
+  const payload = JSON.stringify({ title: title.trim().toLowerCase().normalize('NFC'), content_text: contentText.trim().toLowerCase().normalize('NFC'), url: url || '' });
   return createHash('sha256').update(payload).digest('hex');
 }
 

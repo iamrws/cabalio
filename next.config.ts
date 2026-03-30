@@ -5,10 +5,10 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com",
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' https://www.youtube.com https://s.ytimg.com",
+      "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
       "img-src 'self' data: https://i.ytimg.com https://img.youtube.com",
-      "font-src 'self'",
+      "font-src 'self' https://api.fontshare.com",
       "connect-src 'self' https://mainnet.helius-rpc.com https://youtube.googleapis.com https://*.supabase.co",
       "frame-src 'self' https://www.youtube.com",
       "object-src 'none'",

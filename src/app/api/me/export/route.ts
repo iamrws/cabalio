@@ -10,7 +10,11 @@ export const dynamic = 'force-dynamic';
 /* ------------------------------------------------------------------ */
 
 function toCSV(headers: string[], rows: string[][]): string {
-  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const escape = (v: string) => {
+    // Prevent CSV formula injection (CWE-1236)
+    const sanitized = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+    return `"${sanitized.replace(/"/g, '""')}"`;
+  };
   return [
     headers.join(','),
     ...rows.map((row) => row.map(escape).join(',')),
@@ -18,25 +22,54 @@ function toCSV(headers: string[], rows: string[][]): string {
 }
 
 /* ------------------------------------------------------------------ */
-/*  In-memory rate limiter (per-wallet, 5 exports / hour)             */
+/*  Database-backed rate limiter (per-wallet, 5 exports / hour)       */
 /* ------------------------------------------------------------------ */
 
-const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_MAX = 5;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_WINDOW_SECONDS = 3600; // 1 hour
 
-function isRateLimited(wallet: string): boolean {
-  const now = Date.now();
-  const timestamps = (rateLimitMap.get(wallet) || []).filter(
-    (t) => now - t < RATE_LIMIT_WINDOW_MS
-  );
-  rateLimitMap.set(wallet, timestamps);
+async function isRateLimited(
+  supabase: ReturnType<typeof createServerClient>,
+  wallet: string
+): Promise<boolean> {
+  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_SECONDS * 1000).toISOString();
 
-  if (timestamps.length >= RATE_LIMIT_MAX) {
+  const { data: rateLimitRow } = await supabase
+    .from('rate_limits')
+    .select('request_count, window_start')
+    .eq('wallet_address', wallet)
+    .eq('action', 'data_export')
+    .gte('window_start', windowStart)
+    .order('window_start', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (rateLimitRow && rateLimitRow.request_count >= RATE_LIMIT_MAX) {
     return true;
   }
 
-  timestamps.push(now);
+  const nowIso = new Date().toISOString();
+
+  if (rateLimitRow) {
+    await supabase
+      .from('rate_limits')
+      .update({ request_count: rateLimitRow.request_count + 1, updated_at: nowIso })
+      .eq('wallet_address', wallet)
+      .eq('action', 'data_export')
+      .eq('window_start', rateLimitRow.window_start);
+  } else {
+    await supabase.from('rate_limits').upsert(
+      {
+        wallet_address: wallet,
+        action: 'data_export',
+        request_count: 1,
+        window_start: nowIso,
+        updated_at: nowIso,
+      },
+      { onConflict: 'wallet_address,action' }
+    );
+  }
+
   return false;
 }
 
@@ -70,15 +103,15 @@ export async function GET(request: NextRequest) {
 
   const { type } = parsed.data;
 
-  // Rate limit
-  if (isRateLimited(session.walletAddress)) {
+  const supabase = createServerClient();
+
+  // Rate limit (database-backed, survives serverless cold starts)
+  if (await isRateLimited(supabase, session.walletAddress)) {
     return NextResponse.json(
       { error: 'Rate limit exceeded. Maximum 5 exports per hour.' },
       { status: 429 }
     );
   }
-
-  const supabase = createServerClient();
   const wallet = session.walletAddress;
   const dateStr = new Date().toISOString().slice(0, 10);
 

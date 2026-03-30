@@ -6,7 +6,7 @@ import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 const voteSchema = z.object({
-  videoId: z.string().min(1).max(50),
+  videoId: z.string().regex(/^[a-zA-Z0-9_-]{1,50}$/, 'Invalid video ID format'),
   vote: z.enum(['ai', 'human']),
 });
 
@@ -67,20 +67,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch current aggregate consensus for this video
-    const { data: aggregateRows } = await supabase
+    // Fetch current aggregate consensus for this video using count queries (no rows transferred)
+    const { count: aiCount } = await supabase
       .from('game_votes')
-      .select('vote')
-      .eq('video_id', parsed.videoId);
+      .select('id', { count: 'exact', head: true })
+      .eq('video_id', parsed.videoId)
+      .eq('vote', 'ai');
 
-    const votes = aggregateRows || [];
-    const aiCount = votes.filter((v) => v.vote === 'ai').length;
-    const humanCount = votes.filter((v) => v.vote === 'human').length;
-    const totalVotesBefore = aiCount + humanCount;
+    const { count: humanCount } = await supabase
+      .from('game_votes')
+      .select('id', { count: 'exact', head: true })
+      .eq('video_id', parsed.videoId)
+      .eq('vote', 'human');
+
+    const totalVotesBefore = (aiCount || 0) + (humanCount || 0);
 
     // Consensus: what the majority thinks (including the new vote)
-    const newAiCount = aiCount + (parsed.vote === 'ai' ? 1 : 0);
-    const newHumanCount = humanCount + (parsed.vote === 'human' ? 1 : 0);
+    const newAiCount = (aiCount || 0) + (parsed.vote === 'ai' ? 1 : 0);
+    const newHumanCount = (humanCount || 0) + (parsed.vote === 'human' ? 1 : 0);
     const totalVotesAfter = newAiCount + newHumanCount;
     const aiPct = totalVotesAfter > 0 ? Math.round((newAiCount / totalVotesAfter) * 100) : 50;
 

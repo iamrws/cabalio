@@ -35,8 +35,9 @@ export async function GET(request: NextRequest) {
 
   const supabase = createServerClient();
 
-  // Build the search pattern for ilike
-  const pattern = `%${q}%`;
+  // Sanitize search query to strip PostgREST operator characters and SQL wildcards
+  const sanitized = q.replace(/[%_\\'"]/g, '');
+  const pattern = `%${sanitized}%`;
 
   let query = supabase
     .from('submissions')

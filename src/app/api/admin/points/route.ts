@@ -179,27 +179,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!updatedUser) {
-      // Concurrent modification detected — re-read and retry once
-      const { data: freshUser } = await supabase
-        .from('users')
-        .select('total_xp')
-        .eq('wallet_address', walletAddress)
-        .single();
-
-      if (freshUser) {
-        const { error: retryError } = await supabase
-          .from('users')
-          .update({
-            total_xp: freshUser.total_xp + parsed.points_delta,
-            updated_at: now,
-          })
-          .eq('wallet_address', walletAddress);
-
-        if (retryError) {
-          console.error('User XP retry update failed:', retryError);
-          return NextResponse.json({ error: 'Failed to update user points (concurrent modification)' }, { status: 500 });
-        }
-      }
+      return NextResponse.json(
+        { error: 'Concurrent modification detected. Please try again.' },
+        { status: 409 }
+      );
     }
 
     void createNotification({
