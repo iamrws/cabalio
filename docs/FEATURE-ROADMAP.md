@@ -380,9 +380,13 @@ seasons 1:N → season_world_boss_progress
 
 | # | Feature | Scope | Impact | Status |
 |---|---------|-------|--------|--------|
-| 5.1 | **Supabase Realtime** — live leaderboard, notification delivery | 2d | Medium | Pending |
-| 5.2 | **Data export** — CSV download for submissions, points | 0.5d | Low | Pending |
-| 5.3 | **Appeals process** — rejected submission appeal workflow | 1-2d | Medium | Pending |
+| 5.1 | **Supabase Realtime** — live leaderboard, notification delivery | 2d | Medium | Deferred |
+| 5.2 | **Data export** — CSV download for submissions, points | 0.5d | Low | ✅ Done |
+| 5.3 | **Appeals process** — rejected submission appeal workflow | 1-2d | Medium | ✅ Done |
+| 5.4 | **Batch reaction endpoint** — eliminate feed N+1 (25 reqs → 1) | 0.5d | High | ✅ Done |
+| 5.5 | **UserContext provider** — deduplicate /api/me/summary (3 → 1) | 0.5d | High | ✅ Done |
+| 5.6 | **Font loading optimization** — trim weights, preload hint | 0.25d | Medium | ✅ Done |
+| 5.7 | **Dynamic import AiOrNotPanel** — code-split game chunk | 0.25d | Medium | ✅ Done |
 
 ### Future Phases
 - Governance/voting system
