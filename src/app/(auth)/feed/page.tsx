@@ -119,31 +119,24 @@ export default function FeedPage() {
     };
   }, []);
 
-  // Fetch reactions for community submissions
+  // Fetch reactions for community submissions in a single batch request
   useEffect(() => {
     if (communitySubmissions.length === 0) return;
     let cancelled = false;
 
     const fetchReactions = async () => {
-      const results = await Promise.allSettled(
-        communitySubmissions.map((s) =>
-          fetch(`/api/submissions/${s.id}/react`, { cache: 'no-store' }).then(async (r) => {
-            if (!r.ok) return null;
-            const d = await r.json();
-            return { id: s.id, data: d as ReactionData };
-          })
-        )
-      );
-
-      if (cancelled) return;
-
-      const next: Record<string, ReactionData> = {};
-      for (const result of results) {
-        if (result.status === 'fulfilled' && result.value) {
-          next[result.value.id] = result.value.data;
-        }
+      const ids = communitySubmissions.map((s) => s.id).join(',');
+      try {
+        const res = await fetch(`/api/submissions/reactions/batch?ids=${ids}`, {
+          cache: 'no-store',
+        });
+        if (!res.ok) return;
+        const body = await res.json();
+        if (cancelled) return;
+        setReactions(body.reactions || {});
+      } catch {
+        // Silently fail — reaction counts are non-critical
       }
-      setReactions(next);
     };
 
     void fetchReactions();

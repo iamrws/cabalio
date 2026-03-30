@@ -38,8 +38,14 @@ export default function RootLayout({
           href="https://api.fontshare.com"
           crossOrigin="anonymous"
         />
+        {/* Preload the font stylesheet so it doesn't block rendering */}
         <link
-          href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&f[]=satoshi@300,400,500,600,700&display=swap"
+          rel="preload"
+          href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,600,700&display=swap"
+          as="style"
+        />
+        <link
+          href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,600,700&display=swap"
           rel="stylesheet"
         />
       </head>

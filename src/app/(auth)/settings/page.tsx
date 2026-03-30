@@ -133,6 +133,7 @@ export default function SettingsPage() {
   const [settingsFeedback, setSettingsFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [exportingType, setExportingType] = useState<string | null>(null);
   const nameTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const settingsTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -492,12 +493,30 @@ export default function SettingsPage() {
 
           <div className="space-y-4">
             <div>
-              <button
-                onClick={() => showToast('Data export coming soon')}
-                className="px-4 py-2 bg-bg-raised border border-border-subtle rounded-lg text-sm text-text-primary hover:border-border-default transition-colors"
-              >
-                Export my data
-              </button>
+              <p className="text-text-secondary text-xs uppercase tracking-wider mb-2">Export my data</p>
+              <div className="flex flex-wrap gap-2">
+                {(['submissions', 'points', 'all'] as const).map((exportType) => (
+                  <button
+                    key={exportType}
+                    disabled={exportingType !== null}
+                    onClick={() => {
+                      setExportingType(exportType);
+                      const link = document.createElement('a');
+                      link.href = `/api/me/export?type=${exportType}`;
+                      link.download = '';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      setTimeout(() => setExportingType(null), 2000);
+                    }}
+                    className="px-4 py-2 bg-bg-raised border border-border-subtle rounded-lg text-sm text-text-primary hover:border-border-default transition-colors disabled:opacity-50"
+                  >
+                    {exportingType === exportType
+                      ? 'Downloading...'
+                      : `Export ${exportType.charAt(0).toUpperCase() + exportType.slice(1)}`}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

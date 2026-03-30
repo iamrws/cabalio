@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import AuthControls from '../shared/AuthControls';
 import PointsBadge from '../shared/PointsBadge';
+import { useUser } from '../shared/UserProvider';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -51,8 +52,9 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const title = pageTitles[pathname] || 'Jito Cabal';
-  const [streak, setStreak] = useState(0);
-  const [weeklyPoints, setWeeklyPoints] = useState(0);
+  const { summary } = useUser();
+  const streak = summary?.user?.current_streak ?? 0;
+  const weeklyPoints = summary?.stats?.weekly_points ?? 0;
 
   // Notification state
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -60,28 +62,6 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLButtonElement>(null);
-
-  // ---------- Fetch user summary ----------
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadSummary = async () => {
-      try {
-        const response = await fetch('/api/me/summary', { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok || cancelled) return;
-        setStreak(data.user?.current_streak || 0);
-        setWeeklyPoints(data.stats?.weekly_points || 0);
-      } catch {
-        // No-op: header can gracefully show defaults.
-      }
-    };
-
-    void loadSummary();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // ---------- Fetch notifications ----------
   const fetchNotifications = useCallback(async () => {

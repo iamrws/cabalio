@@ -5,6 +5,7 @@ import Link from 'next/link';
 import NeonCard from '@/components/shared/NeonCard';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import PointsBadge from '@/components/shared/PointsBadge';
+import { useUser } from '@/components/shared/UserProvider';
 
 interface SubmissionRow {
   id: string;
@@ -69,13 +70,15 @@ const typeIcons: Record<string, { label: string; color: string; dotColor: string
 const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary', dotColor: 'bg-text-secondary' };
 
 export default function DashboardPage() {
+  const { summary: userSummary, refresh: refreshUser } = useUser();
   const [mySubmissions, setMySubmissions] = useState<SubmissionRow[]>([]);
-  const [myWeeklyPoints, setMyWeeklyPoints] = useState(0);
-  const [myTotalPoints, setMyTotalPoints] = useState(0);
   const [commandCenter, setCommandCenter] = useState<CommandCenterResponse | null>(null);
   const [pointsFeed, setPointsFeed] = useState<PointsFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const myWeeklyPoints = userSummary?.stats?.weekly_points ?? 0;
+  const myTotalPoints = userSummary?.stats?.total_points ?? 0;
 
   const actionImpressionRef = useRef<string>('');
 
@@ -92,11 +95,6 @@ export default function DashboardPage() {
             if (!r.ok) throw new Error(d.error || 'Failed to load your submissions');
             return d;
           }),
-          fetch('/api/me/summary', { cache: 'no-store' }).then(async (r) => {
-            const d = await r.json();
-            if (!r.ok) throw new Error(d.error || 'Failed to load your points summary');
-            return d;
-          }),
           fetch('/api/me/command-center', { cache: 'no-store' }).then(async (r) => {
             const d = await r.json();
             if (!r.ok) throw new Error(d.error || 'Failed to load command center');
@@ -110,16 +108,14 @@ export default function DashboardPage() {
         ]);
 
         const mineData = results[0].status === 'fulfilled' ? results[0].value : null;
-        const summaryData = results[1].status === 'fulfilled' ? results[1].value : null;
-        const commandCenterData = results[2].status === 'fulfilled' ? results[2].value : null;
-        const pointsFeedData = results[3].status === 'fulfilled' ? results[3].value : null;
+        const commandCenterData = results[1].status === 'fulfilled' ? results[1].value : null;
+        const pointsFeedData = results[2].status === 'fulfilled' ? results[2].value : null;
 
         if (!cancelled) {
           setMySubmissions(mineData?.submissions || []);
-          setMyWeeklyPoints(summaryData?.stats?.weekly_points || 0);
-          setMyTotalPoints(summaryData?.stats?.total_points || 0);
           setCommandCenter(commandCenterData || null);
           setPointsFeed(pointsFeedData?.items || []);
+          refreshUser(); // sync UserContext with latest data
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -136,7 +132,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshUser]);
 
   useEffect(() => {
     const actionId = commandCenter?.next_best_action?.action_id;

@@ -1,33 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS } from '@/lib/constants';
 import { NAV_ICONS } from '@/lib/nav-icons';
 import PointsBadge from '../shared/PointsBadge';
 import { useAiOrNot } from '../game/AiOrNotPanel';
+import { useUser } from '../shared/UserProvider';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [weeklyPoints, setWeeklyPoints] = useState(0);
-  const [level, setLevel] = useState(1);
+  const { summary } = useUser();
+  const weeklyPoints = summary?.stats?.weekly_points ?? 0;
+  const level = summary?.user?.level ?? 1;
   const { toggle: toggleGame, isOpen: gameOpen } = useAiOrNot();
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadSummary = async () => {
-      try {
-        const response = await fetch('/api/me/summary', { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok || cancelled) return;
-        setWeeklyPoints(data.stats?.weekly_points || 0);
-        setLevel(data.user?.level || 1);
-      } catch { /* keep defaults */ }
-    };
-    void loadSummary();
-    return () => { cancelled = true; };
-  }, []);
 
   return (
     <aside className="fixed left-0 top-0 h-full w-[260px] bg-bg-surface border-r border-border-subtle flex flex-col z-40 hidden lg:flex">

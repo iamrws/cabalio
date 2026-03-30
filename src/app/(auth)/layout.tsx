@@ -4,10 +4,18 @@ import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import MobileNav from '@/components/layout/MobileNav';
 import AuthControls from '@/components/shared/AuthControls';
-import AiOrNotPanel, { AiOrNotProvider } from '@/components/game/AiOrNotPanel';
+import { UserProvider } from '@/components/shared/UserProvider';
+import dynamic from 'next/dynamic';
+import { AiOrNotProvider } from '@/components/game/AiOrNotPanel';
+
+const AiOrNotPanel = dynamic(
+  () => import('@/components/game/AiOrNotPanel').then(m => ({ default: m.default })),
+  { ssr: false, loading: () => null }
+);
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
+    <UserProvider>
     <AiOrNotProvider>
       <div className="min-h-screen bg-bg-base">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2 focus:bg-accent focus:text-white focus:rounded-md">
@@ -27,5 +35,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <AiOrNotPanel />
       </div>
     </AiOrNotProvider>
+    </UserProvider>
   );
 }

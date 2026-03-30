@@ -741,6 +741,67 @@ function ContributionsTab({
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Appeal state
+  const [appealingId, setAppealingId] = useState<string | null>(null);
+  const [appealReason, setAppealReason] = useState('');
+  const [appealSubmitting, setAppealSubmitting] = useState(false);
+  const [appealError, setAppealError] = useState('');
+  // Track which submissions have pending/reviewed appeals: submissionId -> status
+  const [appealStatuses, setAppealStatuses] = useState<Record<string, string>>({});
+
+  // Load appeal statuses for rejected/flagged submissions on mount
+  useEffect(() => {
+    if (!isSelf) return;
+    const appealable = contributions.filter((c) => ['rejected', 'flagged'].includes(c.status));
+    if (appealable.length === 0) return;
+
+    const loadAppeals = async () => {
+      const statuses: Record<string, string> = {};
+      await Promise.all(
+        appealable.map(async (c) => {
+          try {
+            const res = await fetch(`/api/submissions/${c.id}/appeal`, { cache: 'no-store' });
+            if (res.ok) {
+              const data = await res.json();
+              statuses[c.id] = data.appeal.status;
+            }
+          } catch {
+            // No appeal exists — that's fine
+          }
+        })
+      );
+      setAppealStatuses(statuses);
+    };
+    void loadAppeals();
+  }, [contributions, isSelf]);
+
+  const handleAppealSubmit = useCallback(async (submissionId: string) => {
+    if (appealReason.length < 10 || appealReason.length > 500) {
+      setAppealError('Reason must be between 10 and 500 characters.');
+      return;
+    }
+    setAppealSubmitting(true);
+    setAppealError('');
+    try {
+      const res = await fetch(`/api/submissions/${submissionId}/appeal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: appealReason }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(Array.isArray(data.error) ? data.error[0]?.message : data.error || 'Failed to submit appeal');
+      }
+      setAppealStatuses((prev) => ({ ...prev, [submissionId]: 'pending' }));
+      setAppealingId(null);
+      setAppealReason('');
+    } catch (err) {
+      setAppealError(err instanceof Error ? err.message : 'Failed to submit appeal');
+    } finally {
+      setAppealSubmitting(false);
+    }
+  }, [appealReason]);
+
   return (
     <NeonCard hover={false} className="p-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -880,6 +941,83 @@ function ContributionsTab({
                               <p className="text-xs text-text-secondary mt-2 italic">
                                 {c.scoring_breakdown.summary}
                               </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Appeal section for rejected/flagged submissions (self only) */}
+                        {isSelf && ['rejected', 'flagged'].includes(c.status) && (
+                          <div className="pt-2 border-t border-border-subtle">
+                            {appealStatuses[c.id] === 'pending' && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-caution-muted text-caution">
+                                  Appeal Pending
+                                </span>
+                              </div>
+                            )}
+                            {appealStatuses[c.id] === 'accepted' && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-positive-muted text-positive">
+                                  Appeal Accepted
+                                </span>
+                              </div>
+                            )}
+                            {appealStatuses[c.id] === 'denied' && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-negative-muted text-negative">
+                                  Appeal Denied
+                                </span>
+                              </div>
+                            )}
+                            {!appealStatuses[c.id] && appealingId !== c.id && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAppealingId(c.id);
+                                  setAppealReason('');
+                                  setAppealError('');
+                                }}
+                                className="rounded-lg bg-caution-muted border border-caution-border text-caution px-3 py-1.5 text-xs font-medium hover:bg-caution-muted/80 transition-colors"
+                              >
+                                Appeal Decision
+                              </button>
+                            )}
+                            {!appealStatuses[c.id] && appealingId === c.id && (
+                              <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                                <textarea
+                                  value={appealReason}
+                                  onChange={(e) => setAppealReason(e.target.value)}
+                                  placeholder="Explain why this submission should be reconsidered (10-500 characters)..."
+                                  maxLength={500}
+                                  rows={3}
+                                  className="w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary placeholder:text-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/50"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => void handleAppealSubmit(c.id)}
+                                    disabled={appealSubmitting || appealReason.length < 10}
+                                    className="rounded-lg bg-accent-muted border border-accent-border text-accent-text px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                                  >
+                                    {appealSubmitting ? 'Submitting...' : 'Submit Appeal'}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setAppealingId(null);
+                                      setAppealReason('');
+                                      setAppealError('');
+                                    }}
+                                    className="rounded-lg border border-border-subtle text-text-secondary px-3 py-1.5 text-xs hover:text-text-primary"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <span className="text-[10px] text-text-muted ml-auto">
+                                    {appealReason.length}/500
+                                  </span>
+                                </div>
+                                {appealError && (
+                                  <div className="text-xs text-negative">{appealError}</div>
+                                )}
+                              </div>
                             )}
                           </div>
                         )}

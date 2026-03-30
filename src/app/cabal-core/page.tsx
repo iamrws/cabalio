@@ -36,6 +36,28 @@ function toLocalInputValue(date: Date): string {
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
 
+interface AppealRow {
+  id: string;
+  submission_id: string;
+  wallet_address: string;
+  reason: string;
+  status: string;
+  admin_response: string | null;
+  created_at: string;
+  submissions?: {
+    id: string;
+    title: string;
+    type: string;
+    url: string | null;
+    content_text: string;
+    status: string;
+  } | null;
+  users?: {
+    display_name: string | null;
+    wallet_address: string;
+  } | null;
+}
+
 export default function CabalCorePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(true);
@@ -45,6 +67,13 @@ export default function CabalCorePage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('submitted');
+
+  // Appeals state
+  const [appeals, setAppeals] = useState<AppealRow[]>([]);
+  const [appealsLoading, setAppealsLoading] = useState(true);
+  const [appealProcessingId, setAppealProcessingId] = useState<string | null>(null);
+  const [appealsError, setAppealsError] = useState('');
+  const [appealResponses, setAppealResponses] = useState<Record<string, string>>({});
 
   const [walletAddressInput, setWalletAddressInput] = useState('');
   const [pointsDeltaInput, setPointsDeltaInput] = useState('');
@@ -127,6 +156,55 @@ export default function CabalCorePage() {
     }
   }, []);
 
+  const loadAppeals = useCallback(async () => {
+    setAppealsLoading(true);
+    setAppealsError('');
+    try {
+      const response = await fetch('/api/admin/appeals?status=pending', {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load appeals');
+      }
+      setAppeals(data.appeals || []);
+    } catch (loadError) {
+      setAppealsError(loadError instanceof Error ? loadError.message : 'Failed to load appeals');
+      setAppeals([]);
+    } finally {
+      setAppealsLoading(false);
+    }
+  }, []);
+
+  const handleAppealReview = useCallback(async (appealId: string, action: 'accept' | 'deny') => {
+    setAppealProcessingId(appealId);
+    setAppealsError('');
+    try {
+      const response = await fetch('/api/admin/appeals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appeal_id: appealId,
+          action,
+          response: appealResponses[appealId] || undefined,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Appeal review failed');
+      }
+      await loadAppeals();
+      if (action === 'accept') {
+        await loadSubmissions();
+      }
+    } catch (reviewError) {
+      setAppealsError(reviewError instanceof Error ? reviewError.message : 'Appeal review failed');
+    } finally {
+      setAppealProcessingId(null);
+    }
+  }, [appealResponses, loadAppeals, loadSubmissions]);
+
   useEffect(() => {
     void loadSubmissions();
   }, [loadSubmissions]);
@@ -134,6 +212,10 @@ export default function CabalCorePage() {
   useEffect(() => {
     void loadSeasons();
   }, [loadSeasons]);
+
+  useEffect(() => {
+    void loadAppeals();
+  }, [loadAppeals]);
 
   const handleReview = useCallback(async (submissionId: string, action: ReviewAction) => {
     setProcessingId(submissionId);
@@ -602,6 +684,81 @@ export default function CabalCorePage() {
             ))}
             <span className="ml-auto text-xs text-text-muted font-mono">{statusCount} items</span>
           </div>
+        </NeonCard>
+
+        {/* ============ APPEALS QUEUE ============ */}
+        <NeonCard hover={false} className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-text-primary font-display">
+              Appeals Queue
+            </h2>
+            <span className="text-xs text-text-muted font-mono">{appeals.length} pending</span>
+          </div>
+
+          {appealsError ? (
+            <div className="text-xs text-negative mb-2">{appealsError}</div>
+          ) : null}
+
+          {appealsLoading ? (
+            <div className="text-sm text-text-muted">Loading appeals...</div>
+          ) : appeals.length === 0 ? (
+            <div className="text-sm text-text-muted">No pending appeals.</div>
+          ) : (
+            <div className="space-y-3">
+              {appeals.map((appeal) => (
+                <div
+                  key={appeal.id}
+                  className="rounded-lg border border-border-subtle bg-bg-raised/40 p-3 space-y-2"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-xs text-text-muted font-mono mb-0.5">
+                        {appeal.users?.display_name || appeal.wallet_address}
+                      </div>
+                      <div className="text-sm font-medium text-text-primary">
+                        {appeal.submissions?.title || 'Unknown submission'}
+                      </div>
+                      <div className="text-xs text-text-muted">
+                        {appeal.submissions?.type} | Appealed {new Date(appeal.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg bg-bg-base border border-border-subtle p-2">
+                    <div className="text-[10px] text-text-muted uppercase tracking-wide mb-1">Appeal Reason</div>
+                    <p className="text-sm text-text-secondary whitespace-pre-wrap">{appeal.reason}</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <input
+                      value={appealResponses[appeal.id] || ''}
+                      onChange={(e) =>
+                        setAppealResponses((prev) => ({ ...prev, [appeal.id]: e.target.value }))
+                      }
+                      placeholder="Optional response to user..."
+                      className="flex-1 w-full sm:w-auto rounded-lg bg-bg-raised border border-border-subtle px-3 py-1.5 text-xs text-text-primary"
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleAppealReview(appeal.id, 'accept')}
+                        disabled={appealProcessingId === appeal.id}
+                        className="rounded-lg bg-positive-muted border border-positive-border text-positive px-3 py-1.5 text-xs disabled:opacity-60"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => handleAppealReview(appeal.id, 'deny')}
+                        disabled={appealProcessingId === appeal.id}
+                        className="rounded-lg bg-negative-muted border border-negative-border text-negative px-3 py-1.5 text-xs disabled:opacity-60"
+                      >
+                        Deny
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </NeonCard>
 
         {error ? (
