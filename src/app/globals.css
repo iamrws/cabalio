@@ -176,7 +176,7 @@ body {
   font-size: 14px;
 }
 
-/* Noise texture overlay for depth */
+/* Noise texture overlay for depth — GPU-composited layer */
 body::before {
   content: '';
   position: fixed;
@@ -184,6 +184,7 @@ body::before {
   z-index: 0;
   pointer-events: none;
   opacity: 0.025;
+  will-change: transform;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -430,6 +431,13 @@ body::before {
   );
   background-size: 200% 100%;
   animation: gold-shimmer 3s ease-in-out infinite;
+}
+
+/* Skip layout/paint for off-screen feed & list items */
+.space-y-4 > div,
+.space-y-3 > div {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
 }
 
 /* Scrollbar */
