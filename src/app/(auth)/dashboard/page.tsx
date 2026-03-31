@@ -70,7 +70,7 @@ const typeIcons: Record<string, { label: string; color: string; dotColor: string
 const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary', dotColor: 'bg-text-secondary' };
 
 export default function DashboardPage() {
-  const { summary: userSummary, refresh: refreshUser } = useUser();
+  const { summary: userSummary } = useUser();
   const [mySubmissions, setMySubmissions] = useState<SubmissionRow[]>([]);
   const [commandCenter, setCommandCenter] = useState<CommandCenterResponse | null>(null);
   const [pointsFeed, setPointsFeed] = useState<PointsFeedItem[]>([]);
@@ -115,7 +115,6 @@ export default function DashboardPage() {
           setMySubmissions(mineData?.submissions || []);
           setCommandCenter(commandCenterData || null);
           setPointsFeed(pointsFeedData?.items || []);
-          refreshUser(); // sync UserContext with latest data
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -132,7 +131,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [refreshUser]);
+  }, []);
 
   useEffect(() => {
     const actionId = commandCenter?.next_best_action?.action_id;

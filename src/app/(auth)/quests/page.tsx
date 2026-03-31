@@ -62,9 +62,13 @@ export default function QuestsPage() {
     setError('');
 
     try {
-      const currentResponse = await fetch('/api/seasons/current', { cache: 'no-store' });
-      const currentData = await currentResponse.json();
+      // Fetch season info and quests in parallel to eliminate waterfall
+      const [currentResponse, questResponse] = await Promise.all([
+        fetch('/api/seasons/current', { cache: 'no-store' }),
+        fetch('/api/seasons/current/quests', { cache: 'no-store' }),
+      ]);
 
+      const currentData = await currentResponse.json();
       if (!currentResponse.ok) {
         throw new Error(currentData.error || 'Failed to load season');
       }
@@ -73,14 +77,8 @@ export default function QuestsPage() {
       setRoles(currentData.roles || []);
       setMemberState(currentData.member_state || null);
 
-      if (currentData.season?.status === 'live') {
-        const questResponse = await fetch('/api/seasons/current/quests', { cache: 'no-store' });
+      if (currentData.season?.status === 'live' && questResponse.ok) {
         const questData = await questResponse.json();
-
-        if (!questResponse.ok) {
-          throw new Error(questData.error || 'Failed to load season quests');
-        }
-
         setQuests(questData.quests || []);
         if (questData.member_state) {
           setMemberState(questData.member_state);
