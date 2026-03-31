@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import NeonCard from '@/components/shared/NeonCard';
 import PointsBadge from '@/components/shared/PointsBadge';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
@@ -370,14 +370,11 @@ export default function ProfilePage() {
                     </button>
                   )}
                   {editSuccess && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="text-xs text-positive font-medium"
+                    <span
+                      className="text-xs text-positive font-medium animate-in fade-in"
                     >
                       Saved
-                    </motion.span>
+                    </span>
                   )}
                 </>
               )}
@@ -451,11 +448,9 @@ export default function ProfilePage() {
             </span>
           </div>
           <div className="h-2.5 rounded-full bg-bg-raised overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.max(levelInfo.progress * 100, 2)}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-              className="h-full rounded-full bg-gradient-to-r from-accent/80 to-accent"
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-accent/80 to-accent transition-all duration-700 ease-out"
+              style={{ width: `${Math.max(levelInfo.progress * 100, 2)}%` }}
             />
           </div>
         </div>
@@ -545,8 +540,7 @@ export default function ProfilePage() {
           >
             {TAB_LABELS[tab]}
             {activeTab === tab && (
-              <motion.div
-                layoutId="profile-tab-indicator"
+              <div
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full"
               />
             )}
@@ -555,45 +549,37 @@ export default function ProfilePage() {
       </div>
 
       {/* ============ TAB CONTENT ============ */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2 }}
-        >
-          {activeTab === 'overview' && (
-            <OverviewTab
-              profile={profile}
-              levelInfo={levelInfo}
-              earnedBadgeIds={earnedBadgeIds}
-            />
-          )}
-          {activeTab === 'contributions' && (
-            <ContributionsTab
-              contributions={filteredContributions}
-              totalCount={profile.contributions.length}
-              filter={contribFilter}
-              onFilterChange={setContribFilter}
-              isSelf={isSelf}
-            />
-          )}
-          {activeTab === 'points' && (
-            <PointsTab
-              pointsHistory={profile.points_history}
-              pointsWithRunning={pointsWithRunning}
-              maxRunning={maxRunning}
-            />
-          )}
-          {activeTab === 'badges' && (
-            <BadgesTab
-              earnedBadgeIds={earnedBadgeIds}
-              earnedBadgeMap={earnedBadgeMap}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <div key={activeTab}>
+        {activeTab === 'overview' && (
+          <OverviewTab
+            profile={profile}
+            levelInfo={levelInfo}
+            earnedBadgeIds={earnedBadgeIds}
+          />
+        )}
+        {activeTab === 'contributions' && (
+          <ContributionsTab
+            contributions={filteredContributions}
+            totalCount={profile.contributions.length}
+            filter={contribFilter}
+            onFilterChange={setContribFilter}
+            isSelf={isSelf}
+          />
+        )}
+        {activeTab === 'points' && (
+          <PointsTab
+            pointsHistory={profile.points_history}
+            pointsWithRunning={pointsWithRunning}
+            maxRunning={maxRunning}
+          />
+        )}
+        {activeTab === 'badges' && (
+          <BadgesTab
+            earnedBadgeIds={earnedBadgeIds}
+            earnedBadgeMap={earnedBadgeMap}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -885,15 +871,8 @@ function ContributionsTab({
                   </div>
                 </div>
 
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
+                {isExpanded && (
+                    <div className="overflow-hidden">
                       <div className="px-3 pb-3 pt-1 border-t border-border-subtle space-y-3">
                         {c.url && (
                           <a
@@ -1022,9 +1001,8 @@ function ContributionsTab({
                           </div>
                         )}
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+                )}
               </div>
             );
           })}
@@ -1056,15 +1034,13 @@ function PointsTab({
             Points Growth
           </h3>
           <div className="flex items-end gap-px h-32 overflow-hidden">
-            {pointsWithRunning.map((entry, i) => {
+            {pointsWithRunning.map((entry) => {
               const height = Math.max((entry.running_total / maxRunning) * 100, 2);
               return (
-                <motion.div
+                <div
                   key={entry.id}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${height}%` }}
-                  transition={{ duration: 0.5, delay: i * 0.02 }}
                   className="flex-1 min-w-[3px] max-w-3 bg-accent/60 hover:bg-accent rounded-t transition-colors"
+                  style={{ height: `${height}%` }}
                   title={`${entry.running_total} pts — ${new Date(entry.created_at).toLocaleDateString()}`}
                 />
               );
@@ -1147,10 +1123,8 @@ function BadgesTab({
           const earned = earnedBadgeIds.has(badge.id);
           const earnedAt = earnedBadgeMap.get(badge.id);
           return (
-            <motion.div
+            <div
               key={badge.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
               className={`relative text-center p-5 rounded-xl border transition-all ${
                 earned
                   ? 'bg-accent/10 border-accent-border shadow-[0_0_16px_rgba(212,168,83,0.08)]'
@@ -1173,7 +1147,7 @@ function BadgesTab({
                   <div className="text-[10px] text-text-muted mt-1">Locked</div>
                 </div>
               )}
-            </motion.div>
+            </div>
           );
         })}
       </div>

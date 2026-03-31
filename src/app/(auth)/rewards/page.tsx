@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import NeonCard from '@/components/shared/NeonCard';
 import AnimatedCounter from '@/components/shared/AnimatedCounter';
 
@@ -64,21 +64,15 @@ function EarningsChart({ weeks }: { weeks: WeekHistory[] }) {
   return (
     <div className="relative">
       {/* Tooltip */}
-      <AnimatePresence>
-        {hoveredIdx !== null && (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.15 }}
-            className="absolute -top-12 left-1/2 -translate-x-1/2 bg-bg-raised border border-border-subtle rounded-lg px-3 py-1.5 text-xs font-mono shadow-lg z-10 whitespace-nowrap pointer-events-none"
-          >
-            <span className="text-text-primary">{weeks[hoveredIdx].points} pts</span>
-            <span className="text-text-muted mx-1">·</span>
-            <span className="text-accent-text">{weeks[hoveredIdx].reward_sol.toFixed(4)} SOL</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {hoveredIdx !== null && (
+        <div
+          className="absolute -top-12 left-1/2 -translate-x-1/2 bg-bg-raised border border-border-subtle rounded-lg px-3 py-1.5 text-xs font-mono shadow-lg z-10 whitespace-nowrap pointer-events-none transition-opacity duration-150"
+        >
+          <span className="text-text-primary">{weeks[hoveredIdx].points} pts</span>
+          <span className="text-text-muted mx-1">·</span>
+          <span className="text-accent-text">{weeks[hoveredIdx].reward_sol.toFixed(4)} SOL</span>
+        </div>
+      )}
 
       {/* Bars */}
       <div
@@ -95,18 +89,15 @@ function EarningsChart({ weeks }: { weeks: WeekHistory[] }) {
               className="flex flex-col items-center justify-end"
               style={{ width: barWidth, height: '100%' }}
             >
-              <motion.div
-                className={`w-full rounded-t-md cursor-pointer transition-opacity ${
+              <div
+                className={`w-full rounded-t-md cursor-pointer transition-all duration-500 ${
                   isCurrentWeek
                     ? 'bg-accent'
                     : hoveredIdx === idx
                       ? 'bg-accent/70'
                       : 'bg-accent/30'
                 }`}
-                style={{ minHeight }}
-                initial={{ height: 0 }}
-                animate={{ height: `${Math.max(heightPct, minHeight / chartHeight * 100)}%` }}
-                transition={{ duration: 0.6, delay: idx * 0.05, ease: 'easeOut' }}
+                style={{ minHeight, height: `${Math.max(heightPct, minHeight / chartHeight * 100)}%` }}
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
               />
@@ -267,11 +258,7 @@ export default function RewardsPage() {
 
       {/* ── Earnings Projection Card ── */}
       {!projectionsLoading && projections && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
+        <div>
           <NeonCard hover={false} className="p-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -309,32 +296,24 @@ export default function RewardsPage() {
               </div>
             </div>
           </NeonCard>
-        </motion.div>
+        </div>
       )}
 
       {/* ── Earnings History Chart ── */}
       {!projectionsLoading && projections && projections.weeks_history.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
+        <div>
           <NeonCard hover={false} className="p-6">
             <h3 className="text-sm font-display text-text-muted uppercase tracking-wider mb-4">
               Weekly Earnings — Last 8 Weeks
             </h3>
             <EarningsChart weeks={projections.weeks_history} />
           </NeonCard>
-        </motion.div>
+        </div>
       )}
 
       {/* ── Pace Indicator ── */}
       {!projectionsLoading && projections && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
+        <div>
           <NeonCard hover={false} className="p-5">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-text-muted font-display">This Week So Far</div>
@@ -345,13 +324,11 @@ export default function RewardsPage() {
 
             {/* Progress bar */}
             <div className="relative h-2 bg-bg-raised rounded-full overflow-hidden">
-              <motion.div
-                className={`absolute inset-y-0 left-0 rounded-full ${
+              <div
+                className={`absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out ${
                   isAheadOfPace ? 'bg-positive' : 'bg-accent'
                 }`}
-                initial={{ width: 0 }}
-                animate={{ width: `${pacePercent}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
+                style={{ width: `${pacePercent}%` }}
               />
               {/* Average marker */}
               {projections.avg_weekly_points > 0 && (
@@ -387,7 +364,7 @@ export default function RewardsPage() {
               </div>
             )}
           </NeonCard>
-        </motion.div>
+        </div>
       )}
 
       {/* ── Projections skeleton ── */}
@@ -411,15 +388,13 @@ export default function RewardsPage() {
 
         {totalClaimable > 0 ? (
           <div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               onClick={handleClaim}
               disabled={claimLoading}
-              className="bg-accent px-8 py-3 rounded-xl font-semibold text-[#08080a] transition-shadow disabled:opacity-50"
+              className="bg-accent px-8 py-3 rounded-xl font-semibold text-[#08080a] hover:bg-accent-dim active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {claimLoading ? 'Processing...' : 'Claim Rewards'}
-            </motion.button>
+            </button>
             {claimError ? (
               <div className="mt-2 text-sm text-negative">{claimError}</div>
             ) : null}
@@ -464,13 +439,8 @@ export default function RewardsPage() {
         ) : null}
 
         <div className="space-y-3">
-          {rewards.map((reward, index) => (
-            <motion.div
-              key={reward.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.06 }}
-            >
+          {rewards.map((reward) => (
+            <div key={reward.id}>
               <NeonCard hover={false} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -495,7 +465,7 @@ export default function RewardsPage() {
                   </div>
                 </div>
               </NeonCard>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

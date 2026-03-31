@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+
 import NeonCard from '@/components/shared/NeonCard';
 import { MAX_IMAGE_SIZE_MB } from '@/lib/constants';
 import type { SubmissionType } from '@/lib/types';
@@ -222,15 +222,13 @@ export default function SubmitPage() {
             <div id="content-char-count" className="mt-1 text-xs text-text-muted text-right">{contentText.length}/5000 characters</div>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
+          <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-[#08080a] hover:bg-accent-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-[#08080a] hover:bg-accent-dim active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploadingImage ? 'Scanning & Uploading Image...' : isSubmitting ? 'Submitting...' : 'Submit For Review'}
-          </motion.button>
+          </button>
         </NeonCard>
       </form>
 

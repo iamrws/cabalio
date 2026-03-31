@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+
 import NeonCard from '@/components/shared/NeonCard';
 
 interface SeasonRole {
@@ -273,15 +273,10 @@ export default function QuestsPage() {
             </NeonCard>
           ) : null}
 
-          {quests.map((quest, index) => {
+          {quests.map((quest) => {
             const evidence = evidenceByQuest[quest.id] || { evidence_type: 'none', evidence_id: '' };
             return (
-              <motion.div
-                key={quest.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 }}
-              >
+              <div key={quest.id}>
                 <NeonCard className="p-5 h-full flex flex-col" hover={false}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm font-semibold text-text-primary">{quest.title}</div>
@@ -347,7 +342,7 @@ export default function QuestsPage() {
                     </button>
                   </div>
                 </NeonCard>
-              </motion.div>
+              </div>
             );
           })}
         </div>

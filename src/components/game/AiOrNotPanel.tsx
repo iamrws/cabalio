@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 // ── Context for panel open/close ──────────────────────────────────────
 interface AiOrNotContextType {
@@ -395,6 +394,37 @@ export default function AiOrNotPanel() {
     });
   }, [showResult, shorts.length, fetchShorts]);
 
+  // Panel mount/visible state for CSS exit transitions
+  const [panelMounted, setPanelMounted] = useState(false);
+  const [panelVisible, setPanelVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPanelMounted(true);
+      // Trigger enter animation on next frame
+      requestAnimationFrame(() => requestAnimationFrame(() => setPanelVisible(true)));
+    } else {
+      setPanelVisible(false);
+      const timer = setTimeout(() => setPanelMounted(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  // Result overlay mount/visible state for CSS exit transitions
+  const [resultMounted, setResultMounted] = useState(false);
+  const [resultVisible, setResultVisible] = useState(false);
+
+  useEffect(() => {
+    if (showResult) {
+      setResultMounted(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setResultVisible(true)));
+    } else {
+      setResultVisible(false);
+      const timer = setTimeout(() => setResultMounted(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showResult]);
+
   // Keyboard shortcuts when panel is open
   useEffect(() => {
     if (!isOpen) return;
@@ -410,25 +440,22 @@ export default function AiOrNotPanel() {
   }, [isOpen, close, showResult, submitVote, skipVideo]);
 
   return (
-    <AnimatePresence>
-      {isOpen && (
+    <>
+      {panelMounted && (
         <>
           {/* Backdrop (mobile) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             onClick={close}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+            className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden transition-opacity duration-300 ${
+              panelVisible ? 'opacity-100' : 'opacity-0'
+            }`}
           />
 
           {/* Panel */}
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-[56] w-full sm:w-[420px] bg-bg-base border-l border-border-default flex flex-col overflow-hidden"
+          <div
+            className={`fixed right-0 top-0 bottom-0 z-[56] w-full sm:w-[420px] bg-bg-base border-l border-border-default flex flex-col overflow-hidden transition-transform duration-300 ease-out ${
+              panelVisible ? 'translate-x-0' : 'translate-x-full'
+            }`}
           >
             {/* ─── Header ─── */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
@@ -565,112 +592,102 @@ export default function AiOrNotPanel() {
                     </div>
 
                     {/* ─── Vote Result Overlay ─── */}
-                    <AnimatePresence>
-                      {showResult && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className={`absolute inset-0 z-40 flex flex-col items-center justify-center ${
+                    {resultMounted && showResult && (
+                      <div
+                        className={`absolute inset-0 z-40 flex flex-col items-center justify-center transition-opacity duration-300 ${
+                          resultVisible ? 'opacity-100' : 'opacity-0'
+                        } ${
+                          showResult.matched
+                            ? 'bg-[rgba(34,197,94,0.1)] backdrop-brightness-110'
+                            : 'bg-[rgba(239,68,68,0.1)] backdrop-brightness-75'
+                        }`}
+                      >
+                        {/* Icon */}
+                        <div
+                          className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 transition-transform duration-500 ease-out ${
+                            resultVisible ? 'scale-100 rotate-0' : 'scale-0 -rotate-180'
+                          } ${
                             showResult.matched
-                              ? 'bg-[rgba(34,197,94,0.1)] backdrop-brightness-110'
-                              : 'bg-[rgba(239,68,68,0.1)] backdrop-brightness-75'
+                              ? 'bg-positive-muted border-2 border-positive'
+                              : 'bg-negative-muted border-2 border-negative'
                           }`}
                         >
-                          {/* Icon */}
-                          <motion.div
-                            initial={{ scale: 0, rotate: -180 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                            className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-                              showResult.matched
-                                ? 'bg-positive-muted border-2 border-positive'
-                                : 'bg-negative-muted border-2 border-negative'
+                          {showResult.matched ? (
+                            <svg className="w-10 h-10 text-positive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-10 h-10 text-negative" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                        </div>
+
+                        {/* Text */}
+                        <p
+                          className={`text-xl font-black text-white mb-1 transition-all duration-300 delay-100 ${
+                            resultVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2.5'
+                          }`}
+                        >
+                          {showResult.matched ? 'Matches Consensus!' : 'Against Consensus'}
+                        </p>
+
+                        {/* Community breakdown */}
+                        <div
+                          className={`flex items-center gap-3 text-sm mb-3 transition-opacity duration-300 delay-200 ${
+                            resultVisible ? 'opacity-100' : 'opacity-0'
+                          }`}
+                        >
+                          <span className="text-positive font-bold">{100 - showResult.aiPct}% Human</span>
+                          <span className="text-white/40">|</span>
+                          <span className="text-accent-text font-bold">{showResult.aiPct}% AI</span>
+                        </div>
+
+                        {/* Vote bar */}
+                        <div
+                          className={`w-48 h-2 rounded-full bg-bg-raised overflow-hidden origin-left transition-transform duration-500 delay-[250ms] ${
+                            resultVisible ? 'scale-x-100' : 'scale-x-0'
+                          }`}
+                        >
+                          <div
+                            className="h-full bg-gradient-to-r from-positive to-accent rounded-full"
+                            style={{ width: `${showResult.aiPct}%`, marginLeft: `${100 - showResult.aiPct}%` }}
+                          />
+                        </div>
+
+                        {/* Points */}
+                        <p
+                          className={`text-3xl font-black text-accent-text mt-4 transition-all duration-300 delay-300 ${
+                            resultVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                          }`}
+                        >
+                          +{showResult.pointsEarned}
+                        </p>
+
+                        <p
+                          className={`text-xs text-white/50 mt-1 transition-opacity duration-300 delay-[400ms] ${
+                            resultVisible ? 'opacity-100' : 'opacity-0'
+                          }`}
+                        >
+                          {showResult.totalVotes.toLocaleString()} community votes
+                        </p>
+
+                        {/* Streak celebration */}
+                        {showResult.matched && streak >= 3 && (
+                          <div
+                            className={`mt-3 px-4 py-1.5 rounded-full border border-caution-border bg-caution-muted transition-all duration-300 delay-500 ${
+                              resultVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
                             }`}
                           >
-                            {showResult.matched ? (
-                              <svg className="w-10 h-10 text-positive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-10 h-10 text-negative" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            )}
-                          </motion.div>
-
-                          {/* Text */}
-                          <motion.p
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="text-xl font-black text-white mb-1"
-                          >
-                            {showResult.matched ? 'Matches Consensus!' : 'Against Consensus'}
-                          </motion.p>
-
-                          {/* Community breakdown */}
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="flex items-center gap-3 text-sm mb-3"
-                          >
-                            <span className="text-positive font-bold">{100 - showResult.aiPct}% Human</span>
-                            <span className="text-white/40">|</span>
-                            <span className="text-accent-text font-bold">{showResult.aiPct}% AI</span>
-                          </motion.div>
-
-                          {/* Vote bar */}
-                          <motion.div
-                            initial={{ scaleX: 0 }}
-                            animate={{ scaleX: 1 }}
-                            transition={{ delay: 0.25, duration: 0.5 }}
-                            className="w-48 h-2 rounded-full bg-bg-raised overflow-hidden origin-left"
-                          >
-                            <div
-                              className="h-full bg-gradient-to-r from-positive to-accent rounded-full"
-                              style={{ width: `${showResult.aiPct}%`, marginLeft: `${100 - showResult.aiPct}%` }}
-                            />
-                          </motion.div>
-
-                          {/* Points */}
-                          <motion.p
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.3, type: 'spring' }}
-                            className="text-3xl font-black text-accent-text mt-4"
-                          >
-                            +{showResult.pointsEarned}
-                          </motion.p>
-
-                          <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-xs text-white/50 mt-1"
-                          >
-                            {showResult.totalVotes.toLocaleString()} community votes
-                          </motion.p>
-
-                          {/* Streak celebration */}
-                          {showResult.matched && streak >= 3 && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: 0.5, type: 'spring' }}
-                              className="mt-3 px-4 py-1.5 rounded-full border border-caution-border bg-caution-muted"
-                            >
-                              <span className="text-caution font-bold text-sm">
-                                <span aria-hidden="true">🔥</span> {streak} Streak!
-                                {streak >= 10 && ' LEGENDARY!'}
-                                {streak >= 5 && streak < 10 && ' On Fire!'}
-                              </span>
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                            <span className="text-caution font-bold text-sm">
+                              <span aria-hidden="true">🔥</span> {streak} Streak!
+                              {streak >= 10 && ' LEGENDARY!'}
+                              {streak >= 5 && streak < 10 && ' On Fire!'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* ─── Vote Buttons ─── */}
@@ -740,9 +757,9 @@ export default function AiOrNotPanel() {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }

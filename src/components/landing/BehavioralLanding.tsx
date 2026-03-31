@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AuthControls from '@/components/shared/AuthControls';
 
 interface BehavioralLandingProps {
@@ -74,51 +73,54 @@ const bracketRows = [
   { name: 'NoirValidator', points: 102, delta: '+6' },
 ];
 
-/* ─────────────── ANIMATION VARIANTS ─────────────── */
-
-type Ease4 = [number, number, number, number];
-const EASE: Ease4 = [0.16, 1, 0.3, 1];
+/* ─────────────── ANIMATION HELPERS ─────────────── */
 
 const heroWords = ["The", "inner", "circle", "doesn't", "grind."];
 const heroAccent = ["It", "builds."];
 
-const staggerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.3 } },
-};
+/** Intersection Observer hook — triggers once when element enters viewport */
+function useInView(ref: React.RefObject<HTMLElement | null>, opts?: { threshold?: number; once?: boolean }) {
+  const [inView, setInView] = useState(false);
+  const once = opts?.once ?? true;
+  const threshold = opts?.threshold ?? 0.15;
 
-const wordReveal = {
-  hidden: { opacity: 0, y: 40, filter: 'blur(8px)' },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.6, ease: EASE },
-  },
-};
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          if (once) observer.disconnect();
+        }
+      },
+      { threshold }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref, once, threshold]);
+  return inView;
+}
 
-const accentWordReveal = {
-  hidden: { opacity: 0, y: 40, filter: 'blur(8px)' },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.8, ease: EASE },
-  },
-};
+/** Shared transition style for scroll-triggered fade-up */
+function fadeUpStyle(visible: boolean, delay = 0) {
+  return {
+    opacity: visible ? 1 : 0,
+    transform: visible ? 'translateY(0)' : 'translateY(40px)',
+    transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+  } as const;
+}
 
-const fadeInUp = (delay: number = 0) => ({
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.7, delay, ease: EASE },
-});
-
-const scrollFadeUp = (delay: number = 0) => ({
-  initial: { opacity: 0, y: 40 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.15 as const },
-  transition: { duration: 0.7, delay, ease: EASE },
-});
+/** Wrapper that observes itself and applies fade-up */
+function ScrollFadeUp({ delay = 0, className = '', children }: { delay?: number; className?: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
+  return (
+    <div ref={ref} className={className} style={fadeUpStyle(inView, delay)}>
+      {children}
+    </div>
+  );
+}
 
 /* ─────────────── COMPONENT ─────────────── */
 
@@ -130,10 +132,12 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
     qualityWeighting: true,
   });
 
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-  const heroParallax = useTransform(scrollYProgress, [0, 1], [0, -120]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const [heroVisible, setHeroVisible] = useState(false);
+  useEffect(() => {
+    // Trigger hero entrance on mount
+    const id = requestAnimationFrame(() => setHeroVisible(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const heatmapCells = useMemo(
     () =>
@@ -158,6 +162,25 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-bg-base text-text-primary">
+      {/* CSS keyframes for this page */}
+      <style>{`
+        @keyframes word-reveal {
+          from { opacity: 0; transform: translateY(40px); filter: blur(8px); }
+          to   { opacity: 1; transform: translateY(0);    filter: blur(0px); }
+        }
+        @keyframes bar-grow {
+          from { width: 0; }
+        }
+        @keyframes bounce-scroll {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(6px); }
+        }
+        @keyframes slide-in-right {
+          from { opacity: 0; transform: perspective(1200px) translateX(100px) rotateY(-8deg); }
+          to   { opacity: 1; transform: perspective(1200px) translateX(0) rotateY(-3deg); }
+        }
+      `}</style>
+
       {/* ═══════ ATMOSPHERIC BACKGROUND ═══════ */}
       <div className="pointer-events-none fixed inset-0 z-0">
         {/* Gold radial glow — hero focal point */}
@@ -194,11 +217,12 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
       <div className="relative z-10">
         {/* ═══════ NAV ═══════ */}
-        <motion.header
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-bg-base/60"
+        <header
+          className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-bg-base/60 transition-opacity duration-[800ms]"
+          style={{
+            opacity: heroVisible ? 1 : 0,
+            transitionDelay: '0.1s',
+          }}
         >
           <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 h-16">
             <div className="flex items-center gap-3">
@@ -225,7 +249,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
               <AuthControls compact />
             </div>
           </div>
-        </motion.header>
+        </header>
 
         {/* Auth warning banner */}
         {authState === 'required' ? (
@@ -239,57 +263,78 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
         ) : null}
 
         {/* ═══════════════════ HERO ═══════════════════ */}
-        <section ref={heroRef} className="relative min-h-screen flex flex-col justify-center pt-16">
-          <motion.div style={{ y: heroParallax, opacity: heroOpacity }} className="mx-auto w-full max-w-7xl px-6">
+        <section className="relative min-h-screen flex flex-col justify-center pt-16">
+          <div className="mx-auto w-full max-w-7xl px-6 will-change-transform">
             {/* Overline */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15, ease: EASE }}
-              className="mb-8"
+            <div
+              className="mb-8 transition-all duration-[600ms]"
+              style={{
+                opacity: heroVisible ? 1 : 0,
+                transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
+                transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+                transitionDelay: '0.15s',
+              }}
             >
               <span className="inline-flex items-center gap-2 rounded-md border border-accent-border bg-accent-muted/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
                 Community Points, Reimagined
               </span>
-            </motion.div>
+            </div>
 
             {/* Giant headline — word-by-word reveal */}
-            <motion.h1
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-              className="font-display text-[clamp(2.8rem,8vw,6.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] mb-8 max-w-5xl"
-            >
+            <h1 className="font-display text-[clamp(2.8rem,8vw,6.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] mb-8 max-w-5xl">
               {heroWords.map((word, i) => (
-                <motion.span key={i} variants={wordReveal} className="inline-block mr-[0.25em]">
+                <span
+                  key={i}
+                  className="inline-block mr-[0.25em]"
+                  style={{
+                    opacity: heroVisible ? 1 : 0,
+                    animation: heroVisible ? `word-reveal 0.6s cubic-bezier(0.16,1,0.3,1) ${0.3 + i * 0.08}s both` : 'none',
+                  }}
+                >
                   {word}
-                </motion.span>
+                </span>
               ))}
               <br className="hidden sm:block" />
               {heroAccent.map((word, i) => (
-                <motion.span
+                <span
                   key={`accent-${i}`}
-                  variants={accentWordReveal}
                   className="inline-block mr-[0.25em] text-accent-text"
-                  style={{ textShadow: '0 0 60px rgba(212,168,83,0.3)' }}
+                  style={{
+                    textShadow: '0 0 60px rgba(212,168,83,0.3)',
+                    opacity: heroVisible ? 1 : 0,
+                    animation: heroVisible ? `word-reveal 0.8s cubic-bezier(0.16,1,0.3,1) ${0.3 + (heroWords.length + i) * 0.08}s both` : 'none',
+                  }}
                 >
                   {word}
-                </motion.span>
+                </span>
               ))}
-            </motion.h1>
+            </h1>
 
             {/* Subhead */}
-            <motion.p
-              {...fadeInUp(1.1)}
-              className="max-w-xl text-base leading-relaxed text-text-secondary mb-10"
+            <p
+              className="max-w-xl text-base leading-relaxed text-text-secondary mb-10 transition-all duration-700"
+              style={{
+                opacity: heroVisible ? 1 : 0,
+                transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
+                transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+                transitionDelay: '1.1s',
+              }}
             >
               A behavioral operating system for a holder-gated community. Ethical motivation loops,
               contribution-first scoring, and anti-burnout safeguards — wired into Jito Cabal.
-            </motion.p>
+            </p>
 
             {/* CTAs */}
-            <motion.div {...fadeInUp(1.3)} className="flex flex-wrap gap-4 mb-16">
+            <div
+              className="flex flex-wrap gap-4 mb-16 transition-all duration-700"
+              style={{
+                opacity: heroVisible ? 1 : 0,
+                transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
+                transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+                transitionDelay: '1.3s',
+              }}
+            >
               <a
                 href="#simulator"
                 className="group relative rounded-md bg-accent px-7 py-3 text-sm font-semibold text-[#08080a] transition-all hover:shadow-[0_0_30px_rgba(212,168,83,0.25)]"
@@ -303,10 +348,18 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
               >
                 Open Dashboard
               </Link>
-            </motion.div>
+            </div>
 
             {/* Feature chips — horizontal scroll on mobile */}
-            <motion.div {...fadeInUp(1.5)} className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2 transition-all duration-700"
+              style={{
+                opacity: heroVisible ? 1 : 0,
+                transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
+                transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+                transitionDelay: '1.5s',
+              }}
+            >
               {['Transparent Points', 'Weekly Resets', 'Streak Shields', 'Immutable Ledger'].map((chip, i) => (
                 <span
                   key={chip}
@@ -316,16 +369,16 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                   {chip}
                 </span>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Floating preview cards — asymmetric overlap */}
           <div className="absolute right-0 top-[22%] w-[480px] hidden xl:block" style={{ perspective: '1200px' }}>
-            <motion.div
-              initial={{ opacity: 0, x: 100, rotateY: -8 }}
-              animate={{ opacity: 1, x: 0, rotateY: -3 }}
-              transition={{ duration: 1.2, delay: 0.8, ease: EASE }}
+            <div
               className="relative"
+              style={{
+                animation: heroVisible ? 'slide-in-right 1.2s cubic-bezier(0.16,1,0.3,1) 0.8s both' : 'none',
+              }}
             >
               {/* Heatmap card */}
               <div className="rounded-xl border border-border-default bg-bg-surface/90 backdrop-blur-sm p-5 shadow-lg mb-4">
@@ -353,7 +406,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                   <span className="text-[10px] text-text-muted font-mono">Resets Mon</span>
                 </div>
                 <div className="space-y-2.5">
-                  {bracketRows.map((row) => (
+                  {bracketRows.map((row, rowIdx) => (
                     <div key={row.name}>
                       <div className="mb-0.5 flex items-center justify-between text-xs">
                         <span className={row.highlight ? 'font-semibold text-accent-text' : 'text-text-muted'}>
@@ -364,15 +417,14 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                         </span>
                       </div>
                       <div className="h-1 rounded-full bg-bg-overlay">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(row.points / maxBracketPoints) * 100}%` }}
-                          transition={{ duration: 1, delay: 1.5 + bracketRows.indexOf(row) * 0.1, ease: EASE }}
+                        <div
                           className="h-full rounded-full"
                           style={{
+                            width: `${(row.points / maxBracketPoints) * 100}%`,
                             background: row.highlight
                               ? 'linear-gradient(90deg, #D4A853, #E8C475)'
                               : 'linear-gradient(90deg, #4A4640, #6B5B3A)',
+                            animation: `bar-grow 1s cubic-bezier(0.16,1,0.3,1) ${1.5 + rowIdx * 0.1}s both`,
                           }}
                         />
                       </div>
@@ -386,23 +438,20 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                 className="absolute -inset-10 -z-10 opacity-30 blur-3xl"
                 style={{ background: 'radial-gradient(circle, rgba(212,168,83,0.15), transparent 70%)' }}
               />
-            </motion.div>
+            </div>
           </div>
 
           {/* Scroll indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2.5, duration: 1 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+          <div
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-opacity duration-1000"
+            style={{ opacity: heroVisible ? 1 : 0, transitionDelay: '2.5s' }}
           >
             <span className="text-[10px] uppercase tracking-[0.2em] text-text-muted">Scroll</span>
-            <motion.div
-              animate={{ y: [0, 6, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            <div
               className="w-px h-6 bg-gradient-to-b from-accent-text/60 to-transparent"
+              style={{ animation: 'bounce-scroll 1.5s ease-in-out infinite' }}
             />
-          </motion.div>
+          </div>
         </section>
 
         {/* ═══════ GOLD DIVIDER ═══════ */}
@@ -412,7 +461,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
         {/* ═══════════════════ PILLARS ═══════════════════ */}
         <section id="pillars" className="mx-auto w-full max-w-7xl px-6 py-32">
-          <motion.div {...scrollFadeUp()} className="mb-20">
+          <ScrollFadeUp className="mb-20">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
               Psychology Core
             </p>
@@ -420,13 +469,13 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
               Three motivation systems,{' '}
               <span className="text-text-tertiary">one product language</span>
             </h2>
-          </motion.div>
+          </ScrollFadeUp>
 
           <div className="grid gap-6 md:grid-cols-3">
             {pillarCards.map((pillar, idx) => (
-              <motion.article
+              <ScrollFadeUp
                 key={pillar.title}
-                {...scrollFadeUp(idx * 0.1)}
+                delay={idx * 0.1}
                 className="group relative rounded-xl border border-border-subtle bg-bg-surface/50 p-8 transition-all duration-500 hover:border-accent-border hover:bg-bg-surface/80"
               >
                 {/* Number — oversized, faded */}
@@ -450,7 +499,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                 <div className="absolute inset-0 rounded-xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                   style={{ boxShadow: 'inset 0 1px 0 0 rgba(212,168,83,0.1), 0 0 20px rgba(212,168,83,0.03)' }}
                 />
-              </motion.article>
+              </ScrollFadeUp>
             ))}
           </div>
         </section>
@@ -464,7 +513,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
         <section id="engine" className="mx-auto w-full max-w-7xl px-6 py-32">
           <div className="grid gap-16 lg:grid-cols-[1fr_1fr]">
             {/* Pipeline — left */}
-            <motion.div {...scrollFadeUp()}>
+            <ScrollFadeUp>
               <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
                 Engineering Flow
               </p>
@@ -474,9 +523,9 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
               <div className="space-y-3">
                 {engineSteps.map((step, idx) => (
-                  <motion.div
+                  <ScrollFadeUp
                     key={step.step}
-                    {...scrollFadeUp(idx * 0.08)}
+                    delay={idx * 0.08}
                     className="group flex gap-4 rounded-lg border border-border-subtle bg-bg-surface/30 p-4 transition-all duration-300 hover:border-accent-border hover:bg-bg-surface/60"
                   >
                     <div className="flex-shrink-0 h-10 w-10 rounded-md bg-accent-muted flex items-center justify-center font-mono text-sm font-bold text-accent-text">
@@ -486,13 +535,13 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                       <p className="text-sm font-semibold text-text-primary mb-0.5">{step.label}</p>
                       <p className="text-xs leading-relaxed text-text-secondary">{step.detail}</p>
                     </div>
-                  </motion.div>
+                  </ScrollFadeUp>
                 ))}
               </div>
-            </motion.div>
+            </ScrollFadeUp>
 
             {/* Anti-patterns — right */}
-            <motion.div {...scrollFadeUp(0.15)}>
+            <ScrollFadeUp delay={0.15}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-caution mb-4">
                 Ethical Safety Rails
               </p>
@@ -502,9 +551,9 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
               <div className="space-y-3">
                 {antiPatterns.map((pattern, idx) => (
-                  <motion.div
+                  <ScrollFadeUp
                     key={pattern.risk}
-                    {...scrollFadeUp(0.15 + idx * 0.08)}
+                    delay={0.15 + idx * 0.08}
                     className="rounded-lg border border-border-subtle bg-bg-raised/50 p-5"
                   >
                     <p className="text-xs font-bold uppercase tracking-[0.12em] text-caution/80 mb-2">
@@ -513,10 +562,10 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                     <p className="text-sm leading-relaxed text-text-secondary">
                       {pattern.fix}
                     </p>
-                  </motion.div>
+                  </ScrollFadeUp>
                 ))}
               </div>
-            </motion.div>
+            </ScrollFadeUp>
           </div>
         </section>
 
@@ -527,7 +576,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
         {/* ═══════════════════ ROADMAP ═══════════════════ */}
         <section id="roadmap" className="mx-auto w-full max-w-7xl px-6 py-32">
-          <motion.div {...scrollFadeUp()} className="mb-16 max-w-2xl">
+          <ScrollFadeUp className="mb-16 max-w-2xl">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
               Build Plan
             </p>
@@ -537,13 +586,13 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
             <p className="mt-4 text-sm leading-relaxed text-text-secondary">
               Foundation first, novelty second: trust and clarity before high-variance mechanics.
             </p>
-          </motion.div>
+          </ScrollFadeUp>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {roadmap.map((phase, idx) => (
-              <motion.article
+              <ScrollFadeUp
                 key={phase.phase}
-                {...scrollFadeUp(idx * 0.08)}
+                delay={idx * 0.08}
                 className="group rounded-xl border border-border-subtle bg-bg-surface/30 p-6 transition-all duration-500 hover:border-accent-border"
               >
                 <div className="mb-5 flex items-center justify-between">
@@ -562,7 +611,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                     </p>
                   ))}
                 </div>
-              </motion.article>
+              </ScrollFadeUp>
             ))}
           </div>
         </section>
@@ -574,7 +623,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
         {/* ═══════════════════ SIMULATOR ═══════════════════ */}
         <section id="simulator" className="mx-auto w-full max-w-7xl px-6 py-32">
-          <motion.div {...scrollFadeUp()} className="mb-12 max-w-2xl">
+          <ScrollFadeUp className="mb-12 max-w-2xl">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
               Scenario Builder
             </p>
@@ -584,9 +633,9 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
             <p className="mt-4 text-sm leading-relaxed text-text-secondary">
               Flip safeguards on or off to see how retention, trust, and quality shift.
             </p>
-          </motion.div>
+          </ScrollFadeUp>
 
-          <motion.div {...scrollFadeUp(0.1)} className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+          <ScrollFadeUp delay={0.1} className="grid gap-8 lg:grid-cols-[1fr_1fr]">
             {/* Controls */}
             <div className="space-y-3">
               {simulatorControls.map((control) => (
@@ -631,10 +680,12 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                     </p>
                   </div>
                   <div className="h-1.5 rounded-full bg-bg-overlay">
-                    <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-accent-dim to-accent"
-                      animate={{ width: `${Math.min(metric.value, 100)}%` }}
-                      transition={{ duration: 0.5, ease: EASE }}
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-accent-dim to-accent transition-[width] duration-500"
+                      style={{
+                        width: `${Math.min(metric.value, 100)}%`,
+                        transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+                      }}
                     />
                   </div>
                 </div>
@@ -650,7 +701,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                 </p>
               </div>
             </div>
-          </motion.div>
+          </ScrollFadeUp>
         </section>
 
         {/* ═══════ DIVIDER ═══════ */}
@@ -660,7 +711,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
         {/* ═══════════════════ CTA ═══════════════════ */}
         <section className="mx-auto w-full max-w-7xl px-6 py-32">
-          <motion.div {...scrollFadeUp()} className="text-center max-w-3xl mx-auto">
+          <ScrollFadeUp className="text-center max-w-3xl mx-auto">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-6">
               Launch Direction
             </p>
@@ -686,7 +737,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                 View Leaderboard
               </Link>
             </div>
-          </motion.div>
+          </ScrollFadeUp>
         </section>
 
         {/* ═══════ FOOTER ═══════ */}

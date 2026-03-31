@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+
 import NeonCard from '@/components/shared/NeonCard';
 import type { LeaderboardEntry } from '@/lib/types';
 
@@ -152,12 +152,9 @@ export default function LeaderboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tierEntries.map((entry, index) => (
-                    <motion.tr
+                  {tierEntries.map((entry) => (
+                    <tr
                       key={entry.wallet_address}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
                       className="border-b border-border-subtle/50 last:border-0 hover:bg-bg-raised/50 transition-colors"
                     >
                       <td className="px-5 py-3">
@@ -184,7 +181,7 @@ export default function LeaderboardPage() {
                       <td className="text-right px-5 py-3">
                         <span className="font-mono font-bold text-accent-text">{entry.total_points}</span>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
                 </tbody>
               </table>

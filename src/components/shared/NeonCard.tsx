@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { KeyboardEvent } from 'react';
 
 interface NeonCardProps {
@@ -39,22 +38,20 @@ export default function NeonCard({
   };
 
   return (
-    <motion.div
-      whileHover={hover ? { y: -1 } : undefined}
-      transition={{ duration: 0.2 }}
+    <div
       onClick={onClick}
       onKeyDown={isInteractive ? handleKeyDown : undefined}
       role={isInteractive ? 'button' : undefined}
       tabIndex={isInteractive ? 0 : undefined}
       className={`
         rounded-2xl ${variantStyles[variant]}
-        ${hover ? 'transition-all duration-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_16px_rgba(212,168,83,0.04)]' : ''}
+        ${hover ? 'transition-all duration-200 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_16px_rgba(212,168,83,0.04)]' : ''}
         ${isInteractive ? 'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent' : ''}
         ${className}
       `}
       style={accent ? { borderLeftWidth: '3px', borderLeftColor: accent } : undefined}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
