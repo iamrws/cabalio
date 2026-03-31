@@ -33,21 +33,10 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
-        <link
-          rel="preconnect"
-          href="https://api.fontshare.com"
-          crossOrigin="anonymous"
-        />
-        {/* Preload the font stylesheet so it doesn't block rendering */}
-        <link
-          rel="preload"
-          href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,600,700&display=swap"
-          as="style"
-        />
-        <link
-          href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,600,700&display=swap"
-          rel="stylesheet"
-        />
+        {/* Preload critical fonts — self-hosted, no external origin */}
+        <link rel="preload" href="/fonts/clash-display-600.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/satoshi-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/satoshi-600.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body className="font-sans antialiased bg-bg-base text-text-primary">
         <Providers>
