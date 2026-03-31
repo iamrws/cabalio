@@ -42,7 +42,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchSummary();
-    const interval = setInterval(fetchSummary, 60_000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchSummary();
+    }, 60_000);
     return () => clearInterval(interval);
   }, [fetchSummary]);
 

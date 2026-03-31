@@ -78,7 +78,9 @@ export default function Header() {
 
   useEffect(() => {
     void fetchNotifications();
-    const id = setInterval(fetchNotifications, POLL_INTERVAL);
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchNotifications();
+    }, POLL_INTERVAL);
     return () => clearInterval(id);
   }, [fetchNotifications]);
 

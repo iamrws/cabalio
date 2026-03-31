@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+
 import NeonCard from '@/components/shared/NeonCard';
 import PointsBadge from '@/components/shared/PointsBadge';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
@@ -235,15 +235,10 @@ export default function FeedPage() {
             </NeonCard>
           ) : null}
 
-          {communitySubmissions.map((submission, index) => {
+          {communitySubmissions.map((submission) => {
             const typeInfo = typeIcons[submission.type] || fallbackTypeIcon;
             return (
-              <motion.div
-                key={submission.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04 }}
-              >
+              <div key={submission.id}>
                 <NeonCard className="p-5">
                   <div className="flex items-center justify-between mb-3">
                     <div>
@@ -269,7 +264,7 @@ export default function FeedPage() {
                     onToggle={handleReactionToggle}
                   />
                 </NeonCard>
-              </motion.div>
+              </div>
             );
           })}
         </div>

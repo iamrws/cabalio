@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+
 import NeonCard from '@/components/shared/NeonCard';
 
 interface SeasonRole {
@@ -62,9 +62,13 @@ export default function QuestsPage() {
     setError('');
 
     try {
-      const currentResponse = await fetch('/api/seasons/current', { cache: 'no-store' });
-      const currentData = await currentResponse.json();
+      // Fetch season info and quests in parallel to eliminate waterfall
+      const [currentResponse, questResponse] = await Promise.all([
+        fetch('/api/seasons/current', { cache: 'no-store' }),
+        fetch('/api/seasons/current/quests', { cache: 'no-store' }),
+      ]);
 
+      const currentData = await currentResponse.json();
       if (!currentResponse.ok) {
         throw new Error(currentData.error || 'Failed to load season');
       }
@@ -73,14 +77,8 @@ export default function QuestsPage() {
       setRoles(currentData.roles || []);
       setMemberState(currentData.member_state || null);
 
-      if (currentData.season?.status === 'live') {
-        const questResponse = await fetch('/api/seasons/current/quests', { cache: 'no-store' });
+      if (currentData.season?.status === 'live' && questResponse.ok) {
         const questData = await questResponse.json();
-
-        if (!questResponse.ok) {
-          throw new Error(questData.error || 'Failed to load season quests');
-        }
-
         setQuests(questData.quests || []);
         if (questData.member_state) {
           setMemberState(questData.member_state);
@@ -273,15 +271,10 @@ export default function QuestsPage() {
             </NeonCard>
           ) : null}
 
-          {quests.map((quest, index) => {
+          {quests.map((quest) => {
             const evidence = evidenceByQuest[quest.id] || { evidence_type: 'none', evidence_id: '' };
             return (
-              <motion.div
-                key={quest.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 }}
-              >
+              <div key={quest.id}>
                 <NeonCard className="p-5 h-full flex flex-col" hover={false}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm font-semibold text-text-primary">{quest.title}</div>
@@ -347,7 +340,7 @@ export default function QuestsPage() {
                     </button>
                   </div>
                 </NeonCard>
-              </motion.div>
+              </div>
             );
           })}
         </div>

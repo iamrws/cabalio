@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import NeonCard from '../shared/NeonCard';
 
 const steps = [
@@ -30,15 +30,40 @@ const steps = [
   },
 ];
 
+function useInView(ref: React.RefObject<HTMLElement | null>, once = true) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          if (once) observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref, once]);
+  return inView;
+}
+
 export default function HowItWorks() {
+  const headerRef = useRef<HTMLDivElement>(null);
+  const headerInView = useInView(headerRef);
+
   return (
     <section id="how-it-works" className="py-24 px-6">
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
+        <div
+          ref={headerRef}
+          className="text-center mb-16 transition-all duration-700 ease-out"
+          style={{
+            opacity: headerInView ? 1 : 0,
+            transform: headerInView ? 'translateY(0)' : 'translateY(20px)',
+          }}
         >
           <h2 className="font-display text-3xl md:text-5xl mb-4 text-text-primary font-semibold">
             How it works
@@ -46,30 +71,41 @@ export default function HowItWorks() {
           <p className="text-text-secondary text-lg max-w-2xl mx-auto">
             A new way to engage with the Jito ecosystem. Create value, get recognized, earn rewards.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((step, i) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.15 }}
-            >
-              <NeonCard accent={step.accent} className="p-6 h-full">
-                <span className="font-mono text-sm text-text-tertiary">{step.number}</span>
-                <h3 className="text-lg font-semibold mb-2 text-text-primary mt-2">
-                  {step.title}
-                </h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
-                  {step.description}
-                </p>
-              </NeonCard>
-            </motion.div>
+            <StepCard key={step.number} step={step} index={i} />
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function StepCard({ step, index }: { step: typeof steps[number]; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
+
+  return (
+    <div
+      ref={ref}
+      className="transition-all duration-700 ease-out"
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? 'translateY(0)' : 'translateY(30px)',
+        transitionDelay: `${index * 150}ms`,
+      }}
+    >
+      <NeonCard accent={step.accent} className="p-6 h-full">
+        <span className="font-mono text-sm text-text-tertiary">{step.number}</span>
+        <h3 className="text-lg font-semibold mb-2 text-text-primary mt-2">
+          {step.title}
+        </h3>
+        <p className="text-sm text-text-secondary leading-relaxed">
+          {step.description}
+        </p>
+      </NeonCard>
+    </div>
   );
 }

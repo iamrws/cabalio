@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+
 import NeonCard from '@/components/shared/NeonCard';
 
 /* ------------------------------------------------------------------ */
@@ -94,14 +94,11 @@ function ToggleSwitch({
 
 function InlineFeedback({ message, type }: { message: string; type: 'success' | 'error' }) {
   return (
-    <motion.p
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      className={`text-xs mt-1 ${type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
+    <p
+      className={`text-xs mt-1 animate-in fade-in ${type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
     >
       {message}
-    </motion.p>
+    </p>
   );
 }
 
@@ -536,14 +533,11 @@ export default function SettingsPage() {
 
       {/* ============ Toast ============ */}
       {toastMsg && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[var(--z-toast)] bg-bg-surface border border-border-default rounded-xl px-5 py-3 text-sm text-text-primary shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+        <div
+          className="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[var(--z-toast)] bg-bg-surface border border-border-default rounded-xl px-5 py-3 text-sm text-text-primary shadow-[0_8px_24px_rgba(0,0,0,0.4)] animate-in fade-in slide-in-from-bottom-4"
         >
           {toastMsg}
-        </motion.div>
+        </div>
       )}
     </div>
   );

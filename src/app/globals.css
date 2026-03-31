@@ -1,5 +1,58 @@
 @import "tailwindcss";
 
+/* --------------------------------------------------------------------------
+   0. SELF-HOSTED FONTS
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+
 /* ==========================================================================
    Jito Cabal Design System — "Vault" Aesthetic
    Deep black, warm amber/gold accent, Clash Display + Satoshi typography.
@@ -176,7 +229,7 @@ body {
   font-size: 14px;
 }
 
-/* Noise texture overlay for depth */
+/* Noise texture overlay for depth — GPU-composited layer */
 body::before {
   content: '';
   position: fixed;
@@ -184,6 +237,7 @@ body::before {
   z-index: 0;
   pointer-events: none;
   opacity: 0.025;
+  will-change: transform;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -430,6 +484,13 @@ body::before {
   );
   background-size: 200% 100%;
   animation: gold-shimmer 3s ease-in-out infinite;
+}
+
+/* Skip layout/paint for off-screen feed & list items */
+.space-y-4 > div,
+.space-y-3 > div {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
 }
 
 /* Scrollbar */

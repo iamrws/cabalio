@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
 
 interface AnimatedCounterProps {
   value: number;
@@ -22,7 +21,23 @@ export default function AnimatedCounter({
 }: AnimatedCounterProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true });
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!isInView) return;
@@ -47,18 +62,18 @@ export default function AnimatedCounter({
   }, [isInView, value, duration]);
 
   return (
-    <motion.span
+    <span
       ref={ref}
-      initial={{ opacity: 0, y: 10 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
       role="status"
       aria-live="polite"
       aria-label={`${prefix}${value.toFixed(decimals)}${suffix}`}
-      className={`font-mono tabular-nums text-accent-text ${className}`}
+      className={`font-mono tabular-nums text-accent-text transition-all duration-500 inline-block ${
+        isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2.5'
+      } ${className}`}
     >
       {prefix}
       {displayValue.toFixed(decimals)}
       {suffix}
-    </motion.span>
+    </span>
   );
 }

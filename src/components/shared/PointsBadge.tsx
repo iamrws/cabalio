@@ -1,7 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
-
 interface PointsBadgeProps {
   points: number;
   size?: 'sm' | 'md' | 'lg';
@@ -16,15 +12,14 @@ const sizeMap = {
 
 export default function PointsBadge({ points, size = 'md', showLabel = true }: PointsBadgeProps) {
   return (
-    <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
+    <div
       role="status"
       aria-label={`${points.toLocaleString()} points`}
       className={`
         inline-flex items-center gap-1.5 rounded-full
         bg-accent-muted border border-accent-border
         font-mono font-bold text-accent-text
+        animate-in fade-in zoom-in-95 duration-200
         ${sizeMap[size]}
       `}
     >
@@ -33,6 +28,6 @@ export default function PointsBadge({ points, size = 'md', showLabel = true }: P
       </svg>
       {points.toLocaleString()}
       {showLabel && <span className="text-accent-text/60 font-normal">pts</span>}
-    </motion.div>
+    </div>
   );
 }
