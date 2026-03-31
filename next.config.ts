@@ -54,6 +54,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'img.youtube.com' },
     ],
   },
+  serverExternalPackages: ['@anthropic-ai/sdk'],
   async headers() {
     return [
       {
