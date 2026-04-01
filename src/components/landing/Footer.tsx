@@ -17,7 +17,7 @@ export default function Footer() {
               href="https://x.com/JitoCabalNFT"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-text-primary transition-colors"
+              className="transition-[color] duration-150 hover:text-accent-text active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] rounded-sm"
             >
               X / Twitter
             </a>
@@ -25,7 +25,7 @@ export default function Footer() {
               href="https://jitocabal.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-text-primary transition-colors"
+              className="transition-[color] duration-150 hover:text-accent-text active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] rounded-sm"
             >
               Jito Cabal
             </a>
@@ -33,7 +33,7 @@ export default function Footer() {
               href="https://jitocabal.factorylabs.space/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-text-primary transition-colors"
+              className="transition-[color] duration-150 hover:text-accent-text active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] rounded-sm"
             >
               Governance Forum
             </a>

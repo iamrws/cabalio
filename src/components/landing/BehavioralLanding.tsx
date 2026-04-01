@@ -189,8 +189,6 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
           style={{
             background: `
               radial-gradient(ellipse 60% 50% at 50% 35%, rgba(212,168,83,0.12), transparent 70%),
-              radial-gradient(ellipse 40% 40% at 20% 60%, rgba(212,168,83,0.04), transparent 60%),
-              radial-gradient(ellipse 30% 50% at 80% 80%, rgba(184,146,63,0.03), transparent 50%),
               var(--bg-base)
             `,
           }}
@@ -224,7 +222,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
             transitionDelay: '0.1s',
           }}
         >
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 h-16">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 h-14">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-md bg-accent flex items-center justify-center text-xs font-bold text-[#08080a]">
                 JC
@@ -238,10 +236,10 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                 <a
                   key={label}
                   href={`#${label.toLowerCase()}`}
-                  className="relative py-1 transition-colors duration-300 hover:text-accent-text group"
+                  className="relative py-1 transition-colors duration-300 hover:text-accent-text focus-visible:text-accent-text active:opacity-70 focus-visible:outline-none group [&:focus-visible_span]:w-full"
                 >
                   {label}
-                  <span className="absolute bottom-0 left-0 h-px w-0 bg-accent transition-all duration-300 group-hover:w-full" />
+                  <span className="absolute bottom-0 left-0 h-px w-0 bg-accent transition-[width] duration-300 group-hover:w-full" />
                 </a>
               ))}
             </nav>
@@ -337,14 +335,14 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
             >
               <a
                 href="#simulator"
-                className="group relative rounded-md bg-accent px-7 py-3 text-sm font-semibold text-[#08080a] transition-all hover:shadow-[0_0_30px_rgba(212,168,83,0.25)]"
+                className="group relative rounded-md bg-accent px-7 py-3 text-sm font-semibold text-[#08080a] transition-[box-shadow,transform,background-color] duration-200 hover:bg-[var(--accent-dim)] hover:shadow-[0_0_30px_rgba(212,168,83,0.25)] active:scale-[0.97] active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               >
                 Test the Simulator
                 <span className="absolute inset-0 rounded-md bg-white/0 transition-all group-hover:bg-white/10" />
               </a>
               <Link
                 href="/dashboard"
-                className="rounded-md border border-border-strong px-7 py-3 text-sm font-semibold text-text-primary transition-all hover:border-accent-text hover:text-accent-text"
+                className="rounded-md border border-border-strong px-7 py-3 text-sm font-semibold text-text-primary transition-[color,border-color,transform] duration-200 hover:border-accent-text hover:text-accent-text active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               >
                 Open Dashboard
               </Link>
@@ -422,8 +420,8 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                           style={{
                             width: `${(row.points / maxBracketPoints) * 100}%`,
                             background: row.highlight
-                              ? 'linear-gradient(90deg, #D4A853, #E8C475)'
-                              : 'linear-gradient(90deg, #4A4640, #6B5B3A)',
+                              ? 'var(--accent)'
+                              : 'var(--text-muted)',
                             animation: `bar-grow 1s cubic-bezier(0.16,1,0.3,1) ${1.5 + rowIdx * 0.1}s both`,
                           }}
                         />
@@ -448,7 +446,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
           >
             <span className="text-[10px] uppercase tracking-[0.2em] text-text-muted">Scroll</span>
             <div
-              className="w-px h-6 bg-gradient-to-b from-accent-text/60 to-transparent"
+              className="w-px h-6 bg-accent-text/40"
               style={{ animation: 'bounce-scroll 1.5s ease-in-out infinite' }}
             />
           </div>
@@ -456,12 +454,12 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
 
         {/* ═══════ GOLD DIVIDER ═══════ */}
         <div className="relative mx-auto max-w-7xl px-6">
-          <div className="h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+          <div className="h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
         </div>
 
         {/* ═══════════════════ PILLARS ═══════════════════ */}
-        <section id="pillars" className="mx-auto w-full max-w-7xl px-6 py-32">
-          <ScrollFadeUp className="mb-20">
+        <section id="pillars" className="mx-auto w-full max-w-7xl px-6 py-20">
+          <ScrollFadeUp className="mb-12">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
               Psychology Core
             </p>
@@ -510,7 +508,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
         </div>
 
         {/* ═══════════════════ ENGINE ═══════════════════ */}
-        <section id="engine" className="mx-auto w-full max-w-7xl px-6 py-32">
+        <section id="engine" className="mx-auto w-full max-w-7xl px-6 py-20">
           <div className="grid gap-16 lg:grid-cols-[1fr_1fr]">
             {/* Pipeline — left */}
             <ScrollFadeUp>
@@ -644,9 +642,9 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                   type="button"
                   aria-pressed={flags[control.key]}
                   onClick={() => setFlags((prev) => ({ ...prev, [control.key]: !prev[control.key] }))}
-                  className={`w-full rounded-lg border p-4 text-left transition-all duration-300 ${
+                  className={`w-full rounded-lg border p-4 text-left transition-[border-color,background-color,transform] duration-200 active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                     flags[control.key]
-                      ? 'border-accent-border bg-accent-muted/30'
+                      ? 'border-accent-border bg-accent-muted/30 hover:bg-[var(--accent-muted)]/50 hover:border-[var(--accent)]'
                       : 'border-border-subtle bg-bg-surface/30 hover:border-border-default'
                   }`}
                 >
@@ -681,7 +679,7 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
                   </div>
                   <div className="h-1.5 rounded-full bg-bg-overlay">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-accent-dim to-accent transition-[width] duration-500"
+                      className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
                       style={{
                         width: `${Math.min(metric.value, 100)}%`,
                         transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
@@ -750,13 +748,13 @@ export default function BehavioralLanding({ authState }: BehavioralLandingProps)
               <span className="text-[10px] text-text-muted font-mono">v2</span>
             </div>
             <div className="flex items-center gap-6 text-xs text-text-muted">
-              <a href="https://x.com/JitoCabalNFT" target="_blank" rel="noopener noreferrer" className="transition hover:text-accent-text">
+              <a href="https://x.com/JitoCabalNFT" target="_blank" rel="noopener noreferrer" className="transition-[color] duration-150 hover:text-accent-text active:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] rounded-sm">
                 X / Twitter
               </a>
-              <a href="https://jitocabal.com/" target="_blank" rel="noopener noreferrer" className="transition hover:text-accent-text">
+              <a href="https://jitocabal.com/" target="_blank" rel="noopener noreferrer" className="transition-[color] duration-150 hover:text-accent-text active:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] rounded-sm">
                 Jito Cabal
               </a>
-              <a href="https://jitocabal.factorylabs.space/" target="_blank" rel="noopener noreferrer" className="transition hover:text-accent-text">
+              <a href="https://jitocabal.factorylabs.space/" target="_blank" rel="noopener noreferrer" className="transition-[color] duration-150 hover:text-accent-text active:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] rounded-sm">
                 Governance
               </a>
             </div>
