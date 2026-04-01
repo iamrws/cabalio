@@ -119,7 +119,7 @@ export default function SubmitPage() {
                 setUploadedImagePath('');
               }
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-[color,background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
               activeTab === tab.id
                 ? 'bg-bg-raised text-accent-text border border-accent-border'
                 : 'text-text-secondary hover:text-text-primary'
@@ -225,7 +225,7 @@ export default function SubmitPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-[#08080a] hover:bg-accent-dim active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-[var(--bg-base)] hover:bg-accent-dim active:scale-[0.99] transition-[color,background-color,transform,box-shadow] duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
             {isUploadingImage ? 'Scanning & Uploading Image...' : isSubmitting ? 'Submitting...' : 'Submit For Review'}
           </button>

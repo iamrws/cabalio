@@ -91,7 +91,7 @@ function EarningsChart({ weeks }: { weeks: WeekHistory[] }) {
               style={{ width: barWidth, height: '100%' }}
             >
               <div
-                className={`w-full rounded-t-md cursor-pointer transition-all duration-500 ${
+                className={`w-full rounded-t-md cursor-pointer transition-[background-color] duration-500 ${
                   isCurrentWeek
                     ? 'bg-accent'
                     : hoveredIdx === idx
@@ -326,7 +326,7 @@ export default function RewardsPage() {
             {/* Progress bar */}
             <div className="relative h-2 bg-bg-raised rounded-full overflow-hidden">
               <div
-                className={`absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out ${
+                className={`absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-700 ease-out ${
                   isAheadOfPace ? 'bg-positive' : 'bg-accent'
                 }`}
                 style={{ width: `${pacePercent}%` }}
@@ -392,7 +392,7 @@ export default function RewardsPage() {
             <button
               onClick={handleClaim}
               disabled={claimLoading}
-              className="bg-accent px-8 py-3 rounded-xl font-semibold text-[#08080a] hover:bg-accent-dim active:scale-[0.98] transition-all disabled:opacity-50"
+              className="bg-accent px-8 py-3 rounded-xl font-semibold text-[var(--bg-base)] hover:bg-accent-dim active:scale-[0.98] transition-[color,background-color,transform,box-shadow] duration-150 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             >
               {claimLoading ? 'Processing...' : 'Claim Rewards'}
             </button>

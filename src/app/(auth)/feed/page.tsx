@@ -66,7 +66,7 @@ function ReactionBar({
             key={type}
             type="button"
             onClick={() => onToggle(submissionId, type)}
-            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border transition-colors duration-150 ${
+            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border transition-[color,background-color,border-color] duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
               isActive
                 ? 'bg-accent-muted border-accent-border text-accent-text'
                 : 'bg-bg-raised border-border-subtle text-text-secondary hover:border-text-muted'
@@ -201,7 +201,7 @@ export default function FeedPage() {
           <h2 className="text-2xl font-bold text-text-primary font-display">Community Feed</h2>
           <p className="text-text-secondary text-sm">Discover what the community is building</p>
         </div>
-        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[#08080a] transition-colors hover:bg-accent-dim">
+        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[var(--bg-base)] transition-[color,background-color,transform,box-shadow] duration-150 hover:bg-accent-dim active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
           + Submit Content
         </Link>
       </div>

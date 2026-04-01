@@ -79,7 +79,7 @@ export default function LeaderboardPage() {
             <button
               key={tab.id}
               onClick={() => setTimeRange(tab.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-[color,background-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                 timeRange === tab.id
                   ? 'bg-bg-raised text-accent-text'
                   : 'text-text-secondary hover:text-text-primary'
@@ -163,7 +163,7 @@ export default function LeaderboardPage() {
                       <td className="px-5 py-3">
                         <Link
                           href={`/profile/${entry.wallet_address}`}
-                          className="text-sm font-medium text-text-primary hover:text-accent-text"
+                          className="text-sm font-medium text-text-primary hover:text-accent-text transition-[color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                         >
                           {entry.display_name || entry.wallet_address}
                         </Link>

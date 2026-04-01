@@ -314,7 +314,7 @@ export default function ProfilePage() {
             </div>
             {profile.user.is_holder && (
               <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-accent flex items-center justify-center border-2 border-bg-surface" title="NFT Holder Verified">
-                <Check className="h-3.5 w-3.5 text-[#08080a]" />
+                <Check className="h-3.5 w-3.5 text-[var(--bg-base)]" />
               </div>
             )}
           </div>
@@ -339,13 +339,13 @@ export default function ProfilePage() {
                   <button
                     onClick={() => void handleEditSave()}
                     disabled={editSaving || !editName.trim()}
-                    className="px-3 py-1.5 rounded-lg bg-accent text-[#08080a] text-sm font-semibold hover:bg-accent/90 disabled:opacity-50 transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-accent text-[var(--bg-base)] text-sm font-semibold hover:bg-accent/90 disabled:opacity-50 transition-[color,background-color,transform,box-shadow] duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                   >
                     {editSaving ? 'Saving...' : 'Save'}
                   </button>
                   <button
                     onClick={handleEditCancel}
-                    className="px-3 py-1.5 rounded-lg border border-border-subtle text-sm text-text-secondary hover:text-text-primary transition-colors"
+                    className="px-3 py-1.5 rounded-lg border border-border-subtle text-sm text-text-secondary hover:text-text-primary transition-[color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                   >
                     Cancel
                   </button>
@@ -361,7 +361,7 @@ export default function ProfilePage() {
                   {isSelf && (
                     <button
                       onClick={handleEditStart}
-                      className="text-text-muted hover:text-accent-text transition-colors flex-shrink-0"
+                      className="text-text-muted hover:text-accent-text transition-[color] duration-150 flex-shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                       title="Edit display name"
                     >
                       <Pencil className="h-4 w-4" />
@@ -381,7 +381,7 @@ export default function ProfilePage() {
             {/* Wallet address — click to copy */}
             <button
               onClick={handleCopyAddress}
-              className="text-sm text-text-muted font-mono mb-3 hover:text-text-secondary transition-colors inline-flex items-center gap-1.5 group"
+              className="text-sm text-text-muted font-mono mb-3 hover:text-text-secondary transition-[color] duration-150 inline-flex items-center gap-1.5 group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               title="Click to copy address"
             >
               {profile.wallet_address}
@@ -439,7 +439,7 @@ export default function ProfilePage() {
           </div>
           <div className="h-2.5 rounded-full bg-bg-raised overflow-hidden">
             <div
-              className="h-full rounded-full bg-[var(--accent)] transition-all duration-700 ease-out"
+              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-700 ease-out"
               style={{ width: `${Math.max(levelInfo.progress * 100, 2)}%` }}
             />
           </div>
@@ -522,7 +522,7 @@ export default function ProfilePage() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+            className={`px-4 py-2.5 text-sm font-medium transition-[color] duration-150 relative active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
               activeTab === tab
                 ? 'text-accent-text'
                 : 'text-text-muted hover:text-text-secondary'
@@ -789,9 +789,9 @@ function ContributionsTab({
             <button
               key={opt.key}
               onClick={() => onFilterChange(opt.key)}
-              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              className={`px-3 py-1 text-xs rounded-full transition-[color,background-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                 filter === opt.key
-                  ? 'bg-accent text-[#08080a] font-bold'
+                  ? 'bg-accent text-[var(--bg-base)] font-bold'
                   : 'bg-bg-raised text-text-muted hover:text-text-secondary'
               }`}
             >
@@ -940,7 +940,7 @@ function ContributionsTab({
                                   setAppealReason('');
                                   setAppealError('');
                                 }}
-                                className="rounded-lg bg-caution-muted border border-caution-border text-caution px-3 py-1.5 text-xs font-medium hover:bg-caution-muted/80 transition-colors"
+                                className="rounded-lg bg-caution-muted border border-caution-border text-caution px-3 py-1.5 text-xs font-medium hover:bg-caution-muted/80 transition-[color,background-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                               >
                                 Appeal Decision
                               </button>
@@ -959,7 +959,7 @@ function ContributionsTab({
                                   <button
                                     onClick={() => void handleAppealSubmit(c.id)}
                                     disabled={appealSubmitting || appealReason.length < 10}
-                                    className="rounded-lg bg-accent-muted border border-accent-border text-accent-text px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                                    className="rounded-lg bg-accent-muted border border-accent-border text-accent-text px-3 py-1.5 text-xs font-medium disabled:opacity-50 transition-[color,background-color,border-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                                   >
                                     {appealSubmitting ? 'Submitting...' : 'Submit Appeal'}
                                   </button>
@@ -969,7 +969,7 @@ function ContributionsTab({
                                       setAppealReason('');
                                       setAppealError('');
                                     }}
-                                    className="rounded-lg border border-border-subtle text-text-secondary px-3 py-1.5 text-xs hover:text-text-primary"
+                                    className="rounded-lg border border-border-subtle text-text-secondary px-3 py-1.5 text-xs hover:text-text-primary transition-[color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                                   >
                                     Cancel
                                   </button>
@@ -1109,7 +1109,7 @@ function BadgesTab({
           return (
             <div
               key={badge.id}
-              className={`relative text-center p-5 rounded-xl border transition-all ${
+              className={`relative text-center p-5 rounded-xl border transition-[border-color,background-color,box-shadow,opacity] duration-200 ${
                 earned
                   ? 'bg-accent/10 border-accent-border shadow-[0_0_16px_rgba(212,168,83,0.08)]'
                   : 'bg-bg-raised/50 border-border-subtle opacity-40'

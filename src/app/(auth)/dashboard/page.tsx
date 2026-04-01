@@ -172,7 +172,7 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold text-text-primary font-display">Dashboard</h2>
           <p className="text-text-secondary text-sm">Holder-only community activity and review status</p>
         </div>
-        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[#08080a] transition-colors hover:bg-accent-dim">
+        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[var(--bg-base)] transition-[color,background-color,transform,box-shadow] duration-150 hover:bg-accent-dim active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
           + Submit Content
         </Link>
       </div>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
           <NeonCard
             key={stat.label}
             hover={false}
-            className={`p-4 text-center group relative overflow-hidden border-t-2 border-t-transparent hover:border-t-[var(--accent)] transition-all duration-300 ${
+            className={`p-4 text-center group relative overflow-hidden border-t-2 border-t-transparent hover:border-t-[var(--accent)] transition-[border-color,background-color] duration-300 ${
               idx === maxStatIndex && statValues[idx] > 0
                 ? 'bg-[var(--accent-muted)]'
                 : ''
@@ -235,7 +235,7 @@ export default function DashboardPage() {
               </div>
               <div className="h-3 rounded-full bg-bg-raised overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
+                  className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
                   style={{ width: `${tierProgressPercent}%` }}
                 />
               </div>
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                   <span className="text-xs text-positive font-mono">
                     +{commandCenter.next_best_action.estimated_points} est.
                   </span>
-                  <Link href="/submit" className="text-xs text-accent-text hover:underline">
+                  <Link href="/submit" className="text-xs text-accent-text hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
                     Do it now
                   </Link>
                 </div>
@@ -363,7 +363,7 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/submit"
-                className="inline-block bg-accent px-8 py-3 rounded-[var(--radius-sm)] font-semibold text-[#08080a] transition-colors hover:bg-accent-dim"
+                className="inline-block bg-accent px-8 py-3 rounded-[var(--radius-sm)] font-semibold text-[var(--bg-base)] transition-[color,background-color,transform,box-shadow] duration-150 hover:bg-accent-dim active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               >
                 Make Your First Submission
               </Link>
@@ -396,7 +396,7 @@ export default function DashboardPage() {
       </div>
 
       {/* --- Community Feed Link --- */}
-      <Link href="/feed" className="block">
+      <Link href="/feed" className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
         <NeonCard className="p-5 group">
           <div className="flex items-center justify-between">
             <div>

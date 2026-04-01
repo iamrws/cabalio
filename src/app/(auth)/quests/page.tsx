@@ -226,7 +226,7 @@ export default function QuestsPage() {
                     type="button"
                     onClick={() => handleRoleSelect(role.role_key)}
                     disabled={busyRole || season.status !== 'live'}
-                    className={`w-full text-left rounded-lg border px-3 py-2 transition ${
+                    className={`w-full text-left rounded-lg border px-3 py-2 transition-[color,background-color,border-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                       active
                         ? 'border-accent-border bg-accent-muted text-accent-text'
                         : 'border-border-subtle bg-bg-raised text-text-secondary'
@@ -251,7 +251,7 @@ export default function QuestsPage() {
                 type="button"
                 onClick={() => handleOptOutToggle(!(memberState?.opt_out || false))}
                 disabled={busyOptOut || season.status !== 'live'}
-                className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-accent-text text-xs"
+                className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-accent-text text-xs transition-[color,background-color,border-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               >
                 {memberState?.opt_out ? 'Disable calm mode (opt back in)' : 'Enable calm mode (opt out)'}
               </button>
@@ -330,7 +330,7 @@ export default function QuestsPage() {
                       type="button"
                       onClick={() => handleQuestSubmit(quest.id)}
                       disabled={!quest.can_submit || questSubmittingId === quest.id}
-                      className="w-full rounded-lg bg-accent-muted border border-accent-border px-3 py-2 text-xs text-accent-text disabled:opacity-50"
+                      className="w-full rounded-lg bg-accent-muted border border-accent-border px-3 py-2 text-xs text-accent-text disabled:opacity-50 transition-[color,background-color,border-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                     >
                       {questSubmittingId === quest.id
                         ? 'Submitting...'
