@@ -5,7 +5,7 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' https://www.youtube.com https://s.ytimg.com",
+      "script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https://i.ytimg.com https://img.youtube.com",
       "font-src 'self'",
