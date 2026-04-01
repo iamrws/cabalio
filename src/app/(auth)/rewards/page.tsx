@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { Gift, CheckCircle2, Clock } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 import AnimatedCounter from '@/components/shared/AnimatedCounter';
@@ -444,9 +445,14 @@ export default function RewardsPage() {
               <NeonCard hover={false} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg flex items-center justify-center text-lg bg-bg-raised">
-                      <span aria-hidden="true">{reward.status === 'claimable' ? '🎁' : reward.status === 'claimed' ? '✅' : '⏳'}</span>
-                      <span className="sr-only">{reward.status === 'claimable' ? 'Claimable' : reward.status === 'claimed' ? 'Claimed' : 'Expired'}</span>
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-bg-raised" aria-label={reward.status === 'claimable' ? 'Claimable' : reward.status === 'claimed' ? 'Claimed' : 'Expired'}>
+                      {reward.status === 'claimable' ? (
+                        <Gift className="w-4 h-4" />
+                      ) : reward.status === 'claimed' ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : (
+                        <Clock className="w-4 h-4" />
+                      )}
                     </div>
                     <div>
                       <div className="text-sm font-medium text-text-primary">
