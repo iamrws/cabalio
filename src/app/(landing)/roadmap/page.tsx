@@ -53,7 +53,7 @@ export default function RoadmapPage() {
           Build Plan
         </p>
         <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary">
-          18 features by impact
+          16 features by impact
         </h2>
         <p className="mt-4 text-sm leading-relaxed text-text-secondary">
           Foundation first, novelty second: trust and clarity before high-variance mechanics.
@@ -61,7 +61,7 @@ export default function RoadmapPage() {
         <p className="mt-3 text-sm leading-relaxed text-text-muted">
           Each phase unlocks the next. We ship trust infrastructure before social dynamics — because
           leaderboards without transparency breed anxiety, not engagement. Four sequential milestones,
-          eighteen features, one coherent system.
+          sixteen features, one coherent system.
         </p>
       </ScrollFadeUp>
 
