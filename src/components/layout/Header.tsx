@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { Bell, Flame } from 'lucide-react';
 import AuthControls from '../shared/AuthControls';
 import PointsBadge from '../shared/PointsBadge';
 import { useUser } from '../shared/UserProvider';
@@ -27,9 +28,9 @@ interface Notification {
 
 const TYPE_COLORS: Record<Notification['type'], string> = {
   submission: 'bg-accent',
-  points: 'bg-green-500',
-  quest: 'bg-blue-500',
-  system: 'bg-gray-400',
+  points: 'bg-[var(--positive)]',
+  quest: 'bg-[var(--accent)]',
+  system: 'bg-[var(--text-tertiary)]',
 };
 
 function relativeTime(dateStr: string): string {
@@ -164,24 +165,10 @@ export default function Header() {
               ref={bellRef}
               type="button"
               onClick={() => setIsOpen((v) => !v)}
-              className="relative p-1.5 rounded-md text-text-secondary hover:text-accent-text transition-colors"
+              className="relative p-2 rounded-md text-text-secondary hover:text-accent-text hover:bg-[var(--accent-muted)] active:bg-[var(--accent-muted)]/60 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] transition-[color,background-color,transform] duration-150"
               aria-label="Notifications"
             >
-              {/* Heroicons bell outline */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-                />
-              </svg>
+              <Bell className="w-5 h-5" />
 
               {/* Unread badge */}
               {unreadCount > 0 && (
@@ -204,7 +191,7 @@ export default function Header() {
                     <button
                       type="button"
                       onClick={markAllRead}
-                      className="text-xs text-accent-text hover:underline"
+                      className="text-xs text-accent-text hover:underline active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] rounded-sm transition-[color,opacity] duration-150"
                     >
                       Mark all read
                     </button>
@@ -223,7 +210,7 @@ export default function Header() {
                         key={n.id}
                         type="button"
                         onClick={() => markOneRead(n)}
-                        className={`w-full text-left px-4 py-3 border-b border-border-subtle hover:bg-bg-raised transition-colors ${
+                        className={`w-full text-left px-4 py-3 border-b border-border-subtle hover:bg-bg-raised active:bg-[var(--bg-overlay)] focus-visible:bg-[var(--bg-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40 transition-colors ${
                           !n.read ? 'bg-bg-raised/50' : ''
                         }`}
                       >
@@ -258,7 +245,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className="w-full px-4 py-2.5 text-xs text-center text-text-tertiary hover:text-text-secondary transition-colors"
+                    className="w-full px-4 py-3 text-xs text-center text-text-tertiary hover:text-text-secondary hover:bg-[var(--bg-raised)] active:bg-[var(--bg-overlay)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/30 transition-colors"
                   >
                     Close
                   </button>
@@ -268,8 +255,8 @@ export default function Header() {
           </div>
 
           {/* ---------- Streak Badge ---------- */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-muted border border-accent-border">
-            <span className="text-base leading-none">{'\uD83D\uDD25'}</span>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full bg-accent-muted border border-accent-border">
+            <Flame className="w-4 h-4" />
             <span className="font-mono text-sm text-accent-text font-bold">{streak}</span>
             <span className="text-xs text-text-tertiary">day streak</span>
           </div>
