@@ -58,7 +58,7 @@ export default function EnginePage() {
     <>
       {/* Gold divider at top */}
       <div className="relative mx-auto max-w-7xl px-6 pt-4">
-        <div className="h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
 
       <section
@@ -151,7 +151,7 @@ export default function EnginePage() {
 
       {/* Gold divider at bottom */}
       <div className="relative mx-auto max-w-7xl px-6">
-        <div className="h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
     </>
   );
