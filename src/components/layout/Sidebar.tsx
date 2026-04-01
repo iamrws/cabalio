@@ -17,7 +17,7 @@ export default function Sidebar() {
   const { toggle: toggleGame, isOpen: gameOpen } = useAiOrNot();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-[260px] bg-bg-surface border-r border-border-subtle flex flex-col z-40 hidden lg:flex">
+    <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] bg-bg-surface border-r border-border-subtle flex flex-col z-40 hidden lg:flex">
       <div className="p-6 border-b border-border-subtle">
         <Link href="/" className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-accent-text flex items-center justify-center text-bg-base font-bold text-sm">
@@ -61,7 +61,7 @@ export default function Sidebar() {
           className={`
             w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold
             transition-[color,background-color,border-color,box-shadow] duration-150 group
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 active:scale-[0.98] active:brightness-90
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 active:scale-[0.98] active:opacity-90
             ${gameOpen
               ? 'bg-accent-muted text-accent-text border border-accent-border'
               : 'bg-bg-raised text-text-secondary hover:text-accent-text hover:bg-accent-muted border border-transparent hover:border-accent-border'
@@ -84,7 +84,9 @@ export default function Sidebar() {
           <PointsBadge points={weeklyPoints} size="sm" />
         </div>
         <Link href="/profile/me" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-bg-raised transition-colors active:bg-[var(--bg-overlay)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40">
-          <div className="h-8 w-8 rounded-full bg-border-default border border-border-subtle" />
+          <div className="h-8 w-8 rounded-full bg-border-default flex items-center justify-center text-xs font-medium text-text-secondary">
+              {summary?.user?.display_name?.[0]?.toUpperCase() || '?'}
+            </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-text-primary truncate">Your Profile</div>
             <div className="text-xs text-text-muted font-mono">Level {level}</div>

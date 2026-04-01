@@ -13,6 +13,9 @@ const pageTitles: Record<string, string> = {
   '/leaderboard': 'Leaderboard',
   '/quests': 'Quests',
   '/rewards': 'Rewards',
+  '/feed': 'Community Feed',
+  '/settings': 'Settings',
+  '/profile/me': 'My Profile',
 };
 
 interface Notification {
@@ -53,7 +56,9 @@ const POLL_INTERVAL = 30_000;
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const title = pageTitles[pathname] || 'Jito Cabal';
+  const title =
+    pageTitles[pathname] ??
+    (pathname.startsWith('/profile/') && pathname !== '/profile/me' ? 'Profile' : 'Jito Cabal');
   const { summary } = useUser();
   const streak = summary?.user?.current_streak ?? 0;
   const weeklyPoints = summary?.stats?.weekly_points ?? 0;
