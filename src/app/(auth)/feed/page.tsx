@@ -25,8 +25,8 @@ interface SubmissionRow {
 
 const typeIcons: Record<string, { label: string; color: string; dotColor: string }> = {
   x_post: { label: 'Jito Content', color: 'text-accent-text', dotColor: 'bg-[var(--accent)]' },
-  blog: { label: 'Blog', color: 'text-accent-text', dotColor: 'bg-emerald-500' },
-  art: { label: 'Art', color: 'text-caution', dotColor: 'bg-amber-500' },
+  blog: { label: 'Blog', color: 'text-accent-text', dotColor: 'bg-[var(--positive)]' },
+  art: { label: 'Art', color: 'text-caution', dotColor: 'bg-[var(--caution)]' },
 };
 
 const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary', dotColor: 'bg-text-secondary' };
@@ -255,7 +255,7 @@ export default function FeedPage() {
                     <PointsBadge points={submission.points_awarded} size="sm" showLabel={false} />
                   </div>
 
-                  <h4 className="text-base font-semibold text-text-primary mb-1">{submission.title}</h4>
+                  <h4 className="text-base font-semibold text-text-primary mb-1 font-display">{submission.title}</h4>
                   <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">{submission.content_text}</p>
 
                   <ReactionBar
