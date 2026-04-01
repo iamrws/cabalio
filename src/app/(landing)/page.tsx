@@ -155,13 +155,13 @@ export default function HeroPage() {
               transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) 1.3s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 1.3s`,
             }}
           >
-            <a
-              href="#simulator"
+            <Link
+              href="/simulator"
               className="group relative rounded-md bg-accent px-7 py-3 text-sm font-semibold text-[#08080a] transition-[box-shadow,transform,background-color] duration-200 hover:bg-[var(--accent-dim)] hover:shadow-[0_0_30px_rgba(212,168,83,0.25)] active:scale-[0.97] active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             >
               Test the Simulator
               <span className="absolute inset-0 rounded-md bg-white/0 transition-[background-color] group-hover:bg-white/10" />
-            </a>
+            </Link>
             <Link
               href="/dashboard"
               className="rounded-md border border-border-strong px-7 py-3 text-sm font-semibold text-text-primary transition-[color,border-color,transform] duration-200 hover:border-accent-text hover:text-accent-text active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
