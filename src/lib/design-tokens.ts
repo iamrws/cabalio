@@ -64,10 +64,12 @@ export const radii = {
 } as const;
 
 export const shadows = {
-  sm: '0 1px 3px rgba(0,0,0,0.4)',
-  md: '0 4px 16px rgba(0,0,0,0.5)',
-  lg: '0 8px 32px rgba(0,0,0,0.6)',
-  gold: '0 0 20px rgba(212,168,83,0.08)',
+  sm: '0 1px 2px rgba(0,0,0,0.55), 0 1px 8px rgba(212,168,83,0.06)',
+  md: '0 2px 8px rgba(0,0,0,0.55), 0 4px 20px rgba(212,168,83,0.08)',
+  lg: '0 4px 16px rgba(0,0,0,0.55), 0 8px 40px rgba(212,168,83,0.10)',
+  xl: '0 8px 28px rgba(0,0,0,0.60), 0 16px 64px rgba(212,168,83,0.12)',
+  '2xl': '0 16px 48px rgba(0,0,0,0.65), 0 24px 80px rgba(212,168,83,0.14)',
+  gold: '0 0 0 1px rgba(212,168,83,0.08), 0 2px 12px rgba(212,168,83,0.12), 0 8px 32px rgba(212,168,83,0.08)',
 } as const;
 
 export const motion = {
