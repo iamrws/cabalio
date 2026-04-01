@@ -81,7 +81,7 @@ export default function HeroPage() {
       </div>
 
       {/* ═══════════════════ HERO ═══════════════════ */}
-      <section className="relative z-10 min-h-screen flex flex-col justify-center pt-16">
+      <section className="relative z-10 min-h-screen flex flex-col justify-center">
         <div className="mx-auto w-full max-w-7xl px-6 will-change-transform">
 
           {/* Overline */}
