@@ -115,11 +115,12 @@ export default function SimulatorPage() {
                   </p>
                 </div>
                 {/* Fix 2: bars changed from h-1.5 (6px) to h-2.5 (10px) */}
-                <div className="h-2.5 rounded-full bg-bg-overlay">
+                <div className="h-2.5 rounded-full bg-bg-overlay overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
+                    className="h-full rounded-full bg-[var(--accent)] transition-transform duration-500 w-full"
                     style={{
-                      width: `${Math.min((metric.value / metric.max) * 100, 100)}%`,
+                      transform: `scaleX(${Math.min(metric.value / metric.max, 1)})`,
+                      transformOrigin: 'left',
                       transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
                     }}
                   />
