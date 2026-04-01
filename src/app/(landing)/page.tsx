@@ -192,7 +192,7 @@ export default function HeroPage() {
         </div>
 
         {/* Floating preview cards — asymmetric overlap */}
-        <div className="absolute right-0 top-[22%] w-[480px] hidden xl:block" style={{ perspective: '1200px' }}>
+        <div className="absolute right-0 top-[22%] w-[480px] hidden lg:block" style={{ perspective: '1200px' }}>
           <div
             className="relative"
             style={{
