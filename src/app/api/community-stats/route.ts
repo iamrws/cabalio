@@ -19,15 +19,23 @@ export async function GET() {
         .from('submissions')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'approved'),
-      supabase.rpc('sum_positive_points').single(),
+      supabase
+        .from('points_ledger')
+        .select('points_delta')
+        .gt('points_delta', 0),
     ]);
 
     const active_members = membersResult.count ?? 0;
     const total_submissions = submissionsResult.count ?? 0;
 
+    // Note: This query is limited by Supabase's default 1000-row limit.
+    // Deploy the sum_positive_points RPC function (see migration 20260401)
+    // and switch to supabase.rpc('sum_positive_points') for accurate totals.
     let total_points = 0;
     if (!pointsResult.error && pointsResult.data) {
-      total_points = (pointsResult.data as { total: number | null }).total ?? 0;
+      for (const row of pointsResult.data) {
+        total_points += row.points_delta ?? 0;
+      }
     }
 
     const response = NextResponse.json({
