@@ -91,7 +91,7 @@ export default function PillarsPage() {
 
                   <div className="border-t border-border-subtle pt-4">
                     {/* Fix 3: guardrail text raised from text-[10px] to text-xs (12px) */}
-                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted">
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-secondary">
                       Guardrail — {pillar.guardrail}
                     </p>
                   </div>
