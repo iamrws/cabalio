@@ -311,7 +311,7 @@ body::before {
 
 /* Progress bar grow-in */
 @keyframes bar-grow {
-  from { width: 0; }
+  from { transform: scaleX(0); }
 }
 
 /* Scroll indicator bounce */

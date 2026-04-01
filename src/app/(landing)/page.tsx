@@ -241,6 +241,7 @@ export default function HeroPage() {
                         style={{
                           width: `${(row.points / maxBracketPoints) * 100}%`,
                           background: row.highlight ? 'var(--accent)' : 'var(--text-muted)',
+                          transformOrigin: 'left',
                           animation: `bar-grow 1s cubic-bezier(0.16,1,0.3,1) ${1.5 + rowIdx * 0.1}s both`,
                         }}
                       />
