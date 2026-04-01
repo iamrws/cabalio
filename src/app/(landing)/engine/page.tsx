@@ -91,7 +91,7 @@ export default function EnginePage() {
                 <ScrollFadeUp
                   key={step.step}
                   delay={idx * 0.08}
-                  className="group flex gap-4 rounded-lg border border-border-subtle bg-bg-surface/30 p-4 transition-[border-color,background-color,box-shadow] duration-200 hover:border-accent-border hover:bg-bg-surface/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-border active:bg-bg-surface/80"
+                  className="group flex gap-4 rounded-lg border border-border-subtle bg-bg-surface/30 p-4 transition-[border-color,background-color,box-shadow] duration-200 hover:border-accent-border hover:bg-bg-surface/60 active:bg-bg-surface/80"
                 >
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-accent-muted font-mono text-sm font-bold text-accent-text transition-[background-color] duration-200 group-hover:bg-accent-muted/80">
                     {step.step}
@@ -122,7 +122,7 @@ export default function EnginePage() {
                   key={pattern.risk}
                   delay={0.15 + idx * 0.08}
                   /* Fix 2: hover states on anti-pattern cards */
-                  className="rounded-lg border border-border-subtle bg-bg-raised/50 p-5 transition-[border-color,background-color] duration-200 hover:border-border-default hover:bg-bg-raised/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-default active:bg-bg-raised/80"
+                  className="rounded-lg border border-border-subtle bg-bg-raised/50 p-5 transition-[border-color,background-color] duration-200 hover:border-border-default hover:bg-bg-raised/60 active:bg-bg-raised/80"
                 >
                   {/* Fix 7: risk label in caution color with a small indicator dot */}
                   <div className="mb-2 flex items-center gap-2">
