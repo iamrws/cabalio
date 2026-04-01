@@ -50,7 +50,7 @@ export function LandingFooter() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className={[
-                        'flex items-center min-h-[44px] md:min-h-0 md:h-auto py-0.5',
+                        'flex items-center min-h-[44px] lg:min-h-0 lg:h-auto py-0.5',
                         'text-sm text-text-secondary',
                         'transition-[color] duration-150 hover:text-accent-text active:opacity-70',
                         FOCUS_RING,
@@ -74,7 +74,7 @@ export function LandingFooter() {
                     <Link
                       href={href}
                       className={[
-                        'flex items-center min-h-[44px] md:min-h-0 md:h-auto py-0.5',
+                        'flex items-center min-h-[44px] lg:min-h-0 lg:h-auto py-0.5',
                         'text-sm text-text-secondary',
                         'transition-[color] duration-150 hover:text-accent-text active:opacity-70',
                         FOCUS_RING,
