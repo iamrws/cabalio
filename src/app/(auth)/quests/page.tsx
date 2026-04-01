@@ -183,7 +183,7 @@ export default function QuestsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-text-primary font-display">Season Quests</h2>
+          <h2 className="text-2xl font-bold text-text-primary font-display">Season Quests</h2>
           <p className="text-sm text-text-secondary">Live role-based quests and collaborative milestones</p>
         </div>
         {season ? (
@@ -216,7 +216,7 @@ export default function QuestsPage() {
       {season ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <NeonCard hover={false} className="p-5">
-            <h3 className="text-base font-semibold text-text-primary mb-3">Role Path</h3>
+            <h3 className="text-base font-semibold text-text-primary mb-3 font-display">Role Path</h3>
             <div className="space-y-2">
               {roles.map((role) => {
                 const active = memberState?.role_key === role.role_key;
@@ -241,7 +241,7 @@ export default function QuestsPage() {
           </NeonCard>
 
           <NeonCard hover={false} className="p-5">
-            <h3 className="text-base font-semibold text-text-primary mb-3">Season Preferences</h3>
+            <h3 className="text-base font-semibold text-text-primary mb-3 font-display">Season Preferences</h3>
             <div className="space-y-3 text-sm">
               <div className="rounded-lg bg-bg-raised border border-border-subtle p-3">
                 <div className="text-text-primary">Current Role</div>
