@@ -112,7 +112,7 @@ export default function EnginePage() {
             </p>
 
             {/* Fix 1: secondary heading — smaller than left column primary */}
-            <h2 className="font-display text-xl font-semibold leading-snug tracking-[-0.02em] text-text-primary mb-10">
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold leading-snug tracking-[-0.02em] text-text-primary mb-10">
               What We Refuse to Ship
             </h2>
 
