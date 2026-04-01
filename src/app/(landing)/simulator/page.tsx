@@ -103,9 +103,9 @@ export default function SimulatorPage() {
           {/* Results */}
           <div className="rounded-xl border border-border-subtle bg-bg-base/80 p-6 space-y-5">
             {[
-              { label: '14-Day Retention Lift', value: retentionLift, suffix: '%'    },
-              { label: 'Perceived Trust Score',  value: trustScore,    suffix: '/100' },
-              { label: 'Signal Quality',          value: signalQuality, suffix: '/100' },
+              { label: '14-Day Retention Lift', value: retentionLift, max: 40,  suffix: '%'    },
+              { label: 'Perceived Trust Score',  value: trustScore,   max: 100, suffix: '/100' },
+              { label: 'Signal Quality',          value: signalQuality, max: 100, suffix: '/100' },
             ].map((metric) => (
               <div key={metric.label}>
                 <div className="mb-2 flex items-center justify-between">
@@ -119,7 +119,7 @@ export default function SimulatorPage() {
                   <div
                     className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
                     style={{
-                      width: `${Math.min(metric.value, 100)}%`,
+                      width: `${Math.min((metric.value / metric.max) * 100, 100)}%`,
                       transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
                     }}
                   />
