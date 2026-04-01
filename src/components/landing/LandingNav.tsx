@@ -112,8 +112,8 @@ export function LandingNav() {
         className={[
           'fixed top-14 left-0 right-0 z-40 md:hidden',
           'bg-bg-surface/95 backdrop-blur-xl border-b border-border-subtle',
-          'overflow-hidden transition-[max-height,opacity] duration-300 ease-out',
-          menuOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
+          'transition-[opacity,transform] duration-300 ease-out',
+          menuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none',
         ].join(' ')}
       >
         <nav
