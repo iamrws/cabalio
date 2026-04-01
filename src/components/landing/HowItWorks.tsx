@@ -99,7 +99,7 @@ function StepCard({ step, index }: { step: typeof steps[number]; index: number }
     >
       <NeonCard accent={step.accent} className="p-6 h-full">
         <span className="font-mono text-sm text-text-tertiary">{step.number}</span>
-        <h3 className="text-lg font-semibold mb-2 text-text-primary mt-2">
+        <h3 className="text-lg font-semibold mb-2 text-text-primary mt-2 font-display">
           {step.title}
         </h3>
         <p className="text-sm text-text-secondary leading-relaxed">
