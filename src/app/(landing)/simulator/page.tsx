@@ -143,7 +143,7 @@ export default function SimulatorPage() {
 
       {/* ═══════ DIVIDER ═══════ */}
       <div className="relative mx-auto max-w-7xl px-6">
-        <div className="h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
 
       {/* ═══════════════════ CTA ═══════════════════ */}
