@@ -59,8 +59,8 @@ function getSessionSecret(): string {
 
 async function signValue(value: string): Promise<Uint8Array> {
   const secret = getSessionSecret();
-  const secretBytes = new TextEncoder().encode(secret) as unknown as BufferSource;
-  const valueBytes = new TextEncoder().encode(value) as unknown as BufferSource;
+  const secretBytes = new TextEncoder().encode(secret);
+  const valueBytes = new TextEncoder().encode(value);
   const key = await crypto.subtle.importKey(
     'raw',
     secretBytes,
@@ -174,7 +174,7 @@ export async function isAdminWallet(walletAddress: string): Promise<boolean> {
  */
 export async function verifyAdminStatus(walletAddress: string): Promise<boolean> {
   // Check environment allowlist first (fast path)
-  const envAdmins = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim()).filter(Boolean);
+  const envAdmins = (process.env.ADMIN_WALLET_ADDRESSES || '').split(',').map(w => w.trim()).filter(Boolean);
   if (envAdmins.includes(walletAddress)) return true;
 
   // Check database
@@ -210,7 +210,7 @@ export function buildSignInMessage(walletAddress: string, nonce: string, issuedA
 
 async function getSigningKey(): Promise<CryptoKey> {
   const secret = getSessionSecret();
-  const secretBytes = new TextEncoder().encode(secret) as unknown as BufferSource;
+  const secretBytes = new TextEncoder().encode(secret);
   return crypto.subtle.importKey(
     'raw',
     secretBytes,

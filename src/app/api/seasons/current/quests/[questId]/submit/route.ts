@@ -252,13 +252,35 @@ export async function POST(
           .single();
 
         if (currentUser) {
-          await supabase
+          const { data: updatedUser } = await supabase
             .from('users')
             .update({
               total_xp: (currentUser.total_xp || 0) + pointsReward,
               updated_at: new Date().toISOString(),
             })
-            .eq('wallet_address', session.walletAddress);
+            .eq('wallet_address', session.walletAddress)
+            .eq('total_xp', currentUser.total_xp || 0) // Optimistic lock
+            .select('total_xp')
+            .maybeSingle();
+
+          // Retry once on concurrent modification
+          if (!updatedUser) {
+            const { data: freshUser } = await supabase
+              .from('users')
+              .select('total_xp')
+              .eq('wallet_address', session.walletAddress)
+              .single();
+            if (freshUser) {
+              await supabase
+                .from('users')
+                .update({
+                  total_xp: (freshUser.total_xp || 0) + pointsReward,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('wallet_address', session.walletAddress)
+                .eq('total_xp', freshUser.total_xp || 0);
+            }
+          }
         }
       }
 

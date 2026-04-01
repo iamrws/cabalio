@@ -49,7 +49,7 @@ function parseWeekKey(range: string, requestedWeek: string | null, requestedYear
       // Fall back to current week if validation fails
       return getISOWeekKey(new Date());
     }
-    return `${validated.year}-${validated.week}`;
+    return `${validated.year}-${String(validated.week).padStart(2, '0')}`;
   }
   return getISOWeekKey(new Date());
 }

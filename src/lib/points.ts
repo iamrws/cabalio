@@ -52,7 +52,10 @@ export function calculateStreak(
 
   const last = new Date(lastSubmissionDate);
   const now = new Date();
-  const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+  // Use UTC dates to avoid timezone-dependent streak calculations
+  const lastUtcDay = Date.UTC(last.getUTCFullYear(), last.getUTCMonth(), last.getUTCDate());
+  const nowUtcDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const diffDays = Math.floor((nowUtcDay - lastUtcDay) / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
     // Already submitted today

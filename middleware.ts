@@ -8,11 +8,18 @@ const HOLDER_PROTECTED_PREFIXES = [
   '/quests',
   '/rewards',
   '/profile',
+  '/feed',
+  '/settings',
   '/api/submissions',
   '/api/leaderboard',
   '/api/profile',
   '/api/uploads',
   '/api/seasons',
+  '/api/me',
+  '/api/notifications',
+  '/api/game',
+  '/api/rewards',
+  '/api/activity-feed',
 ];
 
 const ADMIN_PROTECTED_PREFIXES = [
@@ -79,6 +86,8 @@ export const config = {
     '/quests/:path*',
     '/rewards/:path*',
     '/profile/:path*',
+    '/feed/:path*',
+    '/settings/:path*',
     '/cabal-core/:path*',
     '/api/submissions/:path*',
     '/api/leaderboard/:path*',
@@ -86,5 +95,10 @@ export const config = {
     '/api/uploads/:path*',
     '/api/seasons/:path*',
     '/api/admin/:path*',
+    '/api/me/:path*',
+    '/api/notifications/:path*',
+    '/api/game/:path*',
+    '/api/rewards/:path*',
+    '/api/activity-feed',
   ],
 };

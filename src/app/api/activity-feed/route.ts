@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     { items: merged },
     {
       headers: {
-        'Cache-Control': 'public, max-age=30',
+        'Cache-Control': 'private, max-age=30',
       },
     }
   );

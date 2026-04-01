@@ -66,7 +66,7 @@ function getTreasuryKeypair(): Keypair {
 
   const encoding = process.env.TREASURY_KEY_ENCODING || 'base58';
   if (encoding === 'base64') {
-    return Keypair.fromSecretKey(Uint8Array.from(Buffer.from(privateKey, 'base64')));
+    return Keypair.fromSecretKey(new Uint8Array(Buffer.from(privateKey, 'base64')));
   }
   return Keypair.fromSecretKey(decodeBase58(privateKey));
 }
@@ -74,12 +74,16 @@ function getTreasuryKeypair(): Keypair {
 /**
  * Get Solana connection (reuses the same pattern as src/lib/solana.ts).
  */
+let _payoutConnection: Connection | null = null;
 function getConnection(): Connection {
-  const rpcUrl =
-    process.env.SOLANA_RPC_URL ||
-    process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
-    'https://api.mainnet-beta.solana.com';
-  return new Connection(rpcUrl, 'confirmed');
+  if (!_payoutConnection) {
+    const rpcUrl =
+      process.env.SOLANA_RPC_URL ||
+      process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
+      'https://api.mainnet-beta.solana.com';
+    _payoutConnection = new Connection(rpcUrl, 'confirmed');
+  }
+  return _payoutConnection;
 }
 
 /**

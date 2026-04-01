@@ -19,10 +19,7 @@ export async function GET() {
         .from('submissions')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'approved'),
-      supabase
-        .from('points_ledger')
-        .select('points_delta')
-        .gt('points_delta', 0),
+      supabase.rpc('sum_positive_points').single(),
     ]);
 
     const active_members = membersResult.count ?? 0;
@@ -30,9 +27,7 @@ export async function GET() {
 
     let total_points = 0;
     if (!pointsResult.error && pointsResult.data) {
-      for (const row of pointsResult.data) {
-        total_points += row.points_delta ?? 0;
-      }
+      total_points = (pointsResult.data as { total: number | null }).total ?? 0;
     }
 
     const response = NextResponse.json({

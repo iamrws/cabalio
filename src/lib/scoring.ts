@@ -172,5 +172,5 @@ export function getISOWeekYear(date: Date): number {
 }
 
 export function getISOWeekKey(date: Date): string {
-  return `${getISOWeekYear(date)}-${getISOWeekNumber(date)}`;
+  return `${getISOWeekYear(date)}-${String(getISOWeekNumber(date)).padStart(2, '0')}`;
 }

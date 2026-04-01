@@ -81,8 +81,12 @@ export function verifySignature(
   return nacl.sign.detached.verify(messageBytes, signature, publicKey.toBytes());
 }
 
-// Get a Solana connection
+// Get a cached Solana connection (singleton)
+let _connection: Connection | null = null;
 export function getConnection(): Connection {
-  const rpcUrl = process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
-  return new Connection(rpcUrl, 'confirmed');
+  if (!_connection) {
+    const rpcUrl = process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+    _connection = new Connection(rpcUrl, 'confirmed');
+  }
+  return _connection;
 }

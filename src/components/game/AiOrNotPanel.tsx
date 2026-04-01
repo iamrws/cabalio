@@ -86,8 +86,12 @@ function loadYouTubeAPI(): Promise<void> {
 
     const existing = document.querySelector('script[src*="youtube.com/iframe_api"]');
     if (existing) {
+      let attempts = 0;
+      const maxAttempts = 100; // 10 seconds max
       const check = setInterval(() => {
+        attempts++;
         if (window.YT?.Player) { clearInterval(check); resolve(); }
+        else if (attempts >= maxAttempts) { clearInterval(check); resolve(); }
       }, 100);
       return;
     }

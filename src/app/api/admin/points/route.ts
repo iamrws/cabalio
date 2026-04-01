@@ -142,26 +142,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { error: ledgerError } = await supabase
-      .from('points_ledger')
-      .insert({
-        wallet_address: walletAddress,
-        entry_type: 'manual_adjustment',
-        points_delta: parsed.points_delta,
-        metadata: {
-          note: parsed.note,
-          reviewed_by: session.walletAddress,
-          approving_admin: parsed.approving_admin || null,
-        },
-        created_at: now,
-      });
-
-    if (ledgerError) {
-      console.error('Points ledger insert failed:', ledgerError);
-      return NextResponse.json({ error: 'Failed to record points adjustment' }, { status: 500 });
-    }
-
-    // Use optimistic lock: only update if total_xp hasn't changed since we read it
+    // Update user XP first with optimistic lock, BEFORE inserting ledger entry.
+    // This prevents orphaned ledger entries on concurrent modification.
     const { data: updatedUser, error: userUpdateError } = await supabase
       .from('users')
       .update({
@@ -183,6 +165,26 @@ export async function POST(request: NextRequest) {
         { error: 'Concurrent modification detected. Please try again.' },
         { status: 409 }
       );
+    }
+
+    // Now insert immutable ledger entry (XP update already succeeded)
+    const { error: ledgerError } = await supabase
+      .from('points_ledger')
+      .insert({
+        wallet_address: walletAddress,
+        entry_type: 'manual_adjustment',
+        points_delta: parsed.points_delta,
+        metadata: {
+          note: parsed.note,
+          reviewed_by: session.walletAddress,
+          approving_admin: parsed.approving_admin || null,
+        },
+        created_at: now,
+      });
+
+    if (ledgerError) {
+      console.error('Points ledger insert failed:', ledgerError);
+      return NextResponse.json({ error: 'Failed to record points adjustment' }, { status: 500 });
     }
 
     void createNotification({

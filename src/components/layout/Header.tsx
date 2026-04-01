@@ -21,6 +21,7 @@ interface Notification {
   body: string;
   read: boolean;
   created_at: string;
+  metadata?: { link?: string; [key: string]: unknown };
   link?: string;
 }
 
@@ -140,8 +141,9 @@ export default function Header() {
 
     setIsOpen(false);
 
-    if (notification.link) {
-      router.push(notification.link);
+    const link = notification.link || notification.metadata?.link;
+    if (link && typeof link === 'string') {
+      router.push(link);
     }
   };
 

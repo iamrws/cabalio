@@ -12,7 +12,7 @@ const TIER_CONFIG = {
   initiate: { color: 'var(--tier-initiate)', label: 'Cabal Initiate' },
 } as const;
 
-type TimeRange = 'week' | 'alltime';
+type TimeRange = 'week' | 'all';
 
 export default function LeaderboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
@@ -74,7 +74,7 @@ export default function LeaderboardPage() {
         <div className="flex gap-2 p-1 bg-bg-surface rounded-xl border border-border-subtle">
           {[
             { id: 'week' as const, label: 'This Week' },
-            { id: 'alltime' as const, label: 'All Time' },
+            { id: 'all' as const, label: 'All Time' },
           ].map((tab) => (
             <button
               key={tab.id}
