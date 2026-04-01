@@ -5,7 +5,7 @@ export default function LandingLayout({ children }: { children: React.ReactNode 
   return (
     <>
       <LandingNav />
-      <main className="min-h-screen pt-14">
+      <main className="min-h-screen pt-20">
         {children}
       </main>
       <LandingFooter />

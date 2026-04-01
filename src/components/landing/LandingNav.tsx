@@ -18,7 +18,7 @@ export function LandingNav() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-bg-base/60 border-b border-border-subtle/50">
+      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-bg-base/90 border-b border-border-subtle/50">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 h-14">
           {/* Logo */}
           <Link
