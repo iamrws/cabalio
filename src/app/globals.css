@@ -299,3 +299,30 @@ body::before {
   background: var(--accent-muted);
   color: var(--accent-text);
 }
+
+/* --------------------------------------------------------------------------
+   4. LANDING PAGE KEYFRAMES
+   -------------------------------------------------------------------------- */
+
+/* Word-by-word headline reveal — opacity + translateY only (no blur) */
+@keyframes word-reveal {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Progress bar grow-in */
+@keyframes bar-grow {
+  from { width: 0; }
+}
+
+/* Scroll indicator bounce */
+@keyframes bounce-scroll {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
+
+/* Floating preview cards entrance */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: perspective(1200px) translateX(100px) rotateY(-8deg); }
+  to   { opacity: 1; transform: perspective(1200px) translateX(0) rotateY(-3deg); }
+}
