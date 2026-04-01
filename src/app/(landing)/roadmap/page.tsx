@@ -71,7 +71,7 @@ export default function RoadmapPage() {
           <ScrollFadeUp
             key={phase.phase}
             delay={idx * 0.08}
-            className="group rounded-xl border border-border-subtle bg-bg-surface/30 p-6 transition-[border-color,background-color] duration-200 hover:border-accent-border hover:bg-bg-surface/60"
+            className="group rounded-xl border border-border-subtle bg-bg-surface/30 p-6 transition-[border-color,background-color] duration-200 hover:border-accent-border hover:bg-bg-surface/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.99]"
           >
             {/* Step number + phase badge row */}
             <div className="mb-5 flex items-center justify-between">
