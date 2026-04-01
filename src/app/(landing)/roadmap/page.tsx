@@ -76,7 +76,7 @@ export default function RoadmapPage() {
             {/* Step number + phase badge row */}
             <div className="mb-5 flex items-center justify-between">
               {/* Prominent step number */}
-              <span className="font-mono text-3xl font-bold leading-none text-accent/30 group-hover:text-accent/50 transition-[color] duration-200">
+              <span className="font-mono text-3xl font-bold leading-none text-accent/50 group-hover:text-accent/70 transition-[color] duration-200">
                 {phase.step}
               </span>
               {/* Phase badge */}
