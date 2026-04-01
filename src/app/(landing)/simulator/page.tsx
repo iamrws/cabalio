@@ -58,7 +58,7 @@ export default function SimulatorPage() {
           <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary">
             Engagement Simulator
           </h2>
-          <p className="mt-4 text-sm leading-relaxed text-text-secondary">
+          <p className="mt-4 text-sm leading-[1.7] text-text-secondary">
             Flip safeguards on or off to see how retention, trust, and quality shift.
           </p>
         </ScrollFadeUp>
@@ -132,7 +132,7 @@ export default function SimulatorPage() {
               <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted mb-2">
                 Engineering Note
               </p>
-              <p className="text-xs leading-relaxed text-text-secondary">
+              <p className="text-xs leading-[1.7] text-text-secondary">
                 Feature flags will be instrumented with event telemetry for A/B testing behavior outcomes
                 before fully rolling out across the holder base.
               </p>
@@ -156,7 +156,7 @@ export default function SimulatorPage() {
           <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary mb-6">
             Build a community worth returning to
           </h2>
-          <p className="text-sm leading-relaxed text-text-secondary mb-10">
+          <p className="text-sm leading-[1.7] text-text-secondary mb-10">
             The system rewards contribution quality, preserves member dignity, and maps cleanly to your
             production stack: wallet auth, admin moderation, immutable ledger, and bracketed progression.
           </p>

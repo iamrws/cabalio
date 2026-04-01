@@ -98,7 +98,7 @@ export default function EnginePage() {
                   </div>
                   <div>
                     <p className="mb-0.5 text-sm font-semibold text-text-primary">{step.label}</p>
-                    <p className="text-xs leading-relaxed text-text-secondary">{step.detail}</p>
+                    <p className="text-xs leading-[1.7] text-text-secondary">{step.detail}</p>
                   </div>
                 </ScrollFadeUp>
               ))}
@@ -136,7 +136,7 @@ export default function EnginePage() {
                   </div>
 
                   {/* Fix 7: fix text with positive color prefix */}
-                  <p className="text-sm leading-relaxed text-text-secondary">
+                  <p className="text-sm leading-[1.7] text-text-secondary">
                     <span className="font-semibold text-positive" aria-label="Fix:">
                       Fix:{' '}
                     </span>

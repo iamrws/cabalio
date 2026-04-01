@@ -87,7 +87,7 @@ export default function PillarsPage() {
                 <div className="relative space-y-4">
                   {/* Fix 1: insight demoted to text-lg — was text-xl */}
                   <p className="text-lg font-medium text-text-primary leading-snug">{pillar.insight}</p>
-                  <p className="text-sm leading-relaxed text-text-secondary">{pillar.mechanics}</p>
+                  <p className="text-sm leading-[1.7] text-text-secondary">{pillar.mechanics}</p>
 
                   <div className="border-t border-border-subtle pt-4">
                     {/* Fix 3: guardrail text raised from text-[10px] to text-xs (12px) */}
