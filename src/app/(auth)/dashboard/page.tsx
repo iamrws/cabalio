@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import NeonCard from '@/components/shared/NeonCard';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import PointsBadge from '@/components/shared/PointsBadge';
@@ -63,8 +64,8 @@ interface PointsFeedItem {
 
 const typeIcons: Record<string, { label: string; color: string; dotColor: string }> = {
   x_post: { label: 'Jito Content', color: 'text-accent-text', dotColor: 'bg-[var(--accent)]' },
-  blog: { label: 'Blog', color: 'text-accent-text', dotColor: 'bg-emerald-500' },
-  art: { label: 'Art', color: 'text-caution', dotColor: 'bg-amber-500' },
+  blog: { label: 'Blog', color: 'text-accent-text', dotColor: 'bg-[var(--positive)]' },
+  art: { label: 'Art', color: 'text-caution', dotColor: 'bg-[var(--caution)]' },
 };
 
 const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary', dotColor: 'bg-text-secondary' };
@@ -190,7 +191,7 @@ export default function DashboardPage() {
             hover={false}
             className={`p-4 text-center group relative overflow-hidden border-t-2 border-t-transparent hover:border-t-[var(--accent)] transition-all duration-300 ${
               idx === maxStatIndex && statValues[idx] > 0
-                ? 'bg-gradient-to-b from-[var(--accent-muted)] to-transparent'
+                ? 'bg-[var(--accent-muted)]'
                 : ''
             }`}
           >
@@ -234,7 +235,7 @@ export default function DashboardPage() {
               </div>
               <div className="h-3 rounded-full bg-bg-raised overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent)] via-[#e8c96a] to-[var(--accent)] transition-all duration-500"
+                  className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
                   style={{ width: `${tierProgressPercent}%` }}
                 />
               </div>
@@ -406,9 +407,7 @@ export default function DashboardPage() {
                 See what the community is building, react to submissions, and discover new content
               </p>
             </div>
-            <svg className="w-5 h-5 text-text-muted group-hover:text-accent-text transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
+            <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-text transition-colors" />
           </div>
         </NeonCard>
       </Link>
