@@ -24,7 +24,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Sidebar />
         <div className="lg:ml-[var(--sidebar-width)]">
           <Header />
-          <main id="main-content" className="px-4 sm:px-6 py-6 pb-24 lg:pb-6 space-y-4">
+          <main id="main-content" className="px-4 sm:px-6 py-6 pb-20 lg:pb-6 space-y-6">
             <div className="lg:hidden">
               <AuthControls compact />
             </div>
