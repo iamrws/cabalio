@@ -265,9 +265,8 @@ body::before {
   animation: gold-shimmer 3s ease-in-out infinite;
 }
 
-/* Skip layout/paint for off-screen feed & list items */
-.space-y-4 > div,
-.space-y-3 > div {
+/* Skip layout/paint for off-screen feed & list items (scoped to app feed only) */
+[data-feed] > div {
   content-visibility: auto;
   contain-intrinsic-size: auto 120px;
 }
