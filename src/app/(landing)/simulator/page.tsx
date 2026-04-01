@@ -148,7 +148,7 @@ export default function SimulatorPage() {
 
       {/* ═══════════════════ CTA ═══════════════════ */}
       {/* Fix 7: py-24, Fix 8: pb-16 sm:pb-0 for mobile auth bar overlap */}
-      <section className="mx-auto w-full max-w-7xl px-6 py-24 pb-16 sm:pb-24">
+      <section className="mx-auto w-full max-w-7xl px-6 pt-24 pb-16 sm:pb-24">
         <ScrollFadeUp className="text-center max-w-3xl mx-auto">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-6">
             Launch Direction
