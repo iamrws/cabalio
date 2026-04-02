@@ -65,7 +65,7 @@ export default function PillarsPage() {
           </ScrollFadeUp>
 
           {/* Cards grid */}
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-3">
             {PILLARS.map((pillar, idx) => (
               <ScrollFadeUp
                 key={pillar.title}
@@ -91,7 +91,7 @@ export default function PillarsPage() {
                   <p className="text-lg font-medium text-text-primary leading-snug">{pillar.insight}</p>
                   <p className="text-sm leading-[1.7] text-text-secondary">{pillar.mechanics}</p>
 
-                  <div className="border-t border-border-subtle pt-4">
+                  <div className="border-t border-border-subtle pt-6">
                     {/* Fix 3: guardrail text raised from text-[10px] to text-xs (12px) */}
                     <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-secondary">
                       Guardrail — {pillar.guardrail}
