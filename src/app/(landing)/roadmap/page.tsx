@@ -46,7 +46,7 @@ const roadmap = [
 
 export default function RoadmapPage() {
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-24">
+    <section className="mx-auto w-full max-w-7xl px-6 py-24 pb-20 lg:pb-0">
       {/* Header */}
       <ScrollFadeUp className="mb-16 max-w-2xl">
         <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text">
