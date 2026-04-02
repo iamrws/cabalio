@@ -437,10 +437,10 @@ export default function ProfilePage() {
               {profile.user.total_xp.toLocaleString()} / {levelInfo.max_xp.toLocaleString()} XP
             </span>
           </div>
-          <div className="h-2.5 rounded-full bg-bg-raised overflow-hidden">
+          <div className="h-2.5 w-full rounded-full bg-bg-raised overflow-hidden">
             <div
-              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-700 ease-out"
-              style={{ width: `${Math.max(levelInfo.progress * 100, 2)}%` }}
+              className="h-full w-full rounded-full bg-[var(--accent)] transition-transform duration-700 ease-out"
+              style={{ transform: `scaleX(${Math.max(levelInfo.progress, 0.02)})`, transformOrigin: 'left' }}
             />
           </div>
         </div>
