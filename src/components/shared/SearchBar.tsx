@@ -225,7 +225,7 @@ export default function SearchBar() {
                         {badge.label}
                       </span>
                     </div>
-                    <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-text-secondary line-clamp-2 leading-[1.7]">
                       {result.content_text}
                     </p>
                     <div className="flex items-center justify-between mt-1.5">

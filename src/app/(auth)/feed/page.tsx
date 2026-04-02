@@ -256,7 +256,7 @@ export default function FeedPage() {
                   </div>
 
                   <h4 className="text-base font-semibold text-text-primary mb-1 font-display">{submission.title}</h4>
-                  <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">{submission.content_text}</p>
+                  <p className="text-sm text-text-secondary line-clamp-2 leading-[1.7]">{submission.content_text}</p>
 
                   <ReactionBar
                     submissionId={submission.id}

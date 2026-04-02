@@ -23,9 +23,12 @@ const featureChips = ['Transparent Points', 'Weekly Resets', 'Streak Shields', '
 /* ─────────────── COMPONENT ─────────────── */
 
 export default function HeroPage() {
-  const [heroVisible, setHeroVisible] = useState(false);
+  // Default true so content is always visible even if rAF never fires (headless/SSR).
+  // The CSS animation still provides the enter transition when JS runs normally.
+  const [heroVisible, setHeroVisible] = useState(true);
 
   useEffect(() => {
+    // No-op in practice (already true), kept for future progressive-enhancement hooks.
     const id = requestAnimationFrame(() => setHeroVisible(true));
     return () => cancelAnimationFrame(id);
   }, []);
@@ -135,7 +138,7 @@ export default function HeroPage() {
 
           {/* Subhead */}
           <p
-            className="max-w-xl text-base leading-relaxed text-text-secondary mb-10"
+            className="max-w-xl text-base leading-[1.7] text-text-secondary mb-10"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
