@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Lock } from 'lucide-react';
+import { Lock, MessageSquare } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 import PointsBadge from '@/components/shared/PointsBadge';
@@ -247,9 +247,17 @@ export default function FeedPage() {
             <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Community Feed</h3>
             <div className="space-y-4">
               {!loading && communitySubmissions.length === 0 ? (
-                <NeonCard hover={false} className="p-4">
-                  <div className="text-sm text-text-muted">No approved submissions yet.</div>
-                </NeonCard>
+                <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6">
+                  <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+                    <MessageSquare className="w-6 h-6 text-accent-text" />
+                  </div>
+                  <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+                    No submissions yet
+                  </h3>
+                  <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+                    Be the first to share content with the community.
+                  </p>
+                </div>
               ) : null}
 
               {communitySubmissions.map((submission) => {
