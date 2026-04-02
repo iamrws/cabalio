@@ -56,16 +56,21 @@ const antiPatterns = [
 export default function EnginePage() {
   return (
     <>
-      {/* Gold divider at top */}
-      <div className="relative mx-auto max-w-5xl px-6 pt-4">
-        <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-      </div>
-
       <section
         id="engine"
         aria-label="Contribution pipeline and ethical safety rails"
         className="mx-auto w-full max-w-5xl px-6 py-24"
       >
+        {/* Centered section heading */}
+        <ScrollFadeUp className="mb-14 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
+            Engineering Flow
+          </p>
+          <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mx-auto">
+            Contribution Pipeline & Safety Rails
+          </h2>
+        </ScrollFadeUp>
+
         {/* Fix 6: stack on mobile, two columns at lg */}
         <div className="relative grid grid-cols-1 gap-16 lg:grid-cols-2">
 
@@ -77,15 +82,6 @@ export default function EnginePage() {
 
           {/* ── LEFT: Contribution Pipeline ── */}
           <ScrollFadeUp>
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text">
-              Engineering Flow
-            </p>
-
-            {/* Fix 1: primary h2 — larger, dominant */}
-            <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary mb-10">
-              Contribution Pipeline
-            </h2>
-
             <div className="space-y-3">
               {ENGINE_STEPS.map((step, idx) => (
                 <ScrollFadeUp
@@ -97,8 +93,8 @@ export default function EnginePage() {
                     {step.step}
                   </div>
                   <div>
-                    <p className="mb-0.5 text-sm font-semibold text-text-primary">{step.label}</p>
-                    <p className="text-xs leading-[1.7] text-text-secondary">{step.detail}</p>
+                    <p className="mb-0.5 text-base font-semibold text-text-primary">{step.label}</p>
+                    <p className="text-sm leading-[1.7] text-text-secondary">{step.detail}</p>
                   </div>
                 </ScrollFadeUp>
               ))}
@@ -107,15 +103,6 @@ export default function EnginePage() {
 
           {/* ── RIGHT: What We Refuse to Ship ── */}
           <ScrollFadeUp delay={0.15} className="lg:pl-16">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-caution">
-              Ethical Safety Rails
-            </p>
-
-            {/* Fix 1: secondary heading — smaller than left column primary */}
-            <h2 className="font-display text-2xl sm:text-3xl font-semibold leading-snug tracking-[-0.02em] text-text-primary mb-10">
-              What We Refuse to Ship
-            </h2>
-
             <div className="space-y-3">
               {antiPatterns.map((pattern, idx) => (
                 <ScrollFadeUp
@@ -136,7 +123,7 @@ export default function EnginePage() {
                   </div>
 
                   {/* Fix 7: fix text with positive color prefix */}
-                  <p className="text-sm leading-[1.7] text-text-secondary">
+                  <p className="text-base leading-[1.7] text-text-secondary">
                     <span className="font-semibold text-positive" aria-label="Fix:">
                       Fix:{' '}
                     </span>
@@ -148,11 +135,6 @@ export default function EnginePage() {
           </ScrollFadeUp>
         </div>
       </section>
-
-      {/* Gold divider at bottom */}
-      <div className="relative mx-auto max-w-5xl px-6">
-        <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-      </div>
     </>
   );
 }
