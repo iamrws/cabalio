@@ -46,19 +46,19 @@ const roadmap = [
 
 export default function RoadmapPage() {
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-24 pb-20 lg:pb-0">
+    <section className="mx-auto w-full max-w-5xl px-6 py-24 pb-20 lg:pb-0 text-center">
       {/* Header */}
-      <ScrollFadeUp className="mb-16 max-w-2xl">
+      <ScrollFadeUp className="mb-16 mx-auto">
         <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text">
           Build Plan
         </p>
-        <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary">
+        <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary">
           16 features by impact
         </h2>
-        <p className="mt-4 text-sm leading-[1.7] text-text-secondary">
+        <p className="mt-4 text-base leading-[1.7] text-text-secondary">
           Foundation first, novelty second: trust and clarity before high-variance mechanics.
         </p>
-        <p className="mt-3 text-sm leading-[1.7] text-text-muted">
+        <p className="mt-3 text-base leading-[1.7] text-text-muted">
           Each phase unlocks the next. We ship trust infrastructure before social dynamics — because
           leaderboards without transparency breed anxiety, not engagement. Four sequential milestones,
           sixteen features, one coherent system.
@@ -66,7 +66,7 @@ export default function RoadmapPage() {
       </ScrollFadeUp>
 
       {/* Phase grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {roadmap.map((phase, idx) => (
           <ScrollFadeUp
             key={phase.phase}
