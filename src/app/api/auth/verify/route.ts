@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         target_wallet: parsed.walletAddress,
         details: { reason: 'expired_challenge' },
         created_at: new Date().toISOString(),
-      }).then(() => {}, () => {});
+      }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
       return NextResponse.json({ error: 'Authentication challenge expired' }, { status: 401 });
     }
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         target_wallet: parsed.walletAddress,
         details: { reason: 'wallet_mismatch' },
         created_at: new Date().toISOString(),
-      }).then(() => {}, () => {});
+      }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
       return NextResponse.json({ error: 'Wallet address does not match challenge' }, { status: 401 });
     }
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
         target_wallet: parsed.walletAddress,
         details: { reason: 'nonce_already_consumed' },
         created_at: new Date().toISOString(),
-      }).then(() => {}, () => {});
+      }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
       return NextResponse.json({ error: 'Nonce already consumed' }, { status: 401 });
     }
 
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         target_wallet: parsed.walletAddress,
         details: { reason: 'invalid_signature' },
         created_at: new Date().toISOString(),
-      }).then(() => {}, () => {});
+      }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
         target_wallet: parsed.walletAddress,
         details: { reason: 'not_nft_holder' },
         created_at: new Date().toISOString(),
-      }).then(() => {}, () => {});
+      }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
       return NextResponse.json(
         { error: 'Wallet does not hold a Jito Cabal NFT' },
         { status: 403 }
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
         nft_verified: !!heliusApiKey,
       },
       created_at: new Date().toISOString(),
-    }).then(() => {}, () => {}); // Fire and forget, don't block auth
+    }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
 
     const response = NextResponse.json({
       session: {

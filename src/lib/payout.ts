@@ -65,6 +65,9 @@ function getTreasuryKeypair(): Keypair {
   if (!privateKey) throw new Error('TREASURY_PRIVATE_KEY not configured');
 
   const encoding = process.env.TREASURY_KEY_ENCODING || 'base58';
+  if (encoding !== 'base58' && encoding !== 'base64') {
+    throw new Error(`Invalid TREASURY_KEY_ENCODING "${encoding}": must be "base58" or "base64"`);
+  }
   if (encoding === 'base64') {
     return Keypair.fromSecretKey(new Uint8Array(Buffer.from(privateKey, 'base64')));
   }

@@ -385,6 +385,13 @@ export default function AiOrNotPanel() {
           return next;
         });
       }, 2000);
+    }).catch(() => {
+      setVotePending(false);
+      setCurrentIndex(i => {
+        const next = i + 1;
+        if (next >= shorts.length - 3) fetchShorts();
+        return next;
+      });
     });
   }, [current, showResult, votePending, shorts.length, fetchShorts]);
 

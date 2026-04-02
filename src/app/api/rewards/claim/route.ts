@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
         },
         created_at: now,
       })
-      .then(() => {}, () => {});
+      .then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
 
     // ── Notification ──
     const solAmount = (updatedReward.reward_amount_lamports / 1_000_000_000).toFixed(4);

@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       target_wallet: session.walletAddress,
       details: { endpoint: '/api/admin/seasons', reason: 'not_admin' },
       created_at: new Date().toISOString(),
-    }).then(() => {}, () => {});
+    }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
 
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       target_wallet: session.walletAddress,
       details: { endpoint: '/api/admin/seasons', reason: 'not_admin' },
       created_at: new Date().toISOString(),
-    }).then(() => {}, () => {});
+    }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
 
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }

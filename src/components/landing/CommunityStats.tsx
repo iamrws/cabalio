@@ -9,13 +9,6 @@ interface CommunityStatsData {
   pointsDistributed: number;
 }
 
-// TODO: Create a public /api/community-stats endpoint that returns aggregate
-// community metrics (active holder count, total submissions, total points).
-// The existing /api/leaderboard and /api/me/summary endpoints require
-// authentication and are per-user, so they cannot serve this landing page.
-// Until then, this component fetches from /api/community-stats and falls back
-// to zeros if the endpoint does not exist.
-
 function useInView(ref: React.RefObject<HTMLElement | null>, once = true) {
   const [inView, setInView] = useState(false);
   useEffect(() => {
