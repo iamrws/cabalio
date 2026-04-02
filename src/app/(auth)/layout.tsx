@@ -18,7 +18,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <UserProvider>
     <AiOrNotProvider>
       <div className="min-h-screen bg-bg-base">
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2 focus:bg-accent focus:text-white focus:rounded-md">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2 focus:bg-accent focus:text-[var(--bg-base)] focus:rounded-md">
           Skip to main content
         </a>
         <Sidebar />

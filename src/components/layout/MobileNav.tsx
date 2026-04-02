@@ -17,7 +17,7 @@ export default function MobileNav() {
         onClick={toggleGame}
         aria-label={gameOpen ? 'Close AI or Not game' : 'Open AI or Not game'}
         className={`fixed bottom-[72px] right-4 z-[51] lg:hidden w-12 h-12 rounded-full flex items-center justify-center transition-[transform,box-shadow,background-color] duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(212,168,83,0.2)] active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)] focus-visible:ring-[var(--accent)] ${
-          gameOpen ? 'bg-accent text-white' : 'bg-bg-surface border border-accent-border text-accent-text'
+          gameOpen ? 'bg-accent text-[var(--bg-base)]' : 'bg-bg-surface border border-accent-border text-accent-text'
         }`}
       >
         <FlaskConical className="w-5 h-5" />

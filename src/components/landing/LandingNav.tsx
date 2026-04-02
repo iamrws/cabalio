@@ -64,8 +64,8 @@ export function LandingNav() {
                   {/* Underline indicator */}
                   <span
                     className={[
-                      'absolute bottom-0 left-0 h-px bg-accent transition-[width] duration-300',
-                      isActive ? 'w-full' : 'w-0 group-hover:w-full',
+                      'absolute bottom-0 left-0 w-full h-px bg-accent transition-transform duration-300 origin-left',
+                      isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100',
                     ].join(' ')}
                   />
                   {/* focus-visible ring */}

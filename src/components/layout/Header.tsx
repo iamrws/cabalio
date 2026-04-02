@@ -222,7 +222,7 @@ export default function Header() {
                         <div className="flex items-start gap-2.5">
                           {/* Type dot */}
                           <span
-                            className={`mt-1.5 flex-shrink-0 w-2 h-2 rounded-full ${TYPE_COLORS[n.type] ?? 'bg-gray-400'}`}
+                            className={`mt-1.5 flex-shrink-0 w-2 h-2 rounded-full ${TYPE_COLORS[n.type] ?? 'bg-text-tertiary'}`}
                           />
                           <div className="min-w-0 flex-1">
                             <p
