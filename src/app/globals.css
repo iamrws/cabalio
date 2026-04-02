@@ -325,3 +325,18 @@ body::before {
   from { opacity: 0; transform: perspective(1200px) translateX(100px) rotateY(-8deg); }
   to   { opacity: 1; transform: perspective(1200px) translateX(0) rotateY(-3deg); }
 }
+
+/* Reduced-motion fallback — disable entrance animations, content already visible via forwards fill-mode */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes word-reveal {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-in-right {
+    from { opacity: 1; transform: perspective(1200px) translateX(0) rotateY(-3deg); }
+    to   { opacity: 1; transform: perspective(1200px) translateX(0) rotateY(-3deg); }
+  }
+  @keyframes bar-grow {
+    from { transform: scaleX(1); }
+  }
+}

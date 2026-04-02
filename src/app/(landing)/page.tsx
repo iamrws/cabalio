@@ -109,9 +109,8 @@ export default function HeroPage() {
                 key={i}
                 className="inline-block mr-[0.25em]"
                 style={{
-                  opacity: heroVisible ? 1 : 0,
                   animation: heroVisible
-                    ? `word-reveal 0.6s cubic-bezier(0.16,1,0.3,1) ${0.3 + i * 0.08}s both`
+                    ? `word-reveal 0.6s cubic-bezier(0.16,1,0.3,1) ${0.3 + i * 0.08}s forwards`
                     : 'none',
                 }}
               >
@@ -125,9 +124,8 @@ export default function HeroPage() {
                 className="inline-block mr-[0.25em] text-accent-text"
                 style={{
                   textShadow: '0 0 60px rgba(212,168,83,0.3)',
-                  opacity: heroVisible ? 1 : 0,
                   animation: heroVisible
-                    ? `word-reveal 0.8s cubic-bezier(0.16,1,0.3,1) ${0.3 + (heroWords.length + i) * 0.08}s both`
+                    ? `word-reveal 0.8s cubic-bezier(0.16,1,0.3,1) ${0.3 + (heroWords.length + i) * 0.08}s forwards`
                     : 'none',
                 }}
               >
@@ -199,7 +197,7 @@ export default function HeroPage() {
           <div
             className="relative"
             style={{
-              animation: heroVisible ? 'slide-in-right 1.2s cubic-bezier(0.16,1,0.3,1) 0.8s both' : 'none',
+              animation: heroVisible ? 'slide-in-right 1.2s cubic-bezier(0.16,1,0.3,1) 0.8s forwards' : 'none',
             }}
           >
             {/* Heatmap card */}
@@ -245,7 +243,7 @@ export default function HeroPage() {
                           width: `${(row.points / maxBracketPoints) * 100}%`,
                           background: row.highlight ? 'var(--accent)' : 'var(--text-muted)',
                           transformOrigin: 'left',
-                          animation: `bar-grow 1s cubic-bezier(0.16,1,0.3,1) ${1.5 + rowIdx * 0.1}s both`,
+                          animation: `bar-grow 1s cubic-bezier(0.16,1,0.3,1) ${1.5 + rowIdx * 0.1}s forwards`,
                         }}
                       />
                     </div>
