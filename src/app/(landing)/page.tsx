@@ -192,7 +192,8 @@ export default function HeroPage() {
           </div>
         </div>
 
-        {/* Floating preview cards — asymmetric overlap */}
+        {/* Floating preview cards — desktop: absolute floating; mobile: inline stacked */}
+        {/* Desktop */}
         <div className="absolute right-0 top-[22%] w-[480px] hidden lg:block" style={{ perspective: '1200px' }}>
           <div
             className="relative"
@@ -257,6 +258,75 @@ export default function HeroPage() {
               className="absolute -inset-10 -z-10 opacity-30 blur-3xl"
               style={{ background: 'radial-gradient(circle, rgba(212,168,83,0.15), transparent 70%)' }}
             />
+          </div>
+        </div>
+
+        {/* Mobile preview — compact scrollable row of product snapshots */}
+        <div
+          className="lg:hidden relative z-10 mx-auto w-full max-w-7xl px-6 mt-10"
+          style={{
+            opacity: heroVisible ? 1 : 0,
+            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 0.7s cubic-bezier(0.16,1,0.3,1) 1.7s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 1.7s',
+          }}
+        >
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+            {/* Heatmap snapshot */}
+            <div className="snap-start shrink-0 w-[calc(100vw-3rem)] max-w-sm rounded-xl border border-border-default bg-bg-surface/90 backdrop-blur-sm p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Profile Heatmap</span>
+                <span className="text-[10px] text-text-muted font-mono">26w</span>
+              </div>
+              <div className="rounded-lg bg-bg-base/80 p-2">
+                <div className="grid gap-[2px]" style={{ gridTemplateColumns: 'repeat(26, minmax(0, 1fr))' }}>
+                  {heatmapCells.map((value, idx) => (
+                    <div
+                      key={`m-${idx}`}
+                      className="aspect-square rounded-[1px]"
+                      style={{ backgroundColor: heatmapPalette[value] }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bracket snapshot */}
+            <div className="snap-start shrink-0 w-[calc(100vw-3rem)] max-w-sm rounded-xl border border-border-default bg-bg-raised/90 backdrop-blur-sm p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Weekly Bracket</span>
+                <span className="text-[10px] text-text-muted font-mono">Resets Mon</span>
+              </div>
+              <div className="space-y-2">
+                {bracketRows.map((row, rowIdx) => (
+                  <div key={`m-${row.name}`}>
+                    <div className="mb-0.5 flex items-center justify-between text-xs">
+                      <span className={row.highlight ? 'font-semibold text-accent-text' : 'text-text-muted'}>
+                        {row.name}
+                      </span>
+                      <span className="font-mono text-[10px] text-accent-text/70">
+                        {row.points} <span className="text-accent-text/40">{row.delta}</span>
+                      </span>
+                    </div>
+                    <div className="h-1 rounded-full bg-bg-overlay">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(row.points / maxBracketPoints) * 100}%`,
+                          background: row.highlight ? 'var(--accent)' : 'var(--text-muted)',
+                          transformOrigin: 'left',
+                          animation: `bar-grow 1s cubic-bezier(0.16,1,0.3,1) ${1.8 + rowIdx * 0.1}s forwards`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* Scroll hint dots */}
+          <div className="flex justify-center gap-1.5 mt-3">
+            <span className="h-1 w-4 rounded-full bg-accent/60" />
+            <span className="h-1 w-1.5 rounded-full bg-border-subtle" />
           </div>
         </div>
 
