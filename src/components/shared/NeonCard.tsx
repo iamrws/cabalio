@@ -46,7 +46,7 @@ export default function NeonCard({
       className={`
         rounded-2xl ${variantStyles[variant]}
         ${hover ? 'transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_16px_rgba(212,168,83,0.04)]' : ''}
-        ${isInteractive ? 'cursor-pointer active:scale-[0.99] active:shadow-[0_2px_8px_rgba(0,0,0,0.4)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent' : ''}
+        ${isInteractive ? 'cursor-pointer active:scale-[0.99] active:shadow-[0_2px_8px_rgba(0,0,0,0.4)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]' : ''}
         ${className}
       `}
       style={accent ? { borderLeftWidth: '3px', borderLeftColor: accent } : undefined}
