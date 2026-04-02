@@ -103,7 +103,7 @@ export default function HeroPage() {
           </div>
 
           {/* Giant headline — word-by-word reveal */}
-          <h1 className="font-display text-[clamp(2.8rem,8vw,6.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] mb-8 max-w-5xl">
+          <h1 className="font-display text-[clamp(2.8rem,8vw,6.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] mb-8 max-w-5xl text-center lg:text-left">
             {heroWords.map((word, i) => (
               <span
                 key={i}
@@ -136,7 +136,7 @@ export default function HeroPage() {
 
           {/* Subhead */}
           <p
-            className="max-w-xl text-base leading-[1.7] text-text-secondary mb-10"
+            className="max-w-xl text-base leading-[1.7] text-text-secondary mb-10 text-center lg:text-left mx-auto lg:mx-0"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
@@ -149,7 +149,7 @@ export default function HeroPage() {
 
           {/* CTAs */}
           <div
-            className="flex flex-wrap gap-4 mb-8"
+            className="flex flex-wrap gap-4 mb-8 justify-center lg:justify-start"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
@@ -157,10 +157,10 @@ export default function HeroPage() {
             }}
           >
             <Link
-              href="/simulator"
+              href="/how-it-works"
               className="group relative rounded-md bg-accent px-7 py-3 text-sm font-semibold text-[#08080a] transition-[box-shadow,transform,background-color] duration-200 hover:bg-[var(--accent-dim)] hover:shadow-[0_0_30px_rgba(212,168,83,0.25)] active:scale-[0.97] active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             >
-              Test the Simulator
+              How It Works
               <span className="absolute inset-0 rounded-md bg-white/0 transition-[background-color] group-hover:bg-white/10" />
             </Link>
             <Link
@@ -173,7 +173,7 @@ export default function HeroPage() {
 
           {/* Feature chips */}
           <div
-            className="flex flex-wrap gap-2"
+            className="flex flex-wrap gap-2 justify-center lg:justify-start"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
