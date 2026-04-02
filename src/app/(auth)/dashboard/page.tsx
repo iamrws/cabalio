@@ -189,10 +189,10 @@ export default function DashboardPage() {
           <NeonCard
             key={stat.label}
             hover={false}
-            className={`p-4 text-center group relative overflow-hidden border-t-2 border-t-transparent hover:border-t-[var(--accent)] transition-[border-color,background-color] duration-300 ${
+            className={`p-4 text-center group relative overflow-hidden border-t-2 border-t-transparent hover:border-t-[var(--accent)] transition-[border-color,background-color] duration-300 shadow-[var(--shadow-sm)] ${
               idx === maxStatIndex && statValues[idx] > 0
                 ? 'bg-[var(--accent-muted)]'
-                : ''
+                : 'bg-bg-surface'
             }`}
           >
             {stat.isWeeklyPoints ? (
@@ -247,7 +247,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-lg bg-bg-raised border border-border-subtle p-3">
+              <div className="rounded-lg bg-bg-raised border border-border-default shadow-[var(--shadow-sm)] p-3">
                 <div className="text-text-muted">Streak</div>
                 <div className="text-text-primary font-semibold mt-1">
                   {commandCenter.streak.current_days} days
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                   Shields: {commandCenter.streak.shields_available}
                 </div>
               </div>
-              <div className="rounded-lg bg-bg-raised border border-border-subtle p-3">
+              <div className="rounded-lg bg-bg-raised border border-border-default shadow-[var(--shadow-sm)] p-3">
                 <div className="text-text-muted">Bracket</div>
                 <div className="text-text-primary font-semibold mt-1">
                   #{commandCenter.bracket.rank} / {commandCenter.bracket.members}
@@ -295,7 +295,7 @@ export default function DashboardPage() {
                 <div className="text-sm text-text-muted">No point events yet.</div>
               ) : (
                 pointsFeed.map((item) => (
-                  <div key={item.ledger_id} className="rounded-lg bg-bg-raised border border-border-subtle p-3">
+                  <div key={item.ledger_id} className="rounded-lg bg-bg-raised border border-border-default shadow-[var(--shadow-sm)] p-3">
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-text-primary font-medium">{item.reason_label}</div>
                       <div className="text-xs font-mono text-accent-text">
@@ -348,15 +348,15 @@ export default function DashboardPage() {
                 Share your work with the community and start earning points. Pick a content type to get started.
               </p>
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-lg bg-bg-raised border border-border-subtle p-3 text-center">
+                <div className="rounded-lg bg-bg-raised border border-border-default shadow-[var(--shadow-sm)] p-3 text-center">
                   <div className="text-xl mb-1">{'\u{1D54F}'}</div>
                   <div className="text-xs text-text-secondary">X Post</div>
                 </div>
-                <div className="rounded-lg bg-bg-raised border border-border-subtle p-3 text-center">
+                <div className="rounded-lg bg-bg-raised border border-border-default shadow-[var(--shadow-sm)] p-3 text-center">
                   <div className="text-xl mb-1">&#9998;</div>
                   <div className="text-xs text-text-secondary">Blog</div>
                 </div>
-                <div className="rounded-lg bg-bg-raised border border-border-subtle p-3 text-center">
+                <div className="rounded-lg bg-bg-raised border border-border-default shadow-[var(--shadow-sm)] p-3 text-center">
                   <div className="text-xl mb-1">&#9670;</div>
                   <div className="text-xs text-text-secondary">Artwork</div>
                 </div>
