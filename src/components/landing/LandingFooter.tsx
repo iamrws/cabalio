@@ -6,6 +6,13 @@ const EXTERNAL_LINKS = [
   { label: 'Governance', href: 'https://jitocabal.factorylabs.space/' },
 ] as const;
 
+const LEARN_LINKS = [
+  { label: 'Pillars', href: '/pillars' },
+  { label: 'Engine', href: '/engine' },
+  { label: 'Roadmap', href: '/roadmap' },
+  { label: 'Simulator', href: '/simulator' },
+] as const;
+
 const INTERNAL_LINKS = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Leaderboard', href: '/leaderboard' },
@@ -58,6 +65,30 @@ export function LandingFooter() {
                     >
                       {label}
                     </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Learn links */}
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-muted mb-4">
+                Learn
+              </p>
+              <ul className="flex flex-col gap-1" role="list">
+                {LEARN_LINKS.map(({ label, href }) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className={[
+                        'flex items-center min-h-[44px] lg:min-h-0 lg:h-auto py-0.5',
+                        'text-sm text-text-secondary',
+                        'transition-[color] duration-150 hover:text-accent-text active:opacity-70',
+                        FOCUS_RING,
+                      ].join(' ')}
+                    >
+                      {label}
+                    </Link>
                   </li>
                 ))}
               </ul>
