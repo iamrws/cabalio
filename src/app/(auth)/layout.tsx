@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         <TopNav />
-        <main id="main-content" className="px-4 sm:px-6 py-6 pb-20 lg:pb-6 max-w-[var(--content-max)] mx-auto space-y-6">
+        <main id="main-content" className="px-4 sm:px-6 py-6 pb-20 lg:pb-6 max-w-4xl mx-auto space-y-6">
           {children}
         </main>
         <BottomBar />
