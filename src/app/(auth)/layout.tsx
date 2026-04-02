@@ -1,10 +1,10 @@
 'use client';
 
-import Sidebar from '@/components/layout/Sidebar';
-import Header from '@/components/layout/Header';
-import MobileNav from '@/components/layout/MobileNav';
-import AuthControls from '@/components/shared/AuthControls';
+import TopNav from '@/components/layout/TopNav';
+import BottomBar from '@/components/layout/BottomBar';
 import { UserProvider } from '@/components/shared/UserProvider';
+import { SubmitDrawerProvider } from '@/components/shared/SubmitDrawerProvider';
+import SubmitDrawer from '@/components/shared/SubmitDrawer';
 import dynamic from 'next/dynamic';
 import { AiOrNotProvider } from '@/components/game/AiOrNotPanel';
 
@@ -17,23 +17,20 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <UserProvider>
     <AiOrNotProvider>
+    <SubmitDrawerProvider>
       <div className="min-h-screen bg-bg-base">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2 focus:bg-accent focus:text-[var(--bg-base)] focus:rounded-md">
           Skip to main content
         </a>
-        <Sidebar />
-        <div className="lg:ml-[var(--sidebar-width)]">
-          <Header />
-          <main id="main-content" className="px-4 sm:px-6 py-6 pb-20 lg:pb-6 space-y-6">
-            <div className="lg:hidden">
-              <AuthControls compact />
-            </div>
-            {children}
-          </main>
-        </div>
-        <MobileNav />
+        <TopNav />
+        <main id="main-content" className="px-4 sm:px-6 py-6 pb-20 lg:pb-6 max-w-[var(--content-max)] mx-auto space-y-6">
+          {children}
+        </main>
+        <BottomBar />
+        <SubmitDrawer />
         <AiOrNotPanel />
       </div>
+    </SubmitDrawerProvider>
     </AiOrNotProvider>
     </UserProvider>
   );
