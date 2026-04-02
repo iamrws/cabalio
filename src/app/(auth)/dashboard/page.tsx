@@ -233,10 +233,10 @@ export default function DashboardPage() {
                 <span>Tier Progress</span>
                 <span>{tierProgressPercent}%</span>
               </div>
-              <div className="h-3 rounded-full bg-bg-raised overflow-hidden">
+              <div className="h-3 w-full rounded-full bg-bg-raised overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
-                  style={{ width: `${tierProgressPercent}%` }}
+                  className="h-full w-full rounded-full bg-[var(--accent)] transition-transform duration-500"
+                  style={{ transform: `scaleX(${tierProgressPercent / 100})`, transformOrigin: 'left' }}
                 />
               </div>
               <div className="text-xs text-text-muted mt-1">
