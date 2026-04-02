@@ -172,7 +172,7 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold text-text-primary font-display">Dashboard</h2>
           <p className="text-text-secondary text-sm">Holder-only community activity and review status</p>
         </div>
-        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[var(--bg-base)] transition-[color,background-color,transform,box-shadow] duration-150 hover:bg-accent-dim active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
+        <Link href="/submit" className="inline-block w-auto self-start bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[var(--bg-base)] transition-[color,background-color,transform,box-shadow] duration-150 hover:bg-accent-dim active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
           + Submit Content
         </Link>
       </div>
