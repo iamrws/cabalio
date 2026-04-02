@@ -329,7 +329,7 @@ export default function SettingsPage() {
               />
               <button
                 onClick={saveDisplayName}
-                className="px-4 py-2 bg-accent/10 text-accent-text text-sm font-medium rounded-lg hover:bg-accent/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.97] transition-[background-color]"
+                className="px-4 py-2 bg-accent/20 text-accent-text text-sm font-medium rounded-lg border border-accent-border hover:bg-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.97] transition-[background-color,border-color]"
               >
                 Save
               </button>
