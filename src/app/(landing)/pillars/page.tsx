@@ -70,6 +70,8 @@ export default function PillarsPage() {
               <ScrollFadeUp
                 key={pillar.title}
                 delay={idx * 0.1}
+                tabIndex={0}
+                role="article"
                 className="group relative rounded-xl border border-border-subtle bg-bg-surface/50 p-6 md:p-8 transition-[border-color,background-color] duration-500 hover:border-accent-border hover:bg-bg-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-border active:scale-[0.99]"
               >
                 {/* Fix 4: prominent numbered badge replacing faded oversized number */}

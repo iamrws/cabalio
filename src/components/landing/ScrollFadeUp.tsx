@@ -16,16 +16,18 @@ export function ScrollFadeUp({
   className = '',
   children,
   tabIndex,
+  role,
 }: {
   delay?: number;
   className?: string;
   children: React.ReactNode;
   tabIndex?: number;
+  role?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref);
   return (
-    <div ref={ref} className={className} style={fadeUpStyle(inView, delay)} tabIndex={tabIndex}>
+    <div ref={ref} className={className} style={fadeUpStyle(inView, delay)} tabIndex={tabIndex} role={role}>
       {children}
     </div>
   );

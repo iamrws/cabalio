@@ -153,7 +153,7 @@ export default function SubmitPage() {
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Give your submission a clear title"
               required
-              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors text-sm"
             />
           </div>
 
@@ -173,7 +173,7 @@ export default function SubmitPage() {
                     : 'https://example.com/portfolio'
               }
               required={activeTab !== 'art'}
-              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors text-sm"
             />
           </div>
 
@@ -188,7 +188,7 @@ export default function SubmitPage() {
                   setUploadedImagePath('');
                 }}
                 required
-                className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
+                className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors text-sm"
               />
               <p className="mt-1.5 text-xs text-text-muted">
                 Max file size: {MAX_IMAGE_SIZE_MB}MB. Image is scanned for suspicious scam or malware payloads before storage.
@@ -217,7 +217,7 @@ export default function SubmitPage() {
               placeholder={placeholderByType[activeTab]}
               required
               rows={6}
-              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm resize-none"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-colors text-sm resize-none"
             />
             <div id="content-char-count" className="mt-1 text-xs text-text-muted text-right">{contentText.length}/5000 characters</div>
           </div>

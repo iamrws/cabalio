@@ -32,8 +32,8 @@ export default function MobileNav() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
-                  isActive ? 'text-accent-text' : 'text-text-muted hover:text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]/50 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/50'
+                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-[color,background-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-border)] active:scale-90 ${
+                  isActive ? 'text-accent-text' : 'text-text-muted hover:text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]/50'
                 }`}
               >
                 <span>{NAV_ICONS[item.icon]}</span>
