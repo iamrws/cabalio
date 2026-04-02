@@ -5,7 +5,7 @@ export default function LandingLayout({ children }: { children: React.ReactNode 
   return (
     <>
       <LandingNav />
-      <main className="min-h-screen mx-auto" style={{ paddingTop: 'calc(var(--header-height) + 1.5rem)' }}>
+      <main className="min-h-screen w-full" style={{ paddingTop: 'calc(var(--header-height) + 1.5rem)' }}>
         {children}
       </main>
       <LandingFooter />
