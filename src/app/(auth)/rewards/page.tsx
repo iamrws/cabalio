@@ -324,12 +324,12 @@ export default function RewardsPage() {
             </div>
 
             {/* Progress bar */}
-            <div className="relative h-2 bg-bg-raised rounded-full overflow-hidden">
+            <div className="relative h-2 w-full bg-bg-raised rounded-full overflow-hidden">
               <div
-                className={`absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-700 ease-out ${
+                className={`absolute inset-y-0 left-0 w-full rounded-full transition-[transform,background-color] duration-700 ease-out ${
                   isAheadOfPace ? 'bg-positive' : 'bg-accent'
                 }`}
-                style={{ width: `${pacePercent}%` }}
+                style={{ transform: `scaleX(${pacePercent / 100})`, transformOrigin: 'left' }}
               />
               {/* Average marker */}
               {projections.avg_weekly_points > 0 && (
