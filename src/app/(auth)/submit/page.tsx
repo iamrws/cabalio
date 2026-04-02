@@ -110,6 +110,7 @@ export default function SubmitPage() {
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            aria-label={tab.label}
             onClick={() => {
               setActiveTab(tab.id);
               setError('');
@@ -119,14 +120,14 @@ export default function SubmitPage() {
                 setUploadedImagePath('');
               }
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-[color,background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg text-xs sm:text-sm font-medium transition-[color,background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
               activeTab === tab.id
                 ? 'bg-bg-raised text-accent-text border border-accent-border'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             <span>{tab.icon}</span>
-            <span className="hidden sm:inline">{tab.label}</span>
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
@@ -232,13 +233,24 @@ export default function SubmitPage() {
         </NeonCard>
       </form>
 
+      <div className="border-t border-border-subtle" />
+
       <NeonCard hover={false} className="p-5">
         <h3 className="text-sm font-semibold text-text-primary mb-3 font-display">Review Pipeline</h3>
-        <div className="space-y-2 text-sm text-text-secondary">
-          <div>1. Submission enters moderation queue.</div>
-          <div>2. Admin review approves, rejects, or flags content.</div>
-          <div>3. Approved submissions are AI scored and points are credited to your ledger.</div>
-          <div>4. Leaderboards update from approved submissions only.</div>
+        <div className="space-y-2.5 text-sm text-text-secondary">
+          {[
+            'Submission enters moderation queue.',
+            'Admin review approves, rejects, or flags content.',
+            'Approved submissions are AI scored and points are credited to your ledger.',
+            'Leaderboards update from approved submissions only.',
+          ].map((step, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent-muted text-accent-text text-[10px] font-bold shrink-0 mt-0.5">
+                {index + 1}
+              </span>
+              <span>{step}</span>
+            </div>
+          ))}
         </div>
       </NeonCard>
     </div>
