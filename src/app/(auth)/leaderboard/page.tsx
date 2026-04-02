@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { Lock } from 'lucide-react';
+import { Lock, Trophy } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 import type { LeaderboardEntry } from '@/lib/types';
@@ -127,10 +127,18 @@ export default function LeaderboardPage() {
         </NeonCard>
       ) : null}
 
-      {!loading && entries.length === 0 ? (
-        <NeonCard hover={false} className="p-5">
-          <div className="text-sm text-text-muted">No approved submissions yet.</div>
-        </NeonCard>
+      {!loading && !error && entries.length === 0 ? (
+        <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6">
+          <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+            <Trophy className="w-6 h-6 text-accent-text" />
+          </div>
+          <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+            No rankings yet
+          </h3>
+          <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+            Rankings appear after approved submissions are scored each week.
+          </p>
+        </div>
       ) : null}
 
       {(['elite', 'member', 'initiate'] as const).map((tier) => {
