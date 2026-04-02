@@ -182,7 +182,10 @@ export default function LeaderboardPage() {
                         >
                           {entry.display_name || entry.wallet_address}
                         </Link>
-                        <div className="text-xs text-text-muted font-mono">{entry.wallet_address}</div>
+                        <div className="text-xs text-text-muted font-mono truncate max-w-[120px] sm:max-w-none">
+                          <span className="sm:hidden">{entry.wallet_address.slice(0, 4)}...{entry.wallet_address.slice(-4)}</span>
+                          <span className="hidden sm:inline">{entry.wallet_address}</span>
+                        </div>
                       </td>
                       <td className="text-right px-5 py-3 hidden sm:table-cell">
                         <span className="text-xs font-mono text-text-secondary">Lv.{entry.level}</span>
