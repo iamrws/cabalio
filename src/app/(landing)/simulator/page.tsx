@@ -153,7 +153,7 @@ export default function SimulatorPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-6">
             Launch Direction
           </p>
-          <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary mb-6">
+          <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary mb-6" style={{ textWrap: 'balance' }}>
             Build a community worth returning to
           </h2>
           <p className="text-sm leading-[1.7] text-text-secondary mb-10">
