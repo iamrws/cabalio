@@ -33,11 +33,6 @@ const PILLARS = [
 export default function PillarsPage() {
   return (
     <>
-      {/* Gold divider at top */}
-      <div className="relative mx-auto max-w-5xl px-6 pt-4">
-        <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-      </div>
-
       {/* Fix 6: subtle background variation to differentiate from hero */}
       <section
         id="pillars"
@@ -46,19 +41,19 @@ export default function PillarsPage() {
       >
         <div className="mx-auto w-full max-w-5xl px-6">
           {/* Section header */}
-          <ScrollFadeUp className="mb-14">
+          <ScrollFadeUp className="mb-14 text-center">
             {/* Overline */}
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
               Psychology Core
             </p>
 
             {/* Fix 7: improved heading + subhead */}
-            <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary max-w-3xl mb-4">
+            <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mx-auto mb-4">
               Three motivation systems,{' '}
               <span className="text-text-tertiary">one product language</span>
             </h2>
 
-            <p className="text-base leading-[1.7] text-text-secondary max-w-2xl">
+            <p className="text-base leading-[1.7] text-text-secondary mx-auto max-w-2xl">
               Every feature in Jito Cabal maps to one of these three Self-Determination Theory pillars.
               If a mechanic doesn't serve autonomy, competence, or relatedness — it doesn't ship.
             </p>
@@ -89,7 +84,7 @@ export default function PillarsPage() {
                 <div className="relative space-y-4">
                   {/* Fix 1: insight demoted to text-lg — was text-xl */}
                   <p className="text-lg font-medium text-text-primary leading-snug">{pillar.insight}</p>
-                  <p className="text-sm leading-[1.7] text-text-secondary">{pillar.mechanics}</p>
+                  <p className="text-base leading-[1.7] text-text-secondary">{pillar.mechanics}</p>
 
                   <div className="border-t border-border-subtle pt-6">
                     {/* Fix 3: guardrail text raised from text-[10px] to text-xs (12px) */}
@@ -112,11 +107,6 @@ export default function PillarsPage() {
           </div>
         </div>
       </section>
-
-      {/* Gold divider at bottom */}
-      <div className="relative mx-auto max-w-5xl px-6">
-        <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-      </div>
     </>
   );
 }
