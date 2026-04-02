@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Lock } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 import PointsBadge from '@/components/shared/PointsBadge';
@@ -209,11 +210,25 @@ export default function FeedPage() {
       {/* --- Search --- */}
       <SearchBar />
 
-      {/* --- Error State --- */}
+      {/* --- Auth / Error State --- */}
       {error ? (
-        <NeonCard hover={false} className="p-4 border border-negative-border">
-          <div className="text-sm text-negative">{error}</div>
-        </NeonCard>
+        /auth/i.test(error) || /unauthorized/i.test(error) || /authentication required/i.test(error) ? (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-6">
+            <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+              <Lock className="w-6 h-6 text-accent-text" />
+            </div>
+            <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+              Connect your wallet
+            </h3>
+            <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+              Sign in with your wallet to view the community feed and submit your content.
+            </p>
+          </div>
+        ) : (
+          <NeonCard hover={false} className="p-4 border border-negative-border">
+            <div className="text-sm text-negative">{error}</div>
+          </NeonCard>
+        )
       ) : null}
 
       {/* --- Loading State --- */}
@@ -226,57 +241,61 @@ export default function FeedPage() {
       ) : null}
 
       {/* --- Community Feed with Reactions --- */}
-      <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Community Feed</h3>
-        <div className="space-y-4">
-          {!loading && communitySubmissions.length === 0 ? (
-            <NeonCard hover={false} className="p-4">
-              <div className="text-sm text-text-muted">No approved submissions yet.</div>
-            </NeonCard>
-          ) : null}
-
-          {communitySubmissions.map((submission) => {
-            const typeInfo = typeIcons[submission.type] || fallbackTypeIcon;
-            return (
-              <div key={submission.id}>
-                <NeonCard className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-sm font-semibold text-text-primary">
-                        {submission.users?.display_name || submission.wallet_address}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
-                        <span className={`inline-block w-2 h-2 rounded-full ${typeInfo.dotColor}`} />
-                        <span className={typeInfo.color}>{typeInfo.label}</span>
-                        <span className="text-text-muted/50">|</span>
-                        <span>{new Date(submission.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <PointsBadge points={submission.points_awarded} size="sm" showLabel={false} />
-                  </div>
-
-                  <h4 className="text-base font-semibold text-text-primary mb-1 font-display">{submission.title}</h4>
-                  <p className="text-sm text-text-secondary line-clamp-2 leading-[1.7]">{submission.content_text}</p>
-
-                  <ReactionBar
-                    submissionId={submission.id}
-                    data={reactions[submission.id]}
-                    onToggle={handleReactionToggle}
-                  />
+      {!error ? (
+        <>
+          <div>
+            <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Community Feed</h3>
+            <div className="space-y-4">
+              {!loading && communitySubmissions.length === 0 ? (
+                <NeonCard hover={false} className="p-4">
+                  <div className="text-sm text-text-muted">No approved submissions yet.</div>
                 </NeonCard>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              ) : null}
 
-      {/* --- Recent Activity Feed --- */}
-      <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Recent Activity</h3>
-        <NeonCard hover={false} className="p-5">
-          <ActivityFeed />
-        </NeonCard>
-      </div>
+              {communitySubmissions.map((submission) => {
+                const typeInfo = typeIcons[submission.type] || fallbackTypeIcon;
+                return (
+                  <div key={submission.id}>
+                    <NeonCard className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <div className="text-sm font-semibold text-text-primary">
+                            {submission.users?.display_name || submission.wallet_address}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
+                            <span className={`inline-block w-2 h-2 rounded-full ${typeInfo.dotColor}`} />
+                            <span className={typeInfo.color}>{typeInfo.label}</span>
+                            <span className="text-text-muted/50">|</span>
+                            <span>{new Date(submission.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <PointsBadge points={submission.points_awarded} size="sm" showLabel={false} />
+                      </div>
+
+                      <h4 className="text-base font-semibold text-text-primary mb-1 font-display">{submission.title}</h4>
+                      <p className="text-sm text-text-secondary line-clamp-2 leading-[1.7]">{submission.content_text}</p>
+
+                      <ReactionBar
+                        submissionId={submission.id}
+                        data={reactions[submission.id]}
+                        onToggle={handleReactionToggle}
+                      />
+                    </NeonCard>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* --- Recent Activity Feed --- */}
+          <div>
+            <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Recent Activity</h3>
+            <NeonCard hover={false} className="p-5">
+              <ActivityFeed />
+            </NeonCard>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

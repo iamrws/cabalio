@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Lock } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 
@@ -196,9 +197,23 @@ export default function QuestsPage() {
       </div>
 
       {error ? (
-        <NeonCard hover={false} className="p-4 border border-negative-border">
-          <div className="text-sm text-negative">{error}</div>
-        </NeonCard>
+        /auth/i.test(error) || /unauthorized/i.test(error) || /authentication required/i.test(error) ? (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-6">
+            <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+              <Lock className="w-6 h-6 text-accent-text" />
+            </div>
+            <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+              Connect your wallet
+            </h3>
+            <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+              Sign in with your wallet to participate in season quests and track your role progress.
+            </p>
+          </div>
+        ) : (
+          <NeonCard hover={false} className="p-4 border border-negative-border">
+            <div className="text-sm text-negative">{error}</div>
+          </NeonCard>
+        )
       ) : null}
 
       {loading ? (
@@ -207,7 +222,7 @@ export default function QuestsPage() {
         </NeonCard>
       ) : null}
 
-      {!loading && !season ? (
+      {!loading && !error && !season ? (
         <NeonCard hover={false} className="p-5">
           <div className="text-sm text-text-muted">No active or upcoming season found yet.</div>
         </NeonCard>

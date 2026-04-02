@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Check, Pencil, Copy, Flame, BadgeCheck, ChevronDown } from 'lucide-react';
+import { Check, Pencil, Copy, Flame, BadgeCheck, ChevronDown, Lock } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 import PointsBadge from '@/components/shared/PointsBadge';
@@ -290,6 +290,27 @@ export default function ProfilePage() {
   }
 
   if (error || !profile) {
+    const isAuthError =
+      /auth/i.test(error) ||
+      /unauthorized/i.test(error) ||
+      /authentication required/i.test(error);
+
+    if (isAuthError) {
+      return (
+        <div className="max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[50vh] text-center px-6">
+          <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+            <Lock className="w-6 h-6 text-accent-text" />
+          </div>
+          <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+            Connect your wallet
+          </h3>
+          <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+            Sign in with your wallet to view this profile and contribution history.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-5xl mx-auto">
         <NeonCard hover={false} className="p-6 border border-negative-border">
