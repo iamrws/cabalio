@@ -1,24 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { ScrollFadeUp } from '@/components/landing/ScrollFadeUp';
 
 /* ─────────────── DATA ─────────────── */
 
 const heroWords = ['The', 'inner', 'circle', "doesn't", 'grind.'];
 const heroAccent = ['It', 'builds.'];
 
-const bracketRows = [
-  { name: 'You', points: 126, delta: '+18', highlight: true },
-  { name: 'AnchorNode', points: 133, delta: '+9' },
-  { name: 'HelixMint', points: 118, delta: '+11' },
-  { name: 'CabalCraft', points: 109, delta: '+7' },
-  { name: 'NoirValidator', points: 102, delta: '+6' },
-];
-
-const maxBracketPoints = Math.max(...bracketRows.map((r) => r.points));
-
 const featureChips = ['Transparent Points', 'Weekly Resets', 'Streak Shields', 'Immutable Ledger'];
+
+const PLATFORM_STRIPS = [
+  {
+    num: '01',
+    title: 'Choose your path',
+    body: 'Opt-in challenges, profile control, skip anything anytime.',
+  },
+  {
+    num: '02',
+    title: 'Earn transparently',
+    body: 'Every point has a reason. Every tier unlock is visible.',
+  },
+  {
+    num: '03',
+    title: 'Compete fairly',
+    body: 'Weekly resets, streak shields, no pay-to-win mechanics.',
+  },
+];
 
 /* ─────────────── COMPONENT ─────────────── */
 
@@ -32,22 +41,6 @@ export default function HeroPage() {
     const id = requestAnimationFrame(() => setHeroVisible(true));
     return () => cancelAnimationFrame(id);
   }, []);
-
-  const heatmapCells = useMemo(
-    () =>
-      Array.from({ length: 26 * 7 }, (_, index) => {
-        const week = Math.floor(index / 7);
-        const day = index % 7;
-        const wave = Math.sin((week + 1) * 0.52 + day * 0.88);
-        const seasonality = Math.cos((week + 1) * 0.2);
-        const weekdayBonus = day >= 1 && day <= 4 ? 0.25 : -0.1;
-        const normalized = (wave + seasonality + weekdayBonus + 2.2) / 4.4;
-        return Math.max(0, Math.min(4, Math.round(normalized * 4)));
-      }),
-    [],
-  );
-
-  const heatmapPalette = ['#1a1a20', '#2a2520', '#6B5B3A', '#D4A853', '#B8923F'];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg-base text-text-primary">
@@ -84,8 +77,8 @@ export default function HeroPage() {
       </div>
 
       {/* ═══════════════════ HERO ═══════════════════ */}
-      <section className="relative z-10 min-h-screen flex flex-col justify-center">
-        <div className="mx-auto w-full max-w-5xl px-6 will-change-transform">
+      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center">
+        <div className="mx-auto w-full max-w-5xl px-6 will-change-transform flex flex-col items-center text-center">
 
           {/* Overline */}
           <div
@@ -103,7 +96,7 @@ export default function HeroPage() {
           </div>
 
           {/* Giant headline — word-by-word reveal */}
-          <h1 className="font-display text-[clamp(2.8rem,8vw,6.5rem)] font-semibold leading-[1.05] tracking-[-0.03em] mb-8 max-w-5xl text-center lg:text-left">
+          <h1 className="font-display text-[clamp(3rem,8vw,6.5rem)] font-semibold leading-[1.05] tracking-[-0.03em] mb-8 max-w-5xl text-center">
             {heroWords.map((word, i) => (
               <span key={i}>
                 <span
@@ -138,20 +131,20 @@ export default function HeroPage() {
 
           {/* Subhead */}
           <p
-            className="max-w-xl text-base leading-[1.7] text-text-secondary mb-10 text-center lg:text-left mx-auto lg:mx-0"
+            className="max-w-2xl text-base leading-[1.7] text-text-secondary mb-10 text-center mx-auto"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
               transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) 1.1s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 1.1s`,
             }}
           >
-            A behavioral operating system for a holder-gated community. Ethical motivation loops,
-            contribution-first scoring, and anti-burnout safeguards — wired into Jito Cabal.
+            A holder-gated community that rewards quality contributions, not grinding. Transparent
+            scoring, fair competition, anti-burnout safeguards.
           </p>
 
-          {/* CTAs */}
+          {/* Single CTA */}
           <div
-            className="flex flex-wrap gap-4 mb-8 justify-center lg:justify-start"
+            className="flex justify-center mb-8"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
@@ -159,23 +152,17 @@ export default function HeroPage() {
             }}
           >
             <Link
-              href="/how-it-works"
+              href="/dashboard"
               className="group relative rounded-md bg-accent px-7 py-3 text-sm font-semibold text-[#08080a] transition-[box-shadow,transform,background-color] duration-200 hover:bg-[var(--accent-dim)] hover:shadow-[0_0_30px_rgba(212,168,83,0.25)] active:scale-[0.97] active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             >
-              How It Works
+              Enter the Cabal
               <span className="absolute inset-0 rounded-md bg-white/0 transition-[background-color] group-hover:bg-white/10" />
-            </Link>
-            <Link
-              href="/dashboard"
-              className="rounded-md border border-border-strong px-7 py-3 text-sm font-semibold text-text-primary transition-[color,border-color,transform] duration-200 hover:border-accent-text hover:text-accent-text active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-            >
-              Open Dashboard
             </Link>
           </div>
 
           {/* Feature chips */}
           <div
-            className="flex flex-wrap gap-2 justify-center lg:justify-start"
+            className="flex flex-wrap gap-2 justify-center"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
@@ -185,150 +172,12 @@ export default function HeroPage() {
             {featureChips.map((chip, i) => (
               <span
                 key={chip}
-                className="rounded-sm border border-border-subtle bg-bg-surface/40 px-3 py-1.5 text-xs font-mono text-text-muted"
+                className="rounded-sm border border-border-subtle bg-bg-surface/40 px-4 py-2 text-sm font-mono text-text-muted"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 {chip}
               </span>
             ))}
-          </div>
-        </div>
-
-        {/* Floating preview cards — desktop: absolute floating; mobile: inline stacked */}
-        {/* Desktop */}
-        <div className="absolute right-0 top-[22%] w-[480px] hidden lg:block" style={{ perspective: '1200px' }}>
-          <div
-            className="relative"
-            style={{
-              animation: heroVisible ? 'slide-in-right 1.2s cubic-bezier(0.16,1,0.3,1) 0.8s forwards' : 'none',
-            }}
-          >
-            {/* Heatmap card */}
-            <div className="rounded-xl border border-border-default bg-bg-surface/90 backdrop-blur-sm p-5 shadow-lg mb-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Profile Heatmap</span>
-                <span className="text-[10px] text-text-muted font-mono">26w</span>
-              </div>
-              <div className="rounded-lg bg-bg-base/80 p-2">
-                <div className="grid gap-[2px]" style={{ gridTemplateColumns: 'repeat(26, minmax(0, 1fr))' }}>
-                  {heatmapCells.map((value, idx) => (
-                    <div
-                      key={idx}
-                      className="aspect-square rounded-[1px]"
-                      style={{ backgroundColor: heatmapPalette[value] }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Bracket card — offset */}
-            <div className="ml-8 rounded-xl border border-border-default bg-bg-raised/90 backdrop-blur-sm p-5 shadow-lg">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Weekly Bracket</span>
-                <span className="text-[10px] text-text-muted font-mono">Resets Mon</span>
-              </div>
-              <div className="space-y-2.5">
-                {bracketRows.map((row, rowIdx) => (
-                  <div key={row.name}>
-                    <div className="mb-0.5 flex items-center justify-between text-xs">
-                      <span className={row.highlight ? 'font-semibold text-accent-text' : 'text-text-muted'}>
-                        {row.name}
-                      </span>
-                      <span className="font-mono text-[10px] text-accent-text/70">
-                        {row.points} <span className="text-accent-text/40">{row.delta}</span>
-                      </span>
-                    </div>
-                    <div className="h-1 rounded-full bg-bg-overlay">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(row.points / maxBracketPoints) * 100}%`,
-                          background: row.highlight ? 'var(--accent)' : 'var(--text-muted)',
-                          transformOrigin: 'left',
-                          animation: `bar-grow 1s cubic-bezier(0.16,1,0.3,1) ${1.5 + rowIdx * 0.1}s forwards`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Gold glow behind cards */}
-            <div
-              className="absolute -inset-10 -z-10 opacity-30 blur-3xl"
-              style={{ background: 'radial-gradient(circle, rgba(212,168,83,0.15), transparent 70%)' }}
-            />
-          </div>
-        </div>
-
-        {/* Mobile preview — compact scrollable row of product snapshots */}
-        <div
-          className="lg:hidden relative z-10 mx-auto w-full max-w-5xl px-6 mt-10"
-          style={{
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity 0.7s cubic-bezier(0.16,1,0.3,1) 1.7s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 1.7s',
-          }}
-        >
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
-            {/* Heatmap snapshot */}
-            <div className="snap-start shrink-0 w-[calc(100vw-3rem)] max-w-sm rounded-xl border border-border-default bg-bg-surface/90 backdrop-blur-sm p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Profile Heatmap</span>
-                <span className="text-[10px] text-text-muted font-mono">26w</span>
-              </div>
-              <div className="rounded-lg bg-bg-base/80 p-2">
-                <div className="grid gap-[2px]" style={{ gridTemplateColumns: 'repeat(26, minmax(0, 1fr))' }}>
-                  {heatmapCells.map((value, idx) => (
-                    <div
-                      key={`m-${idx}`}
-                      className="aspect-square rounded-[1px]"
-                      style={{ backgroundColor: heatmapPalette[value] }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Bracket snapshot */}
-            <div className="snap-start shrink-0 w-[calc(100vw-3rem)] max-w-sm rounded-xl border border-border-default bg-bg-raised/90 backdrop-blur-sm p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Weekly Bracket</span>
-                <span className="text-[10px] text-text-muted font-mono">Resets Mon</span>
-              </div>
-              <div className="space-y-2">
-                {bracketRows.map((row, rowIdx) => (
-                  <div key={`m-${row.name}`}>
-                    <div className="mb-0.5 flex items-center justify-between text-xs">
-                      <span className={row.highlight ? 'font-semibold text-accent-text' : 'text-text-muted'}>
-                        {row.name}
-                      </span>
-                      <span className="font-mono text-[10px] text-accent-text/70">
-                        {row.points} <span className="text-accent-text/40">{row.delta}</span>
-                      </span>
-                    </div>
-                    <div className="h-1 rounded-full bg-bg-overlay">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(row.points / maxBracketPoints) * 100}%`,
-                          background: row.highlight ? 'var(--accent)' : 'var(--text-muted)',
-                          transformOrigin: 'left',
-                          animation: `bar-grow 1s cubic-bezier(0.16,1,0.3,1) ${1.8 + rowIdx * 0.1}s forwards`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          {/* Scroll hint dots */}
-          <div className="flex justify-center gap-1.5 mt-3">
-            <span className="h-1 w-4 rounded-full bg-accent/60" />
-            <span className="h-1 w-1.5 rounded-full bg-border-subtle" />
           </div>
         </div>
 
@@ -345,6 +194,43 @@ export default function HeroPage() {
             className="w-px h-6 bg-accent-text/40"
             style={{ animation: 'bounce-scroll 1.5s ease-in-out infinite' }}
           />
+        </div>
+      </section>
+
+      {/* ═══════════════════ PLATFORM SECTION ═══════════════════ */}
+      <section className="relative z-10 w-full py-28" aria-label="Platform overview">
+        <div className="mx-auto w-full max-w-5xl px-6">
+
+          {/* Section header */}
+          <ScrollFadeUp className="mb-14 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text mb-4">
+              The Platform
+            </p>
+            <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary">
+              Built for holders who build
+            </h2>
+          </ScrollFadeUp>
+
+          {/* Horizontal strips */}
+          <div className="space-y-4">
+            {PLATFORM_STRIPS.map((strip, idx) => (
+              <ScrollFadeUp key={strip.num} delay={idx * 0.08}>
+                <div className="group flex items-start gap-5 rounded-lg border border-border-subtle bg-bg-surface/30 px-6 py-5 transition-[border-color,background-color] duration-200 hover:border-accent-border hover:bg-bg-surface/60 focus-within:border-accent-border">
+                  <span className="mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 font-display text-sm font-bold tracking-wider text-accent-text transition-[background-color,border-color] duration-200 group-hover:border-accent/60 group-hover:bg-accent/20">
+                    {strip.num}
+                  </span>
+                  <div>
+                    <h3 className="text-xl font-semibold text-text-primary mb-1 leading-snug">
+                      {strip.title}
+                    </h3>
+                    <p className="text-base leading-[1.7] text-text-secondary">
+                      {strip.body}
+                    </p>
+                  </div>
+                </div>
+              </ScrollFadeUp>
+            ))}
+          </div>
         </div>
       </section>
     </div>
