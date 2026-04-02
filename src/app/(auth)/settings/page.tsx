@@ -73,7 +73,7 @@ function ToggleSwitch({
         onClick={() => onChange(!checked)}
         className={`
           relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent
-          transition-colors duration-200 ease-in-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent
+          transition-[background-color] duration-200 ease-in-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent
           ${checked ? 'bg-accent' : 'bg-bg-raised'}
         `}
       >
@@ -324,12 +324,12 @@ export default function SettingsPage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') saveDisplayName();
                 }}
-                className="flex-1 bg-bg-raised border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-accent transition-colors"
+                className="flex-1 bg-bg-raised border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-accent transition-[border-color]"
                 placeholder="Enter display name"
               />
               <button
                 onClick={saveDisplayName}
-                className="px-4 py-2 bg-accent/10 text-accent-text text-sm font-medium rounded-lg hover:bg-accent/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.97] transition-colors"
+                className="px-4 py-2 bg-accent/10 text-accent-text text-sm font-medium rounded-lg hover:bg-accent/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.97] transition-[background-color]"
               >
                 Save
               </button>
@@ -348,7 +348,7 @@ export default function SettingsPage() {
               </span>
               <button
                 onClick={copyWallet}
-                className="px-3 py-2 bg-bg-raised border border-border-subtle rounded-lg text-sm text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.97] transition-colors"
+                className="px-3 py-2 bg-bg-raised border border-border-subtle rounded-lg text-sm text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.97] transition-[color]"
                 title="Copy wallet address"
               >
                 {copied ? (
@@ -501,7 +501,7 @@ export default function SettingsPage() {
                       document.body.removeChild(link);
                       setTimeout(() => setExportingType(null), 2000);
                     }}
-                    className="px-4 py-2 bg-bg-raised border border-border-subtle rounded-lg text-sm text-text-primary hover:border-border-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.97] transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-bg-raised border border-border-subtle rounded-lg text-sm text-text-primary hover:border-border-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.97] transition-[border-color] disabled:opacity-50"
                   >
                     {exportingType === exportType
                       ? 'Downloading...'

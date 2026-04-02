@@ -83,7 +83,7 @@ export default function Sidebar() {
           <span className="text-xs text-text-muted uppercase tracking-wider font-medium">This Week</span>
           <PointsBadge points={weeklyPoints} size="sm" />
         </div>
-        <Link href="/profile/me" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-bg-raised transition-colors active:bg-[var(--bg-overlay)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40">
+        <Link href="/profile/me" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-bg-raised transition-[background-color] active:bg-[var(--bg-overlay)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40">
           <div className="h-8 w-8 rounded-full bg-border-default flex items-center justify-center text-xs font-medium text-text-secondary">
               {summary?.user?.display_name?.[0]?.toUpperCase() || '?'}
             </div>

@@ -1023,7 +1023,7 @@ function PointsTab({
               return (
                 <div
                   key={entry.id}
-                  className="flex-1 min-w-[3px] max-w-3 bg-accent/60 hover:bg-accent rounded-t transition-colors"
+                  className="flex-1 min-w-[3px] max-w-3 bg-accent/60 hover:bg-accent rounded-t transition-[background-color]"
                   style={{ height: `${height}%` }}
                   title={`${entry.running_total} pts — ${new Date(entry.created_at).toLocaleDateString()}`}
                 />

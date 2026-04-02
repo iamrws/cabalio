@@ -479,7 +479,7 @@ export default function AiOrNotPanel() {
                   </span>
                 )}
                 <span className="text-sm font-mono font-bold text-accent-text">{points} pts</span>
-                <button onClick={close} className="w-8 h-8 rounded-lg bg-bg-raised flex items-center justify-center text-text-muted hover:text-text-primary transition-colors">
+                <button onClick={close} className="w-8 h-8 rounded-lg bg-bg-raised flex items-center justify-center text-text-muted hover:text-text-primary transition-[color]">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -504,7 +504,7 @@ export default function AiOrNotPanel() {
                     <p className="text-text-secondary mb-3">{error}</p>
                     <button
                       onClick={fetchShorts}
-                      className="px-4 py-2 rounded-lg bg-accent-muted text-accent-text border border-accent-border hover:bg-accent-muted/80 transition-colors text-sm"
+                      className="px-4 py-2 rounded-lg bg-accent-muted text-accent-text border border-accent-border hover:bg-accent-muted/80 transition-[background-color] text-sm"
                     >
                       Retry
                     </button>
@@ -563,7 +563,7 @@ export default function AiOrNotPanel() {
                     <div className="absolute top-3 right-3 z-30">
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleMute(); }}
-                        className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                        className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-[background-color]"
                       >
                         {isMuted ? (
                           <VolumeX className="w-4 h-4" />

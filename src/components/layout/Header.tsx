@@ -215,7 +215,7 @@ export default function Header() {
                         key={n.id}
                         type="button"
                         onClick={() => markOneRead(n)}
-                        className={`w-full text-left px-4 py-3 border-b border-border-subtle hover:bg-bg-raised active:bg-[var(--bg-overlay)] focus-visible:bg-[var(--bg-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40 transition-colors ${
+                        className={`w-full text-left px-4 py-3 border-b border-border-subtle hover:bg-bg-raised active:bg-[var(--bg-overlay)] focus-visible:bg-[var(--bg-raised)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/40 transition-[background-color] ${
                           !n.read ? 'bg-bg-raised/50' : ''
                         }`}
                       >
@@ -250,7 +250,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className="w-full px-4 py-3 text-xs text-center text-text-tertiary hover:text-text-secondary hover:bg-[var(--bg-raised)] active:bg-[var(--bg-overlay)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/30 transition-colors"
+                    className="w-full px-4 py-3 text-xs text-center text-text-tertiary hover:text-text-secondary hover:bg-[var(--bg-raised)] active:bg-[var(--bg-overlay)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/30 transition-[color,background-color]"
                   >
                     Close
                   </button>

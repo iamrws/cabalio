@@ -155,7 +155,7 @@ export default function LeaderboardPage() {
                   {tierEntries.map((entry) => (
                     <tr
                       key={entry.wallet_address}
-                      className="border-b border-border-subtle/50 last:border-0 hover:bg-bg-raised/50 transition-colors"
+                      className="border-b border-border-subtle/50 last:border-0 hover:bg-bg-raised/50 transition-[background-color]"
                     >
                       <td className="px-5 py-3">
                         <span className="font-mono text-sm font-bold text-text-primary">{entry.rank}</span>

@@ -400,14 +400,14 @@ export default function DashboardPage() {
         <NeonCard className="p-5 group">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold text-text-primary font-display group-hover:text-accent-text transition-colors">
+              <h3 className="text-base font-semibold text-text-primary font-display group-hover:text-accent-text transition-[color]">
                 Community Feed
               </h3>
               <p className="text-xs text-text-secondary mt-1">
                 See what the community is building, react to submissions, and discover new content
               </p>
             </div>
-            <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-text transition-colors" />
+            <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-text transition-[color]" />
           </div>
         </NeonCard>
       </Link>

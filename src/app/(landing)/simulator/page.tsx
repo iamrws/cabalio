@@ -86,7 +86,7 @@ export default function SimulatorPage() {
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-sm font-semibold text-text-primary">{control.label}</p>
                   <span
-                    className={`rounded-sm px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-colors ${
+                    className={`rounded-sm px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-[color,background-color] ${
                       flags[control.key]
                         ? 'bg-accent text-[#08080a]'
                         : 'bg-bg-raised text-text-muted'
