@@ -380,10 +380,10 @@ export default function RewardsPage() {
       )}
 
       {/* ── Claimable Rewards (existing) ── */}
-      <NeonCard hover={false} className="p-8 text-center">
+      <NeonCard hover={false} className="p-6 sm:p-8 text-center">
         <div className="text-sm text-text-muted uppercase tracking-wider mb-2 font-display">Claimable Rewards</div>
-        <div className="text-5xl font-mono font-bold text-positive mb-1">
-          <AnimatedCounter value={totalClaimable / 1e9} decimals={4} className="text-positive" />
+        <div className={`text-5xl font-mono font-bold mb-1 ${totalClaimable > 0 ? 'text-positive' : 'text-text-tertiary'}`}>
+          <AnimatedCounter value={totalClaimable / 1e9} decimals={4} className={totalClaimable > 0 ? 'text-positive' : 'text-text-tertiary'} />
         </div>
         <div className="text-lg text-text-secondary mb-6">SOL</div>
 
