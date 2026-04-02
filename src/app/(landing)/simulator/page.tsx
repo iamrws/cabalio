@@ -51,14 +51,14 @@ export default function SimulatorPage() {
     <>
       {/* ═══════════════════ SIMULATOR ═══════════════════ */}
       <section id="simulator" className="mx-auto w-full max-w-5xl px-6 py-24">
-        <ScrollFadeUp className="mb-12 max-w-2xl">
+        <ScrollFadeUp className="mb-12 max-w-2xl mx-auto text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
             Scenario Builder
           </p>
-          <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.03em] text-text-primary">
+          <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary">
             Engagement Simulator
           </h2>
-          <p className="mt-4 text-sm leading-[1.7] text-text-secondary">
+          <p className="mt-4 text-base leading-[1.7] text-text-secondary">
             Flip safeguards on or off to see how retention, trust, and quality shift.
           </p>
         </ScrollFadeUp>
@@ -84,7 +84,7 @@ export default function SimulatorPage() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-semibold text-text-primary">{control.label}</p>
+                  <p className="text-base font-semibold text-text-primary">{control.label}</p>
                   <span
                     className={`rounded-sm px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-[color,background-color] ${
                       flags[control.key]
@@ -140,11 +140,6 @@ export default function SimulatorPage() {
           </div>
         </ScrollFadeUp>
       </section>
-
-      {/* ═══════ DIVIDER ═══════ */}
-      <div className="relative mx-auto max-w-5xl px-6">
-        <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-      </div>
 
       {/* ═══════════════════ CTA ═══════════════════ */}
       {/* Fix 7: py-24, Fix 8: pb-16 sm:pb-0 for mobile auth bar overlap */}
