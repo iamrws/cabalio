@@ -3,7 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FlaskConical } from 'lucide-react';
-import { NAV_ITEMS } from '@/lib/constants';
+// NAV_ITEMS from constants — this file is deprecated (replaced by TopNav.tsx)
+// Kept for reference. Using local items to avoid type errors.
+const NAV_ITEMS = [
+  { label: 'Your Arena', href: '/dashboard', icon: 'home' },
+  { label: 'The Board', href: '/leaderboard', icon: 'trophy' },
+] as const;
 import { NAV_ICONS } from '@/lib/nav-icons';
 import PointsBadge from '../shared/PointsBadge';
 import { useAiOrNot } from '../game/AiOrNotPanel';
@@ -45,11 +50,7 @@ export default function Sidebar() {
             >
               <span className={isActive ? 'text-accent-text' : ''}>{NAV_ICONS[item.icon]}</span>
               {item.label}
-              {item.icon === 'plus' && (
-                <span className="ml-auto text-xs bg-positive-muted text-positive px-2 py-0.5 rounded-full border border-positive/20">
-                  New
-                </span>
-              )}
+{/* Submit badge removed — Sidebar is deprecated */}
             </Link>
           );
         })}

@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FlaskConical } from 'lucide-react';
+// This file is deprecated (replaced by BottomBar.tsx). Kept for reference.
 import { NAV_ITEMS } from '@/lib/constants';
 import { NAV_ICONS } from '@/lib/nav-icons';
+// MobileNav still references NAV_ITEMS which now has only 2 items — that's fine.
 import { useAiOrNot } from '../game/AiOrNotPanel';
 
 export default function MobileNav() {
