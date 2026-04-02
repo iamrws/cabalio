@@ -23,7 +23,7 @@ export default function Sidebar() {
           <div className="h-8 w-8 rounded-lg bg-accent-text flex items-center justify-center text-bg-base font-bold text-sm">
             JC
           </div>
-          <span className="text-lg font-display font-bold text-text-primary tracking-tight">JITO CABAL</span>
+          <span className="text-sm font-semibold uppercase tracking-[0.25em] text-accent-text">Jito Cabal</span>
         </Link>
       </div>
 
