@@ -6,10 +6,9 @@ import { usePathname } from 'next/navigation';
 import AuthControls from '@/components/shared/AuthControls';
 
 const NAV_LINKS = [
-  { label: 'Pillars', href: '/pillars' },
-  { label: 'Engine', href: '/engine' },
+  { label: 'How It Works', href: '/how-it-works' },
+  { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'Roadmap', href: '/roadmap' },
-  { label: 'Simulator', href: '/simulator' },
 ] as const;
 
 export function LandingNav() {
@@ -75,8 +74,8 @@ export function LandingNav() {
             })}
           </nav>
 
-          {/* Desktop auth — hidden on mobile */}
-          <div className="hidden sm:block">
+          {/* Auth — visible at all viewports; compact on small screens */}
+          <div className="flex items-center">
             <AuthControls compact />
           </div>
 
