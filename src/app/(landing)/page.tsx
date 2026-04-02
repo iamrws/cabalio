@@ -85,7 +85,7 @@ export default function HeroPage() {
 
       {/* ═══════════════════ HERO ═══════════════════ */}
       <section className="relative z-10 min-h-screen flex flex-col justify-center">
-        <div className="mx-auto w-full max-w-7xl px-6 will-change-transform">
+        <div className="mx-auto w-full max-w-5xl px-6 will-change-transform">
 
           {/* Overline */}
           <div
@@ -103,33 +103,35 @@ export default function HeroPage() {
           </div>
 
           {/* Giant headline — word-by-word reveal */}
-          <h1 className="font-display text-[clamp(2.8rem,8vw,6.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] mb-8 max-w-5xl text-center lg:text-left">
+          <h1 className="font-display text-[clamp(2.8rem,8vw,6.5rem)] font-semibold leading-[1.05] tracking-[-0.03em] mb-8 max-w-5xl text-center lg:text-left">
             {heroWords.map((word, i) => (
-              <span
-                key={i}
-                className="inline-block mr-[0.25em]"
-                style={{
-                  animation: heroVisible
-                    ? `word-reveal 0.6s cubic-bezier(0.16,1,0.3,1) ${0.3 + i * 0.08}s forwards`
-                    : 'none',
-                }}
-              >
-                {word}
+              <span key={i}>
+                <span
+                  className="inline-block"
+                  style={{
+                    animation: heroVisible
+                      ? `word-reveal 0.6s cubic-bezier(0.16,1,0.3,1) ${0.3 + i * 0.08}s forwards`
+                      : 'none',
+                  }}
+                >
+                  {word}
+                </span>{' '}
               </span>
             ))}
             <br className="hidden sm:block" />
             {heroAccent.map((word, i) => (
-              <span
-                key={`accent-${i}`}
-                className="inline-block mr-[0.25em] text-accent-text"
-                style={{
-                  textShadow: '0 0 60px rgba(212,168,83,0.3)',
-                  animation: heroVisible
-                    ? `word-reveal 0.8s cubic-bezier(0.16,1,0.3,1) ${0.3 + (heroWords.length + i) * 0.08}s forwards`
-                    : 'none',
-                }}
-              >
-                {word}
+              <span key={`accent-${i}`}>
+                <span
+                  className="inline-block text-accent-text"
+                  style={{
+                    textShadow: '0 0 60px rgba(212,168,83,0.3)',
+                    animation: heroVisible
+                      ? `word-reveal 0.8s cubic-bezier(0.16,1,0.3,1) ${0.3 + (heroWords.length + i) * 0.08}s forwards`
+                      : 'none',
+                  }}
+                >
+                  {word}
+                </span>{' '}
               </span>
             ))}
           </h1>
@@ -263,7 +265,7 @@ export default function HeroPage() {
 
         {/* Mobile preview — compact scrollable row of product snapshots */}
         <div
-          className="lg:hidden relative z-10 mx-auto w-full max-w-7xl px-6 mt-10"
+          className="lg:hidden relative z-10 mx-auto w-full max-w-5xl px-6 mt-10"
           style={{
             opacity: heroVisible ? 1 : 0,
             transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',

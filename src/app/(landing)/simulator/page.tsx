@@ -50,7 +50,7 @@ export default function SimulatorPage() {
   return (
     <>
       {/* ═══════════════════ SIMULATOR ═══════════════════ */}
-      <section id="simulator" className="mx-auto w-full max-w-7xl px-6 py-24">
+      <section id="simulator" className="mx-auto w-full max-w-5xl px-6 py-24">
         <ScrollFadeUp className="mb-12 max-w-2xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
             Scenario Builder
@@ -142,13 +142,13 @@ export default function SimulatorPage() {
       </section>
 
       {/* ═══════ DIVIDER ═══════ */}
-      <div className="relative mx-auto max-w-7xl px-6">
+      <div className="relative mx-auto max-w-5xl px-6">
         <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
 
       {/* ═══════════════════ CTA ═══════════════════ */}
       {/* Fix 7: py-24, Fix 8: pb-16 sm:pb-0 for mobile auth bar overlap */}
-      <section className="mx-auto w-full max-w-7xl px-6 pt-24 pb-16 sm:pb-24">
+      <section className="mx-auto w-full max-w-5xl px-6 pt-24 pb-16 sm:pb-24">
         <ScrollFadeUp className="text-center max-w-3xl mx-auto">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-6">
             Launch Direction

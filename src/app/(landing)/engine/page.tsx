@@ -57,14 +57,14 @@ export default function EnginePage() {
   return (
     <>
       {/* Gold divider at top */}
-      <div className="relative mx-auto max-w-7xl px-6 pt-4">
+      <div className="relative mx-auto max-w-5xl px-6 pt-4">
         <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
 
       <section
         id="engine"
         aria-label="Contribution pipeline and ethical safety rails"
-        className="mx-auto w-full max-w-7xl px-6 py-24"
+        className="mx-auto w-full max-w-5xl px-6 py-24"
       >
         {/* Fix 6: stack on mobile, two columns at lg */}
         <div className="relative grid grid-cols-1 gap-16 lg:grid-cols-2">
@@ -150,7 +150,7 @@ export default function EnginePage() {
       </section>
 
       {/* Gold divider at bottom */}
-      <div className="relative mx-auto max-w-7xl px-6">
+      <div className="relative mx-auto max-w-5xl px-6">
         <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
     </>

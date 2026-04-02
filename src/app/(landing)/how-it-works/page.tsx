@@ -125,7 +125,7 @@ export default function HowItWorksPage() {
         aria-label="How Jito Cabal works — overview"
         className="w-full py-24"
       >
-        <div className="mx-auto w-full max-w-7xl px-6 text-center">
+        <div className="mx-auto w-full max-w-5xl px-6 text-center">
           <ScrollFadeUp className="mx-auto max-w-3xl">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
               Platform Overview
@@ -162,7 +162,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ═══════ DIVIDER ═══════ */}
-      <div className="relative mx-auto max-w-7xl px-6">
+      <div className="relative mx-auto max-w-5xl px-6">
         <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
 
@@ -172,7 +172,7 @@ export default function HowItWorksPage() {
         aria-label="Motivation pillars — the psychological foundations of Jito Cabal"
         className="w-full bg-bg-surface/20 py-24"
       >
-        <div className="mx-auto w-full max-w-7xl px-6">
+        <div className="mx-auto w-full max-w-5xl px-6">
           <ScrollFadeUp className="mb-14 text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
               Psychology Core
@@ -229,7 +229,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ═══════ DIVIDER ═══════ */}
-      <div className="relative mx-auto max-w-7xl px-6">
+      <div className="relative mx-auto max-w-5xl px-6">
         <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
 
@@ -237,7 +237,7 @@ export default function HowItWorksPage() {
       <section
         id="pipeline"
         aria-label="Contribution pipeline and ethical safety rails"
-        className="mx-auto w-full max-w-7xl px-6 py-24"
+        className="mx-auto w-full max-w-5xl px-6 py-24"
       >
         <ScrollFadeUp className="mb-14 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
@@ -317,12 +317,12 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ═══════ DIVIDER ═══════ */}
-      <div className="relative mx-auto max-w-7xl px-6">
+      <div className="relative mx-auto max-w-5xl px-6">
         <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
 
       {/* ═══════════════════ SIMULATOR ═══════════════════ */}
-      <section id="simulator" className="mx-auto w-full max-w-7xl px-6 py-24">
+      <section id="simulator" className="mx-auto w-full max-w-5xl px-6 py-24">
         <ScrollFadeUp className="mb-12 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
             Scenario Builder
@@ -411,14 +411,14 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ═══════ DIVIDER ═══════ */}
-      <div className="relative mx-auto max-w-7xl px-6">
+      <div className="relative mx-auto max-w-5xl px-6">
         <div className="h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       </div>
 
       {/* ═══════════════════ CTA ═══════════════════ */}
       <section
         aria-label="Call to action — join Jito Cabal"
-        className="mx-auto w-full max-w-7xl px-6 pt-24 pb-16 sm:pb-24"
+        className="mx-auto w-full max-w-5xl px-6 pt-24 pb-16 sm:pb-24"
       >
         <ScrollFadeUp className="text-center mx-auto max-w-3xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-6">

@@ -21,7 +21,7 @@ export function LandingFooter() {
 
   return (
     <footer className="border-t border-border-subtle/50 px-6 py-16 bg-bg-base">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-5xl">
         {/* Top row: wordmark + link columns */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-10 mb-12">
           {/* Wordmark */}
