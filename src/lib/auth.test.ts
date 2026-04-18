@@ -322,11 +322,10 @@ describe('getAuthCookieOptions', () => {
   });
 
   it('sets secure to false in non-production', () => {
-    const original = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
     const opts = getAuthCookieOptions();
     expect(opts.secure).toBe(false);
-    process.env.NODE_ENV = original;
+    vi.unstubAllEnvs();
   });
 });
 
