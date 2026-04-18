@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import AuthControls from '@/components/shared/AuthControls';
+import LazyAuthControls from './LazyAuthControls';
 
 const NAV_LINKS = [
   { label: 'Dashboard', href: '/' },
@@ -77,7 +77,7 @@ export function LandingNav() {
 
           {/* Auth — visible at all viewports; compact on small screens */}
           <div className="flex items-center">
-            <AuthControls compact />
+            <LazyAuthControls compact />
           </div>
 
           {/* Mobile hamburger button */}
@@ -154,7 +154,7 @@ export function LandingNav() {
 
           {/* Auth section in mobile drawer */}
           <div className="mt-4 pt-4 border-t border-border-subtle">
-            <AuthControls />
+            <LazyAuthControls />
           </div>
         </nav>
       </div>
