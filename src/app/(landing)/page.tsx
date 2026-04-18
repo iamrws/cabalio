@@ -207,12 +207,6 @@ export default function HomePage() {
             `,
           }}
         />
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          }}
-        />
       </div>
 
       {/* ═══════════════════ HERO + GATE ═══════════════════ */}
@@ -225,7 +219,7 @@ export default function HomePage() {
           {/* Overline */}
           <ScrollFadeUp>
             <span className="inline-flex items-center gap-2 rounded-full border border-accent-border bg-accent-muted/50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
               Holder Dashboard
             </span>
           </ScrollFadeUp>
@@ -255,10 +249,9 @@ export default function HomePage() {
           <ScrollFadeUp delay={0.15}>
             <div className="mt-12 mx-auto w-full max-w-3xl">
               <div
-                className="relative rounded-2xl border border-accent-border bg-bg-surface/60 backdrop-blur-md p-8 sm:p-10"
+                className="relative rounded-2xl border border-accent-border bg-bg-surface/60 p-8 sm:p-10"
                 style={{
-                  boxShadow:
-                    '0 0 0 1px rgba(212,168,83,0.08), 0 20px 60px -20px rgba(212,168,83,0.20), inset 0 1px 0 0 rgba(255,255,255,0.02)',
+                  boxShadow: '0 20px 60px -20px rgba(212,168,83,0.20)',
                 }}
               >
                 {/* ── State: loading session ── */}
