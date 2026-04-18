@@ -1,12 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Flame, Gift, Shield, Target, TrendingUp, Lock, ShieldCheck, Wallet } from 'lucide-react';
 import WalletButton from '@/components/shared/WalletButton';
-import AnimatedCounter from '@/components/shared/AnimatedCounter';
 import { ScrollFadeUp } from '@/components/landing/ScrollFadeUp';
+
+// Only shown in the 'ready' gate state — lazy-load to keep initial bundle lean.
+const AnimatedCounter = dynamic(() => import('@/components/shared/AnimatedCounter'), {
+  ssr: false,
+  loading: () => <span className="font-mono tabular-nums text-accent-text">—</span>,
+});
 
 /* ─────────────── TYPES ─────────────── */
 
