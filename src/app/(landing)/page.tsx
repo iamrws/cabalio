@@ -237,10 +237,7 @@ export default function HomePage() {
               style={{ fontSize: 'clamp(2.5rem, 6.5vw, 5rem)' }}
             >
               Your Cabal,{' '}
-              <span
-                className="text-accent-text"
-                style={{ textShadow: '0 0 60px rgba(212,168,83,0.3)' }}
-              >
+              <span className="text-accent-text">
                 front and center.
               </span>
             </h1>
