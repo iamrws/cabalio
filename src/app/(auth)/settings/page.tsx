@@ -130,7 +130,6 @@ export default function SettingsPage() {
   const [nameFeedback, setNameFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [settingsFeedback, setSettingsFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [copied, setCopied] = useState(false);
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [exportingType, setExportingType] = useState<string | null>(null);
   const nameTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const settingsTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -266,13 +265,6 @@ export default function SettingsPage() {
       setTimeout(() => setCopied(false), 2000);
     });
   }, [profile]);
-
-  /* ---------- Toast helper ---------- */
-
-  const showToast = useCallback((msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3000);
-  }, []);
 
   /* ---------- Format helpers ---------- */
 
@@ -526,14 +518,6 @@ export default function SettingsPage() {
         </NeonCard>
       </div>
 
-      {/* ============ Toast ============ */}
-      {toastMsg && (
-        <div
-          className="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[var(--z-toast)] bg-bg-surface border border-border-default rounded-xl px-5 py-3 text-sm text-text-primary shadow-[0_8px_24px_rgba(0,0,0,0.4)] animate-in fade-in slide-in-from-bottom-4"
-        >
-          {toastMsg}
-        </div>
-      )}
     </div>
   );
 }

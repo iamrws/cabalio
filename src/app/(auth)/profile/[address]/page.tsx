@@ -564,7 +564,6 @@ export default function ProfilePage() {
         {activeTab === 'overview' && (
           <OverviewTab
             profile={profile}
-            levelInfo={levelInfo}
             earnedBadgeIds={earnedBadgeIds}
           />
         )}
@@ -601,11 +600,9 @@ export default function ProfilePage() {
 
 function OverviewTab({
   profile,
-  levelInfo,
   earnedBadgeIds,
 }: {
   profile: ProfileResponse;
-  levelInfo: ReturnType<typeof getLevelInfo>;
   earnedBadgeIds: Set<string>;
 }) {
   const recentContributions = profile.contributions.slice(0, 5);

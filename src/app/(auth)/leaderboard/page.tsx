@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Lock, Trophy } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
-import { useUser } from '@/components/shared/UserProvider';
 import type { LeaderboardEntry } from '@/lib/types';
 
 const TIER_CONFIG = {
@@ -18,7 +17,6 @@ const TIER_CONFIG = {
 type TimeRange = 'week' | 'all';
 
 export default function LeaderboardPage() {
-  const { summary } = useUser();
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,16 +56,6 @@ export default function LeaderboardPage() {
     member: entries.filter((e) => e.tier === 'member'),
     initiate: entries.filter((e) => e.tier === 'initiate'),
   }), [entries]);
-
-  // Find current user in leaderboard
-  const myWallet = summary?.user?.display_name; // We don't have wallet in summary, so we match by display_name
-  const myEntry = useMemo(() => {
-    if (!entries.length) return null;
-    // Try to find by matching — since we don't have wallet address in UserProvider,
-    // we look for any entry. In production this would use the session wallet address.
-    // For now, we use a command-center fetch to get the user's rank.
-    return null;
-  }, [entries]);
 
   // Fetch user's own rank info
   const [myRank, setMyRank] = useState<{ rank: number; tier: string; points: number; points_to_next: number; rival_name: string | null; rival_gap: number } | null>(null);

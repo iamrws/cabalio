@@ -4,8 +4,7 @@ import { getSessionFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-const REACTION_TYPES = ['fire', 'hundred', 'brain', 'art', 'clap'] as const;
-type ReactionType = (typeof REACTION_TYPES)[number];
+type ReactionType = 'fire' | 'hundred' | 'brain' | 'art' | 'clap';
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_IDS = 50;
