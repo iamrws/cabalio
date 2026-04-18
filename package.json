@@ -9,7 +9,10 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "experiment": "node autoresearch-master/run.mjs",
+    "experiment:log": "node autoresearch-master/run.mjs > autoresearch-master/run.log 2>&1",
+    "experiment:analyze": "node autoresearch-master/analysis.mjs autoresearch-master/perf-results.tsv"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.78.0",
@@ -31,6 +34,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -38,6 +42,10 @@
     "@vitest/coverage-v8": "^4.1.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "execa": "^9.5.2",
+    "get-port": "^7.1.0",
+    "madge": "^8.0.0",
+    "playwright": "^1.49.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.2"

@@ -1,0 +1,19 @@
+# Node
+node_modules/
+.next/
+.turbo/
+*.log
+run.log
+
+# Per-session launcher files
+CLAUDE.md
+AGENTS.md
+
+# Experimental scratch
+dev/
+worktrees/
+queue/
+
+# Results + artifacts
+perf-results.tsv
+.perfresearch-cache/
