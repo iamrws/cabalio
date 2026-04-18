@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Search } from 'lucide-react';
 
 interface SearchResult {
   id: string;
@@ -29,8 +30,8 @@ const TYPE_FILTERS = [
 
 const TYPE_BADGES: Record<string, { label: string; color: string }> = {
   x_post: { label: 'X Post', color: 'text-accent-text' },
-  blog: { label: 'Blog', color: 'text-emerald-400' },
-  art: { label: 'Art', color: 'text-amber-400' },
+  blog: { label: 'Blog', color: 'text-[var(--positive)]' },
+  art: { label: 'Art', color: 'text-[var(--caution)]' },
 };
 
 export default function SearchBar() {
@@ -134,19 +135,7 @@ export default function SearchBar() {
     <div ref={containerRef} className="relative w-full">
       {/* Search Input */}
       <div className="relative">
-        <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" aria-hidden="true" />
         <input
           type="text"
           value={query}
@@ -155,7 +144,7 @@ export default function SearchBar() {
             if (query.length >= 2) setIsOpen(true);
           }}
           placeholder="Search submissions..."
-          className="w-full pl-10 pr-4 py-2.5 bg-bg-raised border border-border-subtle rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent-border transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 bg-bg-raised border border-border-subtle rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent-border transition-[border-color]"
         />
         {loading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -172,7 +161,7 @@ export default function SearchBar() {
               key={filter.label}
               type="button"
               onClick={() => setTypeFilter(filter.value)}
-              className={`px-3 py-1 text-xs rounded-sm border transition-colors ${
+              className={`px-3 py-1 text-xs rounded-sm border transition-[color,background-color,border-color] ${
                 typeFilter === filter.value
                   ? 'bg-accent-muted border-accent-border text-accent-text'
                   : 'bg-bg-raised border-border-subtle text-text-secondary hover:border-text-muted'
@@ -188,7 +177,7 @@ export default function SearchBar() {
               key={sortOption}
               type="button"
               onClick={() => setSort(sortOption)}
-              className={`px-3 py-1 text-xs rounded-sm border transition-colors ${
+              className={`px-3 py-1 text-xs rounded-sm border transition-[color,background-color,border-color] ${
                 sort === sortOption
                   ? 'bg-accent-muted border-accent-border text-accent-text'
                   : 'bg-bg-raised border-border-subtle text-text-secondary hover:border-text-muted'
@@ -226,7 +215,7 @@ export default function SearchBar() {
                 return (
                   <div
                     key={result.id}
-                    className="px-4 py-3 hover:bg-bg-raised border-b border-border-subtle last:border-b-0 cursor-pointer transition-colors"
+                    className="px-4 py-3 hover:bg-bg-raised border-b border-border-subtle last:border-b-0 cursor-pointer transition-[background-color]"
                   >
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="text-sm font-medium text-text-primary truncate">
@@ -236,7 +225,7 @@ export default function SearchBar() {
                         {badge.label}
                       </span>
                     </div>
-                    <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-text-secondary line-clamp-2 leading-[1.7]">
                       {result.content_text}
                     </p>
                     <div className="flex items-center justify-between mt-1.5">

@@ -110,6 +110,7 @@ export default function SubmitPage() {
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            aria-label={tab.label}
             onClick={() => {
               setActiveTab(tab.id);
               setError('');
@@ -119,14 +120,14 @@ export default function SubmitPage() {
                 setUploadedImagePath('');
               }
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg text-xs sm:text-sm font-medium transition-[color,background-color,border-color] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
               activeTab === tab.id
                 ? 'bg-bg-raised text-accent-text border border-accent-border'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             <span>{tab.icon}</span>
-            <span className="hidden sm:inline">{tab.label}</span>
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
@@ -153,7 +154,7 @@ export default function SubmitPage() {
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Give your submission a clear title"
               required
-              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-[border-color] text-sm"
             />
           </div>
 
@@ -173,7 +174,7 @@ export default function SubmitPage() {
                     : 'https://example.com/portfolio'
               }
               required={activeTab !== 'art'}
-              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-[border-color] text-sm"
             />
           </div>
 
@@ -188,7 +189,7 @@ export default function SubmitPage() {
                   setUploadedImagePath('');
                 }}
                 required
-                className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm"
+                className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-[border-color] text-sm"
               />
               <p className="mt-1.5 text-xs text-text-muted">
                 Max file size: {MAX_IMAGE_SIZE_MB}MB. Image is scanned for suspicious scam or malware payloads before storage.
@@ -217,7 +218,7 @@ export default function SubmitPage() {
               placeholder={placeholderByType[activeTab]}
               required
               rows={6}
-              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors text-sm resize-none"
+              className="w-full px-4 py-3 rounded-lg bg-bg-raised border border-border-subtle text-text-primary placeholder-text-muted focus:outline-none focus-visible:border-accent/50 focus-visible:ring-1 focus-visible:ring-accent/20 transition-[border-color] text-sm resize-none"
             />
             <div id="content-char-count" className="mt-1 text-xs text-text-muted text-right">{contentText.length}/5000 characters</div>
           </div>
@@ -225,20 +226,31 @@ export default function SubmitPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-[#08080a] hover:bg-accent-dim active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-accent py-3.5 rounded-[var(--radius-sm)] font-semibold text-[var(--bg-base)] hover:bg-accent-dim active:scale-[0.99] transition-[color,background-color,transform,box-shadow] duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
             {isUploadingImage ? 'Scanning & Uploading Image...' : isSubmitting ? 'Submitting...' : 'Submit For Review'}
           </button>
         </NeonCard>
       </form>
 
+      <div className="border-t border-border-subtle" />
+
       <NeonCard hover={false} className="p-5">
         <h3 className="text-sm font-semibold text-text-primary mb-3 font-display">Review Pipeline</h3>
-        <div className="space-y-2 text-sm text-text-secondary">
-          <div>1. Submission enters moderation queue.</div>
-          <div>2. Admin review approves, rejects, or flags content.</div>
-          <div>3. Approved submissions are AI scored and points are credited to your ledger.</div>
-          <div>4. Leaderboards update from approved submissions only.</div>
+        <div className="space-y-2.5 text-sm text-text-secondary">
+          {[
+            'Submission enters moderation queue.',
+            'Admin review approves, rejects, or flags content.',
+            'Approved submissions are AI scored and points are credited to your ledger.',
+            'Leaderboards update from approved submissions only.',
+          ].map((step, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent-muted text-accent-text text-[10px] font-bold shrink-0 mt-0.5">
+                {index + 1}
+              </span>
+              <span>{step}</span>
+            </div>
+          ))}
         </div>
       </NeonCard>
     </div>

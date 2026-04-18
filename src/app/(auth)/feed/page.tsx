@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Lock, MessageSquare } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 import PointsBadge from '@/components/shared/PointsBadge';
@@ -25,8 +26,8 @@ interface SubmissionRow {
 
 const typeIcons: Record<string, { label: string; color: string; dotColor: string }> = {
   x_post: { label: 'Jito Content', color: 'text-accent-text', dotColor: 'bg-[var(--accent)]' },
-  blog: { label: 'Blog', color: 'text-accent-text', dotColor: 'bg-emerald-500' },
-  art: { label: 'Art', color: 'text-caution', dotColor: 'bg-amber-500' },
+  blog: { label: 'Blog', color: 'text-accent-text', dotColor: 'bg-[var(--positive)]' },
+  art: { label: 'Art', color: 'text-caution', dotColor: 'bg-[var(--caution)]' },
 };
 
 const fallbackTypeIcon = { label: 'Other', color: 'text-text-secondary', dotColor: 'bg-text-secondary' };
@@ -66,7 +67,7 @@ function ReactionBar({
             key={type}
             type="button"
             onClick={() => onToggle(submissionId, type)}
-            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border transition-colors duration-150 ${
+            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border transition-[color,background-color,border-color] duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
               isActive
                 ? 'bg-accent-muted border-accent-border text-accent-text'
                 : 'bg-bg-raised border-border-subtle text-text-secondary hover:border-text-muted'
@@ -201,7 +202,7 @@ export default function FeedPage() {
           <h2 className="text-2xl font-bold text-text-primary font-display">Community Feed</h2>
           <p className="text-text-secondary text-sm">Discover what the community is building</p>
         </div>
-        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[#08080a] transition-colors hover:bg-accent-dim">
+        <Link href="/submit" className="inline-block bg-accent px-6 py-3 rounded-[var(--radius-sm)] font-semibold text-[var(--bg-base)] transition-[color,background-color,transform,box-shadow] duration-150 hover:bg-accent-dim active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
           + Submit Content
         </Link>
       </div>
@@ -209,11 +210,25 @@ export default function FeedPage() {
       {/* --- Search --- */}
       <SearchBar />
 
-      {/* --- Error State --- */}
+      {/* --- Auth / Error State --- */}
       {error ? (
-        <NeonCard hover={false} className="p-4 border border-negative-border">
-          <div className="text-sm text-negative">{error}</div>
-        </NeonCard>
+        /auth/i.test(error) || /unauthorized/i.test(error) || /authentication required/i.test(error) ? (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-6">
+            <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+              <Lock className="w-6 h-6 text-accent-text" />
+            </div>
+            <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+              Connect your wallet
+            </h3>
+            <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+              Sign in with your wallet to view the community feed and submit your content.
+            </p>
+          </div>
+        ) : (
+          <NeonCard hover={false} className="p-4 border border-negative-border">
+            <div className="text-sm text-negative">{error}</div>
+          </NeonCard>
+        )
       ) : null}
 
       {/* --- Loading State --- */}
@@ -226,57 +241,69 @@ export default function FeedPage() {
       ) : null}
 
       {/* --- Community Feed with Reactions --- */}
-      <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Community Feed</h3>
-        <div className="space-y-4">
-          {!loading && communitySubmissions.length === 0 ? (
-            <NeonCard hover={false} className="p-4">
-              <div className="text-sm text-text-muted">No approved submissions yet.</div>
-            </NeonCard>
-          ) : null}
-
-          {communitySubmissions.map((submission) => {
-            const typeInfo = typeIcons[submission.type] || fallbackTypeIcon;
-            return (
-              <div key={submission.id}>
-                <NeonCard className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-sm font-semibold text-text-primary">
-                        {submission.users?.display_name || submission.wallet_address}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
-                        <span className={`inline-block w-2 h-2 rounded-full ${typeInfo.dotColor}`} />
-                        <span className={typeInfo.color}>{typeInfo.label}</span>
-                        <span className="text-text-muted/50">|</span>
-                        <span>{new Date(submission.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <PointsBadge points={submission.points_awarded} size="sm" showLabel={false} />
+      {!error ? (
+        <>
+          <div>
+            <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Community Feed</h3>
+            <div className="space-y-4">
+              {!loading && communitySubmissions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6">
+                  <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+                    <MessageSquare className="w-6 h-6 text-accent-text" />
                   </div>
+                  <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+                    No submissions yet
+                  </h3>
+                  <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+                    Be the first to share content with the community.
+                  </p>
+                </div>
+              ) : null}
 
-                  <h4 className="text-base font-semibold text-text-primary mb-1">{submission.title}</h4>
-                  <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">{submission.content_text}</p>
+              {communitySubmissions.map((submission) => {
+                const typeInfo = typeIcons[submission.type] || fallbackTypeIcon;
+                return (
+                  <div key={submission.id}>
+                    <NeonCard className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <div className="text-sm font-semibold text-text-primary">
+                            {submission.users?.display_name || submission.wallet_address}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
+                            <span className={`inline-block w-2 h-2 rounded-full ${typeInfo.dotColor}`} />
+                            <span className={typeInfo.color}>{typeInfo.label}</span>
+                            <span className="text-text-muted/50">|</span>
+                            <span>{new Date(submission.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <PointsBadge points={submission.points_awarded} size="sm" showLabel={false} />
+                      </div>
 
-                  <ReactionBar
-                    submissionId={submission.id}
-                    data={reactions[submission.id]}
-                    onToggle={handleReactionToggle}
-                  />
-                </NeonCard>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                      <h4 className="text-base font-semibold text-text-primary mb-1 font-display">{submission.title}</h4>
+                      <p className="text-sm text-text-secondary line-clamp-2 leading-[1.7]">{submission.content_text}</p>
 
-      {/* --- Recent Activity Feed --- */}
-      <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Recent Activity</h3>
-        <NeonCard hover={false} className="p-5">
-          <ActivityFeed />
-        </NeonCard>
-      </div>
+                      <ReactionBar
+                        submissionId={submission.id}
+                        data={reactions[submission.id]}
+                        onToggle={handleReactionToggle}
+                      />
+                    </NeonCard>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* --- Recent Activity Feed --- */}
+          <div>
+            <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Recent Activity</h3>
+            <NeonCard hover={false} className="p-5">
+              <ActivityFeed />
+            </NeonCard>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

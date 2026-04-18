@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
+import { FlaskConical, X, VolumeX, Volume2, Check, Flame, Clapperboard, User, ChevronsRight } from 'lucide-react';
 
 // ── Context for panel open/close ──────────────────────────────────────
 interface AiOrNotContextType {
@@ -472,25 +473,21 @@ export default function AiOrNotPanel() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-lg bg-accent-muted border border-accent-border flex items-center justify-center">
-                  <svg className="w-4 h-4 text-accent-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-                  </svg>
+                  <FlaskConical className="w-4 h-4 text-accent-text" />
                 </div>
-                <h2 className="text-lg font-bold text-accent-text">AI or NOT?</h2>
+                <h2 className="text-lg font-bold text-accent-text font-display">AI or NOT?</h2>
               </div>
 
               {/* Stats */}
               <div className="flex items-center gap-3">
                 {streak >= 2 && (
                   <span className="text-sm font-bold text-caution flex items-center gap-1">
-                    <span className="text-base" aria-hidden="true">🔥</span>{streak}
+                    <Flame className="w-4 h-4" aria-hidden="true" />{streak}
                   </span>
                 )}
                 <span className="text-sm font-mono font-bold text-accent-text">{points} pts</span>
-                <button onClick={close} className="w-8 h-8 rounded-lg bg-bg-raised flex items-center justify-center text-text-muted hover:text-text-primary transition-colors">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                <button onClick={close} className="w-8 h-8 rounded-lg bg-bg-raised flex items-center justify-center text-text-muted hover:text-text-primary transition-[color]">
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -514,7 +511,7 @@ export default function AiOrNotPanel() {
                     <p className="text-text-secondary mb-3">{error}</p>
                     <button
                       onClick={fetchShorts}
-                      className="px-4 py-2 rounded-lg bg-accent-muted text-accent-text border border-accent-border hover:bg-accent-muted/80 transition-colors text-sm"
+                      className="px-4 py-2 rounded-lg bg-accent-muted text-accent-text border border-accent-border hover:bg-accent-muted/80 transition-[background-color] text-sm"
                     >
                       Retry
                     </button>
@@ -526,7 +523,7 @@ export default function AiOrNotPanel() {
               {!loading && !error && shorts.length > 0 && currentIndex >= shorts.length && (
                 <div className="flex-1 flex items-center justify-center p-6">
                   <div className="text-center">
-                    <p className="text-2xl mb-2">🎬</p>
+                    <p className="mb-2 flex justify-center"><Clapperboard className="w-6 h-6" /></p>
                     <p className="text-text-primary font-bold mb-1">All caught up!</p>
                     <p className="text-text-secondary text-sm mb-4">You scored {points} points with a best streak of {streak}</p>
                     <button
@@ -573,17 +570,12 @@ export default function AiOrNotPanel() {
                     <div className="absolute top-3 right-3 z-30">
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleMute(); }}
-                        className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                        className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-[background-color]"
                       >
                         {isMuted ? (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                          </svg>
+                          <VolumeX className="w-4 h-4" />
                         ) : (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                          </svg>
+                          <Volume2 className="w-4 h-4" />
                         )}
                       </button>
                     </div>
@@ -624,13 +616,9 @@ export default function AiOrNotPanel() {
                           }`}
                         >
                           {showResult.matched ? (
-                            <svg className="w-10 h-10 text-positive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
+                            <Check className="w-10 h-10 text-positive" />
                           ) : (
-                            <svg className="w-10 h-10 text-negative" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X className="w-10 h-10 text-negative" />
                           )}
                         </div>
 
@@ -661,7 +649,7 @@ export default function AiOrNotPanel() {
                           }`}
                         >
                           <div
-                            className="h-full bg-gradient-to-r from-positive to-accent rounded-full"
+                            className="h-full bg-[var(--accent)] rounded-full"
                             style={{ width: `${showResult.aiPct}%`, marginLeft: `${100 - showResult.aiPct}%` }}
                           />
                         </div>
@@ -690,8 +678,8 @@ export default function AiOrNotPanel() {
                               resultVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
                             }`}
                           >
-                            <span className="text-caution font-bold text-sm">
-                              <span aria-hidden="true">🔥</span> {streak} Streak!
+                            <span className="text-caution font-bold text-sm flex items-center gap-1">
+                              <Flame className="w-5 h-5" aria-hidden="true" /> {streak} Streak!
                               {streak >= 10 && ' LEGENDARY!'}
                               {streak >= 5 && streak < 10 && ' On Fire!'}
                             </span>
@@ -713,9 +701,7 @@ export default function AiOrNotPanel() {
                           hover:bg-positive-muted/80 hover:border-positive/50 active:scale-[0.97]"
                       >
                         <span className="flex items-center justify-center gap-2">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
+                          <User className="w-5 h-5" />
                           Human
                         </span>
                       </button>
@@ -727,9 +713,7 @@ export default function AiOrNotPanel() {
                         className="w-12 h-12 rounded-xl bg-bg-raised border border-border-subtle text-text-muted
                           hover:text-text-primary hover:bg-bg-elevated transition-all disabled:opacity-40 flex items-center justify-center"
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                        </svg>
+                        <ChevronsRight className="w-4 h-4" />
                       </button>
 
                       {/* AI button */}
@@ -741,9 +725,7 @@ export default function AiOrNotPanel() {
                           hover:bg-accent-muted/80 hover:border-accent/50 active:scale-[0.97]"
                       >
                         <span className="flex items-center justify-center gap-2">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-                          </svg>
+                          <FlaskConical className="w-5 h-5" />
                           AI
                         </span>
                       </button>

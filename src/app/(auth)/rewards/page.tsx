@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { Gift, CheckCircle2, Clock, Lock } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 import AnimatedCounter from '@/components/shared/AnimatedCounter';
@@ -90,7 +91,7 @@ function EarningsChart({ weeks }: { weeks: WeekHistory[] }) {
               style={{ width: barWidth, height: '100%' }}
             >
               <div
-                className={`w-full rounded-t-md cursor-pointer transition-all duration-500 ${
+                className={`w-full rounded-t-md cursor-pointer transition-[background-color] duration-500 ${
                   isCurrentWeek
                     ? 'bg-accent'
                     : hoveredIdx === idx
@@ -323,12 +324,12 @@ export default function RewardsPage() {
             </div>
 
             {/* Progress bar */}
-            <div className="relative h-2 bg-bg-raised rounded-full overflow-hidden">
+            <div className="relative h-2 w-full bg-bg-raised rounded-full overflow-hidden">
               <div
-                className={`absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out ${
+                className={`absolute inset-y-0 left-0 w-full rounded-full transition-[transform,background-color] duration-700 ease-out ${
                   isAheadOfPace ? 'bg-positive' : 'bg-accent'
                 }`}
-                style={{ width: `${pacePercent}%` }}
+                style={{ transform: `scaleX(${pacePercent / 100})`, transformOrigin: 'left' }}
               />
               {/* Average marker */}
               {projections.avg_weekly_points > 0 && (
@@ -379,10 +380,10 @@ export default function RewardsPage() {
       )}
 
       {/* ── Claimable Rewards (existing) ── */}
-      <NeonCard hover={false} className="p-8 text-center">
+      <NeonCard hover={false} className="p-6 sm:p-8 text-center">
         <div className="text-sm text-text-muted uppercase tracking-wider mb-2 font-display">Claimable Rewards</div>
-        <div className="text-5xl font-mono font-bold text-positive mb-1">
-          <AnimatedCounter value={totalClaimable / 1e9} decimals={4} className="text-positive" />
+        <div className={`text-5xl font-mono font-bold mb-1 ${totalClaimable > 0 ? 'text-positive' : 'text-text-tertiary'}`}>
+          <AnimatedCounter value={totalClaimable / 1e9} decimals={4} className={totalClaimable > 0 ? 'text-positive' : 'text-text-tertiary'} />
         </div>
         <div className="text-lg text-text-secondary mb-6">SOL</div>
 
@@ -391,7 +392,7 @@ export default function RewardsPage() {
             <button
               onClick={handleClaim}
               disabled={claimLoading}
-              className="bg-accent px-8 py-3 rounded-xl font-semibold text-[#08080a] hover:bg-accent-dim active:scale-[0.98] transition-all disabled:opacity-50"
+              className="bg-accent px-8 py-3 rounded-xl font-semibold text-[var(--bg-base)] hover:bg-accent-dim active:scale-[0.98] transition-[color,background-color,transform,box-shadow] duration-150 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             >
               {claimLoading ? 'Processing...' : 'Claim Rewards'}
             </button>
@@ -418,7 +419,7 @@ export default function RewardsPage() {
         </div>
       </NeonCard>
 
-      {error ? (
+      {error && !/auth/i.test(error) ? (
         <NeonCard hover={false} className="p-4 border border-negative-border">
           <div className="text-sm text-negative">{error}</div>
         </NeonCard>
@@ -426,13 +427,30 @@ export default function RewardsPage() {
 
       <div>
         <h3 className="text-lg font-semibold text-text-primary mb-4 font-display">Reward History</h3>
-        {loading ? (
+
+        {/auth/i.test(error) ? (
+          <NeonCard hover={false} className="p-6">
+            <div className="flex flex-col items-center justify-center min-h-[30vh] text-center px-6">
+              <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+                <Lock className="w-6 h-6 text-accent-text" />
+              </div>
+              <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+                Connect your wallet
+              </h3>
+              <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+                Sign in to view your reward history and claim earnings.
+              </p>
+            </div>
+          </NeonCard>
+        ) : null}
+
+        {!error && loading ? (
           <NeonCard hover={false} className="p-4">
             <div className="text-sm text-text-muted">Loading rewards...</div>
           </NeonCard>
         ) : null}
 
-        {!loading && rewards.length === 0 ? (
+        {!error && !loading && rewards.length === 0 ? (
           <NeonCard hover={false} className="p-4">
             <div className="text-sm text-text-muted">No reward records yet.</div>
           </NeonCard>
@@ -444,9 +462,14 @@ export default function RewardsPage() {
               <NeonCard hover={false} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg flex items-center justify-center text-lg bg-bg-raised">
-                      <span aria-hidden="true">{reward.status === 'claimable' ? '🎁' : reward.status === 'claimed' ? '✅' : '⏳'}</span>
-                      <span className="sr-only">{reward.status === 'claimable' ? 'Claimable' : reward.status === 'claimed' ? 'Claimed' : 'Expired'}</span>
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-bg-raised" aria-label={reward.status === 'claimable' ? 'Claimable' : reward.status === 'claimed' ? 'Claimed' : 'Expired'}>
+                      {reward.status === 'claimable' ? (
+                        <Gift className="w-4 h-4" />
+                      ) : reward.status === 'claimed' ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : (
+                        <Clock className="w-4 h-4" />
+                      )}
                     </div>
                     <div>
                       <div className="text-sm font-medium text-text-primary">

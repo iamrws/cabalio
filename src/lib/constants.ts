@@ -38,13 +38,14 @@ export const TIER_COLORS = {
   initiate: { color: '#a1a1aa', label: 'Cabal Initiate' },
 } as const;
 
-// Navigation items for sidebar
+// Primary navigation — top nav tabs
 export const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', icon: 'home' },
-  { label: 'Feed', href: '/feed', icon: 'feed' },
-  { label: 'Submit', href: '/submit', icon: 'plus' },
-  { label: 'Leaderboard', href: '/leaderboard', icon: 'trophy' },
-  { label: 'Quests', href: '/quests', icon: 'target' },
-  { label: 'Rewards', href: '/rewards', icon: 'gift' },
+  { label: 'Your Arena', href: '/dashboard', icon: 'home' },
+  { label: 'The Board', href: '/leaderboard', icon: 'trophy' },
+] as const;
+
+// Secondary navigation — avatar dropdown
+export const SECONDARY_NAV = [
   { label: 'Settings', href: '/settings', icon: 'settings' },
+  { label: 'Profile', href: '/profile/me', icon: 'user' },
 ] as const;

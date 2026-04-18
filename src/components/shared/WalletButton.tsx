@@ -22,7 +22,7 @@ export default function WalletButton({ className = '' }: { className?: string })
         <button
           onClick={() => disconnect()}
           aria-label="Disconnect wallet"
-          className="rounded-lg px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          className="rounded-lg px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-[var(--bg-raised)] active:scale-[0.98] transition-[color,background-color,transform] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
         >
           Disconnect
         </button>
@@ -37,8 +37,9 @@ export default function WalletButton({ className = '' }: { className?: string })
       className={`
         bg-bg-base border border-accent-border rounded-lg px-6 py-3 font-semibold text-text-primary
         shadow-sm
-        transition-all duration-200
+        transition-[box-shadow,background-color,transform,border-color] duration-150
         hover:shadow-md hover:bg-bg-raised hover:scale-[1.02] active:scale-[0.98]
+        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]
         ${className}
       `}
     >

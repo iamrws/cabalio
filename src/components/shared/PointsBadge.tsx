@@ -1,3 +1,5 @@
+import { Star } from 'lucide-react';
+
 interface PointsBadgeProps {
   points: number;
   size?: 'sm' | 'md' | 'lg';
@@ -23,9 +25,7 @@ export default function PointsBadge({ points, size = 'md', showLabel = true }: P
         ${sizeMap[size]}
       `}
     >
-      <svg viewBox="0 0 16 16" className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} fill="currentColor" aria-hidden="true">
-        <path d="M8 0L10.2 5.3L16 6.2L11.9 10.1L12.9 16L8 13.3L3.1 16L4.1 10.1L0 6.2L5.8 5.3L8 0Z" />
-      </svg>
+      <Star className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} aria-hidden="true" />
       {points.toLocaleString()}
       {showLabel && <span className="text-accent-text/60 font-normal">pts</span>}
     </div>

@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { Check, Pencil, Copy, Flame, BadgeCheck, ChevronDown, Lock } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 import PointsBadge from '@/components/shared/PointsBadge';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
+import { IconResolver } from '@/components/shared/IconResolver';
 import { BADGE_DEFINITIONS } from '@/lib/types';
 import { getLevelInfo } from '@/lib/points';
 
@@ -288,6 +290,27 @@ export default function ProfilePage() {
   }
 
   if (error || !profile) {
+    const isAuthError =
+      /auth/i.test(error) ||
+      /unauthorized/i.test(error) ||
+      /authentication required/i.test(error);
+
+    if (isAuthError) {
+      return (
+        <div className="max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[50vh] text-center px-6">
+          <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+            <Lock className="w-6 h-6 text-accent-text" />
+          </div>
+          <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+            Connect your wallet
+          </h3>
+          <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+            Sign in with your wallet to view this profile and contribution history.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-5xl mx-auto">
         <NeonCard hover={false} className="p-6 border border-negative-border">
@@ -312,9 +335,7 @@ export default function ProfilePage() {
             </div>
             {profile.user.is_holder && (
               <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-accent flex items-center justify-center border-2 border-bg-surface" title="NFT Holder Verified">
-                <svg className="h-3.5 w-3.5 text-[#08080a]" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
+                <Check className="h-3.5 w-3.5 text-[var(--bg-base)]" />
               </div>
             )}
           </div>
@@ -339,13 +360,13 @@ export default function ProfilePage() {
                   <button
                     onClick={() => void handleEditSave()}
                     disabled={editSaving || !editName.trim()}
-                    className="px-3 py-1.5 rounded-lg bg-accent text-[#08080a] text-sm font-semibold hover:bg-accent/90 disabled:opacity-50 transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-accent text-[var(--bg-base)] text-sm font-semibold hover:bg-accent/90 disabled:opacity-50 transition-[color,background-color,transform,box-shadow] duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                   >
                     {editSaving ? 'Saving...' : 'Save'}
                   </button>
                   <button
                     onClick={handleEditCancel}
-                    className="px-3 py-1.5 rounded-lg border border-border-subtle text-sm text-text-secondary hover:text-text-primary transition-colors"
+                    className="px-3 py-1.5 rounded-lg border border-border-subtle text-sm text-text-secondary hover:text-text-primary transition-[color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                   >
                     Cancel
                   </button>
@@ -361,12 +382,10 @@ export default function ProfilePage() {
                   {isSelf && (
                     <button
                       onClick={handleEditStart}
-                      className="text-text-muted hover:text-accent-text transition-colors flex-shrink-0"
+                      className="text-text-muted hover:text-accent-text transition-[color] duration-150 flex-shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                       title="Edit display name"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
+                      <Pencil className="h-4 w-4" />
                     </button>
                   )}
                   {editSuccess && (
@@ -383,18 +402,14 @@ export default function ProfilePage() {
             {/* Wallet address — click to copy */}
             <button
               onClick={handleCopyAddress}
-              className="text-sm text-text-muted font-mono mb-3 hover:text-text-secondary transition-colors inline-flex items-center gap-1.5 group"
+              className="text-sm text-text-muted font-mono mb-3 hover:text-text-secondary transition-[color] duration-150 inline-flex items-center gap-1.5 group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               title="Click to copy address"
             >
               {profile.wallet_address}
               {copied ? (
-                <svg className="h-3.5 w-3.5 text-positive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="h-3.5 w-3.5 text-positive" />
               ) : (
-                <svg className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
+                <Copy className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
               )}
             </button>
 
@@ -408,9 +423,7 @@ export default function ProfilePage() {
 
               {/* Streak */}
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-caution-muted border border-caution-border">
-                <svg viewBox="0 0 16 16" className="h-4 w-4 text-caution" fill="currentColor" aria-hidden="true">
-                  <path d="M8 1c-.6 0-1 .5-1.3 1L4 7c-.8 1.5-.2 3 1 4 .8.7 1.8 1.2 3 1.2s2.2-.5 3-1.2c1.2-1 1.8-2.5 1-4L9.3 2C9 1.5 8.6 1 8 1zm0 2.5L9.8 7c.4.8.1 1.5-.5 2-.4.3-1 .5-1.3.5s-.9-.2-1.3-.5c-.6-.5-.9-1.2-.5-2L8 3.5z" />
-                </svg>
+                <Flame className="h-4 w-4 text-caution" aria-hidden="true" />
                 <span className="text-xs font-mono text-caution font-bold">
                   {profile.user.current_streak}d streak
                 </span>
@@ -422,9 +435,7 @@ export default function ProfilePage() {
               {/* NFT Holder badge */}
               {profile.user.is_holder && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/15 border border-accent-border">
-                  <svg className="h-3.5 w-3.5 text-accent-text" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <BadgeCheck className="h-3.5 w-3.5 text-accent-text" />
                   <span className="text-xs font-mono text-accent-text font-bold">Holder Verified</span>
                   {profile.user.holder_verified_at && (
                     <span className="text-[10px] text-accent-text/50">
@@ -447,10 +458,10 @@ export default function ProfilePage() {
               {profile.user.total_xp.toLocaleString()} / {levelInfo.max_xp.toLocaleString()} XP
             </span>
           </div>
-          <div className="h-2.5 rounded-full bg-bg-raised overflow-hidden">
+          <div className="h-2.5 w-full rounded-full bg-bg-raised overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-accent/80 to-accent transition-all duration-700 ease-out"
-              style={{ width: `${Math.max(levelInfo.progress * 100, 2)}%` }}
+              className="h-full w-full rounded-full bg-[var(--accent)] transition-transform duration-700 ease-out"
+              style={{ transform: `scaleX(${Math.max(levelInfo.progress, 0.02)})`, transformOrigin: 'left' }}
             />
           </div>
         </div>
@@ -532,7 +543,7 @@ export default function ProfilePage() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+            className={`px-4 py-2.5 text-sm font-medium transition-[color] duration-150 relative active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
               activeTab === tab
                 ? 'text-accent-text'
                 : 'text-text-muted hover:text-text-secondary'
@@ -695,7 +706,7 @@ function OverviewTab({
               key={badge.id}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-muted border border-accent-border"
             >
-              <span className="text-lg">{badge.icon}</span>
+              <IconResolver name={badge.icon} className="w-4 h-4" />
               <span className="text-xs font-medium text-text-primary">{badge.name}</span>
             </div>
           ))}
@@ -799,9 +810,9 @@ function ContributionsTab({
             <button
               key={opt.key}
               onClick={() => onFilterChange(opt.key)}
-              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              className={`px-3 py-1 text-xs rounded-full transition-[color,background-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                 filter === opt.key
-                  ? 'bg-accent text-[#08080a] font-bold'
+                  ? 'bg-accent text-[var(--bg-base)] font-bold'
                   : 'bg-bg-raised text-text-muted hover:text-text-secondary'
               }`}
             >
@@ -858,15 +869,9 @@ function ContributionsTab({
                       <span className="text-sm font-mono font-bold text-accent-text">
                         {c.points_awarded} pts
                       </span>
-                      <svg
+                      <ChevronDown
                         className={`h-4 w-4 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
+                      />
                     </div>
                   </div>
                 </div>
@@ -956,7 +961,7 @@ function ContributionsTab({
                                   setAppealReason('');
                                   setAppealError('');
                                 }}
-                                className="rounded-lg bg-caution-muted border border-caution-border text-caution px-3 py-1.5 text-xs font-medium hover:bg-caution-muted/80 transition-colors"
+                                className="rounded-lg bg-caution-muted border border-caution-border text-caution px-3 py-1.5 text-xs font-medium hover:bg-caution-muted/80 transition-[color,background-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                               >
                                 Appeal Decision
                               </button>
@@ -975,7 +980,7 @@ function ContributionsTab({
                                   <button
                                     onClick={() => void handleAppealSubmit(c.id)}
                                     disabled={appealSubmitting || appealReason.length < 10}
-                                    className="rounded-lg bg-accent-muted border border-accent-border text-accent-text px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                                    className="rounded-lg bg-accent-muted border border-accent-border text-accent-text px-3 py-1.5 text-xs font-medium disabled:opacity-50 transition-[color,background-color,border-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                                   >
                                     {appealSubmitting ? 'Submitting...' : 'Submit Appeal'}
                                   </button>
@@ -985,7 +990,7 @@ function ContributionsTab({
                                       setAppealReason('');
                                       setAppealError('');
                                     }}
-                                    className="rounded-lg border border-border-subtle text-text-secondary px-3 py-1.5 text-xs hover:text-text-primary"
+                                    className="rounded-lg border border-border-subtle text-text-secondary px-3 py-1.5 text-xs hover:text-text-primary transition-[color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                                   >
                                     Cancel
                                   </button>
@@ -1039,7 +1044,7 @@ function PointsTab({
               return (
                 <div
                   key={entry.id}
-                  className="flex-1 min-w-[3px] max-w-3 bg-accent/60 hover:bg-accent rounded-t transition-colors"
+                  className="flex-1 min-w-[3px] max-w-3 bg-accent/60 hover:bg-accent rounded-t transition-[background-color]"
                   style={{ height: `${height}%` }}
                   title={`${entry.running_total} pts — ${new Date(entry.created_at).toLocaleDateString()}`}
                 />
@@ -1125,13 +1130,13 @@ function BadgesTab({
           return (
             <div
               key={badge.id}
-              className={`relative text-center p-5 rounded-xl border transition-all ${
+              className={`relative text-center p-5 rounded-xl border transition-[border-color,background-color,box-shadow,opacity] duration-200 ${
                 earned
                   ? 'bg-accent/10 border-accent-border shadow-[0_0_16px_rgba(212,168,83,0.08)]'
                   : 'bg-bg-raised/50 border-border-subtle opacity-40'
               }`}
             >
-              <div className={`text-4xl mb-2 ${earned ? '' : 'grayscale'}`}>{badge.icon}</div>
+              <div className={`mb-2 ${earned ? '' : 'opacity-40'}`}><IconResolver name={badge.icon} className="w-8 h-8" /></div>
               <div className="text-sm font-medium text-text-primary mb-0.5">{badge.name}</div>
               <div className="text-xs text-text-muted leading-tight">{badge.description}</div>
               {earned && earnedAt && (

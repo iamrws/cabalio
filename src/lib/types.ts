@@ -180,22 +180,22 @@ export const TIER_THRESHOLDS = {
   initiate: 0,
 } as const;
 
-export const REACTION_EMOJIS: Record<ReactionType, string> = {
-  fire: '🔥',
-  hundred: '💯',
-  brain: '🧠',
-  art: '🎨',
-  clap: '👏',
-};
+export const REACTION_EMOJIS = {
+  fire: 'flame',
+  hundred: 'star',
+  brain: 'brain-circuit',
+  art: 'palette',
+  clap: 'thumbs-up',
+} as const;
 
 export const BADGE_DEFINITIONS: Omit<Badge, 'earned_at'>[] = [
-  { id: 'first_blood', name: 'First Blood', description: 'Made your first submission', icon: '⚡' },
-  { id: 'thread_weaver', name: 'Thread Weaver', description: '5 Jito content submissions', icon: '🧵' },
-  { id: 'wordsmith', name: 'Wordsmith', description: '5 blog submissions', icon: '✍️' },
-  { id: 'artist', name: 'Artist', description: '5 art submissions', icon: '🎨' },
-  { id: 'perfectionist', name: 'Perfectionist', description: 'Scored 90+ on a submission', icon: '💎' },
-  { id: 'iron_will', name: 'Iron Will', description: '30-day streak', icon: '🔥' },
-  { id: 'century', name: 'Century', description: '100 total submissions', icon: '💯' },
-  { id: 'top_cabal', name: 'Top of the Cabal', description: '#1 on weekly leaderboard', icon: '👑' },
-  { id: 'consistent', name: 'Consistent', description: 'Submitted every week for 4 weeks', icon: '📅' },
+  { id: 'first_blood', name: 'First Blood', description: 'Made your first submission', icon: 'zap' },
+  { id: 'thread_weaver', name: 'Thread Weaver', description: '5 Jito content submissions', icon: 'link' },
+  { id: 'wordsmith', name: 'Wordsmith', description: '5 blog submissions', icon: 'pen-line' },
+  { id: 'artist', name: 'Artist', description: '5 art submissions', icon: 'palette' },
+  { id: 'perfectionist', name: 'Perfectionist', description: 'Scored 90+ on a submission', icon: 'gem' },
+  { id: 'iron_will', name: 'Iron Will', description: '30-day streak', icon: 'flame' },
+  { id: 'century', name: 'Century', description: '100 total submissions', icon: 'star' },
+  { id: 'top_cabal', name: 'Top of the Cabal', description: '#1 on weekly leaderboard', icon: 'crown' },
+  { id: 'consistent', name: 'Consistent', description: 'Submitted every week for 4 weeks', icon: 'calendar-check' },
 ];

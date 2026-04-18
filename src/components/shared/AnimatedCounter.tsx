@@ -67,7 +67,7 @@ export default function AnimatedCounter({
       role="status"
       aria-live="polite"
       aria-label={`${prefix}${value.toFixed(decimals)}${suffix}`}
-      className={`font-mono tabular-nums text-accent-text transition-all duration-500 inline-block ${
+      className={`font-mono tabular-nums text-accent-text transition-[opacity,transform] duration-500 inline-block ${
         isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2.5'
       } ${className}`}
     >

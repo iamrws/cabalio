@@ -103,7 +103,7 @@ export default function ActivityFeed() {
                 &#9733;
               </span>
             ) : (
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/15 text-[10px] leading-none text-emerald-400">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--positive-muted)] text-[10px] leading-none text-[var(--positive)]">
                 +
               </span>
             )}

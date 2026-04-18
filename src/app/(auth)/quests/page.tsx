@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Lock, Target } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
 
@@ -183,7 +184,7 @@ export default function QuestsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-text-primary font-display">Season Quests</h2>
+          <h2 className="text-2xl font-bold text-text-primary font-display">Season Quests</h2>
           <p className="text-sm text-text-secondary">Live role-based quests and collaborative milestones</p>
         </div>
         {season ? (
@@ -196,9 +197,23 @@ export default function QuestsPage() {
       </div>
 
       {error ? (
-        <NeonCard hover={false} className="p-4 border border-negative-border">
-          <div className="text-sm text-negative">{error}</div>
-        </NeonCard>
+        /auth/i.test(error) || /unauthorized/i.test(error) || /authentication required/i.test(error) ? (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-6">
+            <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+              <Lock className="w-6 h-6 text-accent-text" />
+            </div>
+            <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+              Connect your wallet
+            </h3>
+            <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+              Sign in with your wallet to participate in season quests and track your role progress.
+            </p>
+          </div>
+        ) : (
+          <NeonCard hover={false} className="p-4 border border-negative-border">
+            <div className="text-sm text-negative">{error}</div>
+          </NeonCard>
+        )
       ) : null}
 
       {loading ? (
@@ -207,16 +222,24 @@ export default function QuestsPage() {
         </NeonCard>
       ) : null}
 
-      {!loading && !season ? (
-        <NeonCard hover={false} className="p-5">
-          <div className="text-sm text-text-muted">No active or upcoming season found yet.</div>
-        </NeonCard>
+      {!loading && !error && !season ? (
+        <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6">
+          <div className="w-12 h-12 rounded-full bg-accent-muted flex items-center justify-center mb-4">
+            <Target className="w-6 h-6 text-accent-text" />
+          </div>
+          <h3 className="text-lg font-display font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.03em' }}>
+            No active season
+          </h3>
+          <p className="text-sm text-text-secondary max-w-xs leading-[1.7]">
+            Seasons bring new quests and challenges. Check back soon.
+          </p>
+        </div>
       ) : null}
 
       {season ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <NeonCard hover={false} className="p-5">
-            <h3 className="text-base font-semibold text-text-primary mb-3">Role Path</h3>
+            <h3 className="text-base font-semibold text-text-primary mb-3 font-display">Role Path</h3>
             <div className="space-y-2">
               {roles.map((role) => {
                 const active = memberState?.role_key === role.role_key;
@@ -226,7 +249,7 @@ export default function QuestsPage() {
                     type="button"
                     onClick={() => handleRoleSelect(role.role_key)}
                     disabled={busyRole || season.status !== 'live'}
-                    className={`w-full text-left rounded-lg border px-3 py-2 transition ${
+                    className={`w-full text-left rounded-lg border px-3 py-2 transition-[color,background-color,border-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                       active
                         ? 'border-accent-border bg-accent-muted text-accent-text'
                         : 'border-border-subtle bg-bg-raised text-text-secondary'
@@ -241,7 +264,7 @@ export default function QuestsPage() {
           </NeonCard>
 
           <NeonCard hover={false} className="p-5">
-            <h3 className="text-base font-semibold text-text-primary mb-3">Season Preferences</h3>
+            <h3 className="text-base font-semibold text-text-primary mb-3 font-display">Season Preferences</h3>
             <div className="space-y-3 text-sm">
               <div className="rounded-lg bg-bg-raised border border-border-subtle p-3">
                 <div className="text-text-primary">Current Role</div>
@@ -251,7 +274,7 @@ export default function QuestsPage() {
                 type="button"
                 onClick={() => handleOptOutToggle(!(memberState?.opt_out || false))}
                 disabled={busyOptOut || season.status !== 'live'}
-                className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-accent-text text-xs"
+                className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-accent-text text-xs transition-[color,background-color,border-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               >
                 {memberState?.opt_out ? 'Disable calm mode (opt back in)' : 'Enable calm mode (opt out)'}
               </button>
@@ -330,7 +353,7 @@ export default function QuestsPage() {
                       type="button"
                       onClick={() => handleQuestSubmit(quest.id)}
                       disabled={!quest.can_submit || questSubmittingId === quest.id}
-                      className="w-full rounded-lg bg-accent-muted border border-accent-border px-3 py-2 text-xs text-accent-text disabled:opacity-50"
+                      className="w-full rounded-lg bg-accent-muted border border-accent-border px-3 py-2 text-xs text-accent-text disabled:opacity-50 transition-[color,background-color,border-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                     >
                       {questSubmittingId === quest.id
                         ? 'Submitting...'

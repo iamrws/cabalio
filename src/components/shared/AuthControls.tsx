@@ -115,7 +115,7 @@ export default function AuthControls({
             onClick={handleVerify}
             disabled={authenticating}
             aria-label="Verify NFT ownership and log in"
-            className="bg-bg-base border border-accent-border rounded-lg px-5 py-2.5 font-semibold text-text-primary disabled:opacity-60 transition-colors hover:bg-bg-raised"
+            className="bg-bg-base border border-accent-border rounded-lg px-5 py-2.5 font-semibold text-text-primary disabled:opacity-60 transition-[background-color,border-color,transform] duration-150 hover:bg-bg-raised hover:border-[var(--accent)] active:scale-[0.98] active:bg-[var(--bg-raised)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
             {authenticating ? 'Verifying...' : 'Verify NFT & Login'}
           </button>
@@ -133,14 +133,14 @@ export default function AuthControls({
       <div className={`flex ${compact ? 'items-center gap-2' : 'items-center gap-3'}`}>
         <Link
           href="/dashboard"
-          className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 transition-colors"
+          className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 hover:border-[var(--accent)] active:scale-[0.97] transition-[background-color,border-color,transform] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
         >
           Enter Dashboard
         </Link>
         {session.role === 'admin' ? (
           <Link
             href="/cabal-core"
-            className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 transition-colors"
+            className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2 text-xs text-accent-text font-medium hover:bg-accent-muted/80 hover:border-[var(--accent)] active:scale-[0.97] transition-[background-color,border-color,transform] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
             Admin
           </Link>
@@ -148,7 +148,7 @@ export default function AuthControls({
         <button
           onClick={handleLogout}
           aria-label="Log out of current session"
-          className="rounded-lg border border-border-subtle px-3 py-2 text-xs text-text-secondary hover:text-text-primary transition-colors"
+          className="rounded-lg border border-border-subtle px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:bg-[var(--bg-raised)] hover:border-[var(--border-default)] active:scale-[0.97] transition-[color,background-color,border-color,transform] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
         >
           Logout
         </button>
