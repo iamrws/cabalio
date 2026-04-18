@@ -7,10 +7,10 @@ const EXTERNAL_LINKS = [
 ] as const;
 
 const INTERNAL_LINKS = [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Leaderboard', href: '/leaderboard' },
-  { label: 'Submit', href: '/submit' },
-  { label: 'Quests', href: '/quests' },
+  { label: 'Dashboard', href: '/' },
+  { label: 'How It Works', href: '/how-it-works' },
+  { label: 'Roadmap', href: '/roadmap' },
+  { label: 'Engine', href: '/engine' },
 ] as const;
 
 const FOCUS_RING =
@@ -20,8 +20,8 @@ export function LandingFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border-subtle/50 px-6 py-16 bg-bg-base">
-      <div className="mx-auto max-w-5xl">
+    <footer className="border-t border-border-subtle/50 px-6 sm:px-10 py-16 bg-bg-base">
+      <div className="mx-auto max-w-6xl">
         {/* Top row: wordmark + link columns */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-10 mb-12">
           {/* Wordmark */}

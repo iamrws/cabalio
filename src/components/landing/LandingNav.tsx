@@ -6,9 +6,10 @@ import { usePathname } from 'next/navigation';
 import AuthControls from '@/components/shared/AuthControls';
 
 const NAV_LINKS = [
+  { label: 'Dashboard', href: '/' },
   { label: 'How It Works', href: '/how-it-works' },
-  { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'Roadmap', href: '/roadmap' },
+  { label: 'Engine', href: '/engine' },
 ] as const;
 
 export function LandingNav() {
@@ -27,7 +28,7 @@ export function LandingNav() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-bg-base/90 border-b border-border-subtle/50">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 h-14">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 sm:px-10 h-14">
           {/* Logo */}
           <Link
             href="/"

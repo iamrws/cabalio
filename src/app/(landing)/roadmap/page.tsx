@@ -46,64 +46,66 @@ const roadmap = [
 
 export default function RoadmapPage() {
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-24 pb-20 lg:pb-0 text-center">
-      {/* Header */}
-      <ScrollFadeUp className="mb-16 mx-auto">
-        <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text">
-          Build Plan
-        </p>
-        <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary">
-          16 features by impact
-        </h2>
-        <p className="mt-4 text-base leading-[1.7] text-text-secondary">
-          Foundation first, novelty second: trust and clarity before high-variance mechanics.
-        </p>
-        <p className="mt-3 text-base leading-[1.7] text-text-muted">
-          Each phase unlocks the next. We ship trust infrastructure before social dynamics — because
-          leaderboards without transparency breed anxiety, not engagement. Four sequential milestones,
-          sixteen features, one coherent system.
-        </p>
-      </ScrollFadeUp>
-
-      {/* Phase grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {roadmap.map((phase, idx) => (
-          <ScrollFadeUp
-            key={phase.phase}
-            delay={idx * 0.08}
-            tabIndex={0}
-            className="group rounded-xl border border-border-subtle bg-bg-surface/30 p-6 transition-[border-color,background-color] duration-200 hover:border-accent-border hover:bg-bg-surface/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.99]"
+    <section className="w-full pt-20 sm:pt-28 pb-24">
+      <div className="mx-auto w-full max-w-5xl px-6 sm:px-10 text-center">
+        {/* Header */}
+        <ScrollFadeUp className="mb-14">
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text">
+            Build Plan
+          </p>
+          <h1
+            className="font-display font-semibold leading-[1.05] tracking-[-0.03em] text-text-primary"
+            style={{ fontSize: 'clamp(2.25rem, 5.5vw, 4rem)' }}
           >
-            {/* Step number + phase badge row */}
-            <div className="mb-5 flex items-center justify-between">
-              {/* Prominent step number */}
-              <span className="font-mono text-3xl font-bold leading-none text-accent/50 group-hover:text-accent/70 transition-[color] duration-200">
-                {phase.step}
-              </span>
-              {/* Phase badge */}
-              <span className="rounded-sm bg-accent/10 px-2.5 py-1 font-mono text-xs font-bold text-accent-text">
-                {phase.phase}
-              </span>
-            </div>
+            16 features by impact
+          </h1>
+          <p className="mx-auto max-w-2xl mt-5 text-base sm:text-lg leading-[1.7] text-text-secondary">
+            Foundation first, novelty second: trust and clarity before high-variance mechanics.
+          </p>
+          <p className="mx-auto max-w-2xl mt-3 text-base leading-[1.7] text-text-muted">
+            Each phase unlocks the next. We ship trust infrastructure before social dynamics — because
+            leaderboards without transparency breed anxiety, not engagement.
+          </p>
+        </ScrollFadeUp>
 
-            {/* Phase title */}
-            <p className="mb-4 text-xs uppercase tracking-wider text-text-secondary font-semibold">
-              {phase.title}
-            </p>
+        {/* Phase grid */}
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 text-left">
+          {roadmap.map((phase, idx) => (
+            <ScrollFadeUp
+              key={phase.phase}
+              delay={idx * 0.08}
+              tabIndex={0}
+              className="group rounded-xl border border-border-subtle bg-bg-surface/30 p-6 transition-[border-color,background-color] duration-200 hover:border-accent-border hover:bg-bg-surface/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.99]"
+            >
+              {/* Step number + phase badge row */}
+              <div className="mb-5 flex items-center justify-between">
+                <span className="font-mono text-3xl font-bold leading-none text-accent/50 group-hover:text-accent/70 transition-[color] duration-200">
+                  {phase.step}
+                </span>
+                <span className="rounded-sm bg-accent/10 px-2.5 py-1 font-mono text-xs font-bold text-accent-text">
+                  {phase.phase}
+                </span>
+              </div>
 
-            {/* Feature list */}
-            <div className="space-y-1.5">
-              {phase.items.map((item) => (
-                <p
-                  key={item}
-                  className="rounded-md border border-border-subtle/50 bg-bg-base/60 px-3 py-2 text-sm text-text-primary"
-                >
-                  {item}
-                </p>
-              ))}
-            </div>
-          </ScrollFadeUp>
-        ))}
+              {/* Phase title */}
+              <p className="mb-4 text-xs uppercase tracking-wider text-text-secondary font-semibold">
+                {phase.title}
+              </p>
+
+              {/* Feature list */}
+              <div className="space-y-1.5">
+                {phase.items.map((item) => (
+                  <p
+                    key={item}
+                    className="rounded-md border border-border-subtle/50 bg-bg-base/60 px-3 py-2 text-sm text-text-primary"
+                  >
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </ScrollFadeUp>
+          ))}
+        </div>
       </div>
     </section>
   );

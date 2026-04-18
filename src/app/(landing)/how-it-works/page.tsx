@@ -5,29 +5,11 @@ import { ScrollFadeUp } from '@/components/landing/ScrollFadeUp';
 
 /* ─────────────── DATA ─────────────── */
 
-const BENEFITS = [
-  {
-    num: '01',
-    title: 'You choose how to participate',
-    body: 'Opt-in challenges, no forced grinds. Skip anything, anytime.',
-  },
-  {
-    num: '02',
-    title: 'You always know where you stand',
-    body: 'Transparent scoring, clear tier progress, no mystery penalties.',
-  },
-  {
-    num: '03',
-    title: 'You win together',
-    body: 'Props, mentorship roles, and team quests with shared rewards.',
-  },
-];
-
 const STEPS = [
   {
     num: '01',
     title: 'Connect your wallet',
-    body: 'Sign in with your Solana wallet. We verify your NFT holder status automatically.',
+    body: 'Sign in with your Solana wallet. We verify your Jito Cabal NFT holder status automatically.',
   },
   {
     num: '02',
@@ -38,6 +20,30 @@ const STEPS = [
     num: '03',
     title: 'Climb the leaderboard',
     body: 'Earn points, unlock tiers, compete in weekly brackets with fair resets.',
+  },
+];
+
+const PILLARS = [
+  {
+    num: '01',
+    title: 'Autonomy',
+    insight: 'Choice keeps motivation intrinsic.',
+    mechanics: 'Opt-in challenges, profile control, and skippable events.',
+    guardrail: 'No forced continuity or hidden enrollment.',
+  },
+  {
+    num: '02',
+    title: 'Competence',
+    insight: 'Progress must feel earned and clear.',
+    mechanics: 'Transparent point reasons, tier unlocks, and visible quality signals.',
+    guardrail: 'No opaque scoring jumps or mystery penalties.',
+  },
+  {
+    num: '03',
+    title: 'Relatedness',
+    insight: 'Community proof beats solo grinding.',
+    mechanics: 'Props, mentorship roles, and team quests with shared wins.',
+    guardrail: 'No zero-sum status monopolies.',
   },
 ];
 
@@ -56,14 +62,20 @@ export default function HowItWorksPage() {
       {/* ═══════════════════ HERO ═══════════════════ */}
       <section
         aria-label="How Jito Cabal works"
-        className="w-full pt-32 pb-20"
+        className="w-full pt-20 sm:pt-28 pb-16"
       >
-        <div className="mx-auto w-full max-w-5xl px-6 text-center">
-          <ScrollFadeUp className="mx-auto max-w-3xl">
-            <h1 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.02] tracking-[-0.03em] text-text-primary mb-6">
+        <div className="mx-auto w-full max-w-4xl px-6 sm:px-10 text-center">
+          <ScrollFadeUp>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text mb-4">
+              Field Manual
+            </p>
+            <h1
+              className="mx-auto font-display font-semibold leading-[1.02] tracking-[-0.03em] text-text-primary mb-6"
+              style={{ fontSize: 'clamp(2.25rem, 5.5vw, 4rem)' }}
+            >
               How Jito Cabal Works
             </h1>
-            <p className="text-base leading-[1.7] text-text-secondary max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg leading-[1.7] text-text-secondary">
               A Solana NFT community platform built around contribution, transparency, and fair competition.
               Every mechanic has a reason — and a guardrail.
             </p>
@@ -71,36 +83,37 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* ═══════════════════ THE PLATFORM ═══════════════════ */}
+      {/* ═══════════════════ THREE STEPS ═══════════════════ */}
       <section
-        aria-label="Platform benefits"
-        className="w-full py-28"
+        aria-label="How to get started — three steps"
+        className="w-full py-16 sm:py-20"
       >
-        <div className="mx-auto w-full max-w-5xl px-6">
-          <ScrollFadeUp className="mb-14">
-            <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mb-4">
-              The Platform
+        <div className="mx-auto w-full max-w-4xl px-6 sm:px-10 text-center">
+          <ScrollFadeUp className="mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text mb-4">
+              Three Steps
+            </p>
+            <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mb-3">
+              From wallet to leaderboard
             </h2>
-            <p className="text-base leading-[1.7] text-text-secondary max-w-xl">
-              Three things that make Jito Cabal different from every other engagement system you have tried.
+            <p className="mx-auto max-w-xl text-base leading-[1.7] text-text-secondary">
+              Minutes to get started. Years to master.
             </p>
           </ScrollFadeUp>
 
-          <div className="space-y-4">
-            {BENEFITS.map((benefit, idx) => (
-              <ScrollFadeUp key={benefit.num} delay={idx * 0.08}>
-                <div className="group flex items-start gap-5 rounded-lg border border-border-subtle bg-bg-surface/30 px-6 py-5 transition-[border-color,background-color] duration-200 hover:border-accent-border hover:bg-bg-surface/60 focus-within:border-accent-border">
-                  <span className="mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 font-display text-sm font-bold tracking-wider text-accent-text transition-[background-color,border-color] duration-200 group-hover:border-accent/60 group-hover:bg-accent/20">
-                    {benefit.num}
+          <div className="grid gap-4 sm:gap-5 md:grid-cols-3">
+            {STEPS.map((step, idx) => (
+              <ScrollFadeUp key={step.num} delay={idx * 0.08}>
+                <div className="group h-full rounded-xl border border-border-subtle bg-bg-surface/40 p-6 text-center transition-[border-color,background-color] duration-200 hover:border-accent-border hover:bg-bg-surface/60">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent/30 bg-accent/10 font-display text-sm font-bold tracking-wider text-accent-text mb-4 mx-auto transition-[background-color,border-color] duration-200 group-hover:border-accent/60 group-hover:bg-accent/20">
+                    {step.num}
                   </span>
-                  <div>
-                    <h3 className="text-xl font-semibold text-text-primary mb-1 leading-snug">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-base leading-[1.7] text-text-secondary">
-                      {benefit.body}
-                    </p>
-                  </div>
+                  <h3 className="text-lg font-semibold text-text-primary mb-2 leading-snug">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm sm:text-base leading-[1.7] text-text-secondary">
+                    {step.body}
+                  </p>
                 </div>
               </ScrollFadeUp>
             ))}
@@ -108,34 +121,50 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* ═══════════════════ THREE STEPS ═══════════════════ */}
+      {/* ═══════════════════ PSYCHOLOGY PILLARS (merged from /pillars) ═══════════════════ */}
       <section
-        aria-label="How to get started — three steps"
-        className="w-full py-20"
+        id="pillars"
+        aria-label="Motivation pillars — the psychological foundations of Jito Cabal"
+        className="w-full bg-bg-surface/20 py-20 sm:py-24"
       >
-        <div className="mx-auto w-full max-w-5xl px-6">
+        <div className="mx-auto w-full max-w-5xl px-6 sm:px-10 text-center">
           <ScrollFadeUp className="mb-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-accent-text mb-4">
+              Psychology Core
+            </p>
             <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mb-4">
-              Three Steps
+              Three motivation systems,{' '}
+              <span className="text-text-tertiary">one product language</span>
             </h2>
-            <p className="text-base leading-[1.7] text-text-secondary max-w-xl">
-              From wallet to leaderboard in minutes.
+            <p className="mx-auto max-w-2xl text-base leading-[1.7] text-text-secondary">
+              Every feature in Jito Cabal maps to one of these three Self-Determination Theory pillars.
+              If a mechanic doesn&apos;t serve autonomy, competence, or relatedness — it doesn&apos;t ship.
             </p>
           </ScrollFadeUp>
 
-          <div className="space-y-4">
-            {STEPS.map((step, idx) => (
-              <ScrollFadeUp key={step.num} delay={idx * 0.08}>
-                <div className="group flex items-start gap-5 rounded-lg border border-border-subtle bg-bg-raised/40 px-6 py-5 transition-[border-color,background-color] duration-200 hover:border-accent-border hover:bg-bg-raised/70 focus-within:border-accent-border">
-                  <span className="mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 font-display text-sm font-bold tracking-wider text-accent-text transition-[background-color,border-color] duration-200 group-hover:border-accent/60 group-hover:bg-accent/20">
-                    {step.num}
+          <div className="grid gap-6 md:gap-8 md:grid-cols-3 text-left">
+            {PILLARS.map((pillar, idx) => (
+              <ScrollFadeUp
+                key={pillar.title}
+                delay={idx * 0.1}
+                tabIndex={0}
+                role="article"
+                className="group relative rounded-xl border border-border-subtle bg-bg-surface/50 p-6 md:p-7 transition-[border-color,background-color] duration-300 hover:border-accent-border hover:bg-bg-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-border active:scale-[0.99]"
+              >
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-accent/30 bg-accent/10 font-display text-sm font-bold tracking-wider text-accent-text transition-[background-color,border-color] duration-300 group-hover:border-accent/60 group-hover:bg-accent/20">
+                    {pillar.num}
                   </span>
-                  <div>
-                    <h3 className="text-xl font-semibold text-text-primary mb-1 leading-snug">
-                      {step.title}
-                    </h3>
-                    <p className="text-base leading-[1.7] text-text-secondary">
-                      {step.body}
+                  <h3 className="font-display text-xl text-accent-text">{pillar.title}</h3>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-base font-medium text-text-primary leading-snug">{pillar.insight}</p>
+                  <p className="text-sm leading-[1.7] text-text-secondary">{pillar.mechanics}</p>
+
+                  <div className="border-t border-border-subtle pt-4 mt-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-secondary leading-relaxed">
+                      Guardrail — {pillar.guardrail}
                     </p>
                   </div>
                 </div>
@@ -150,23 +179,26 @@ export default function HowItWorksPage() {
         aria-label="Our commitments"
         className="w-full py-20"
       >
-        <div className="mx-auto w-full max-w-5xl px-6">
-          <ScrollFadeUp className="mb-14">
-            <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mb-4">
-              Our Commitments
+        <div className="mx-auto w-full max-w-3xl px-6 sm:px-10 text-center">
+          <ScrollFadeUp className="mb-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text mb-4">
+              Commitments
+            </p>
+            <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mb-3">
+              The rules we hold ourselves to
             </h2>
-            <p className="text-base leading-[1.7] text-text-secondary max-w-xl">
-              The rules we hold ourselves to, publicly.
+            <p className="text-base leading-[1.7] text-text-secondary">
+              Publicly. Auditably. Always.
             </p>
           </ScrollFadeUp>
 
           <ScrollFadeUp delay={0.08}>
-            <ul className="space-y-5" role="list">
+            <ul className="mx-auto inline-flex flex-col gap-4 text-left" role="list">
               {COMMITMENTS.map((commitment) => (
-                <li key={commitment} className="flex items-start gap-4">
+                <li key={commitment} className="flex items-start gap-3">
                   <span
                     aria-hidden="true"
-                    className="mt-[0.45em] inline-block h-2 w-2 flex-shrink-0 rounded-full bg-accent"
+                    className="mt-[0.5em] inline-block h-2 w-2 flex-shrink-0 rounded-full bg-accent"
                   />
                   <p className="text-base leading-[1.7] text-text-secondary">
                     {commitment}
@@ -181,26 +213,29 @@ export default function HowItWorksPage() {
       {/* ═══════════════════ CTA ═══════════════════ */}
       <section
         aria-label="Get started with Jito Cabal"
-        className="mx-auto w-full max-w-5xl px-6 pt-28 pb-20"
+        className="w-full pt-16 pb-24"
       >
-        <ScrollFadeUp className="mx-auto max-w-2xl text-center">
-          <h2
-            className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mb-4"
-            style={{ textWrap: 'balance' } as React.CSSProperties}
-          >
-            Start earning with your community
-          </h2>
-          <p className="text-base leading-[1.7] text-text-secondary mb-10">
-            Connect your wallet and start contributing. Quality work gets recognized.
-          </p>
-          <Link
-            href="/dashboard"
-            className="group relative inline-flex items-center rounded-lg bg-accent px-8 py-3.5 text-sm font-semibold text-[#08080a] transition-[box-shadow,transform] duration-200 hover:shadow-[0_0_40px_rgba(212,168,83,0.3)] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-          >
-            Connect Wallet
-            <span className="absolute inset-0 rounded-lg bg-white/0 transition-[background-color] duration-200 group-hover:bg-white/10" />
-          </Link>
-        </ScrollFadeUp>
+        <div className="mx-auto w-full max-w-3xl px-6 sm:px-10 text-center">
+          <ScrollFadeUp>
+            <h2
+              className="font-display text-3xl sm:text-4xl leading-[1.05] tracking-[-0.03em] text-text-primary mb-4"
+              style={{ textWrap: 'balance' } as React.CSSProperties}
+            >
+              Start earning with your community
+            </h2>
+            <p className="mx-auto max-w-xl text-base leading-[1.7] text-text-secondary mb-10">
+              Connect your wallet and start contributing. Quality work gets recognized.
+            </p>
+            <div className="flex justify-center">
+              <Link
+                href="/"
+                className="group relative inline-flex items-center rounded-lg bg-accent px-8 py-3.5 text-sm font-semibold text-[var(--bg-base)] transition-[box-shadow,transform,background-color] duration-200 hover:bg-accent-dim hover:shadow-[0_0_40px_rgba(212,168,83,0.3)] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+              >
+                Connect Your Wallet
+              </Link>
+            </div>
+          </ScrollFadeUp>
+        </div>
       </section>
     </>
   );
