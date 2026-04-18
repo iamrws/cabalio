@@ -73,11 +73,14 @@ export default function TopNav() {
   }, []);
 
   useEffect(() => {
-    void fetchNotifications();
+    const t = setTimeout(() => { void fetchNotifications(); }, 0);
     const id = setInterval(() => {
       if (document.visibilityState === 'visible') fetchNotifications();
     }, POLL_INTERVAL);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(t);
+      clearInterval(id);
+    };
   }, [fetchNotifications]);
 
   useEffect(() => {
