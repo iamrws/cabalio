@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import Providers from '@/components/shared/Providers';
 
 export const metadata: Metadata = {
   title: 'Jito Cabal | Community Engagement Platform',
@@ -39,9 +38,7 @@ export default function RootLayout({
         <link rel="preload" href="/fonts/satoshi-600.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body className="font-sans antialiased bg-bg-base text-text-primary">
-        <Providers>
-          {children}
-        </Providers>
+        {children}
       </body>
     </html>
   );
