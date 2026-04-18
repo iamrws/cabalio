@@ -172,10 +172,9 @@ function Inner() {
 
   return (
     <div
-      className="relative rounded-2xl border border-accent-border bg-bg-surface/60 backdrop-blur-md p-8 sm:p-10"
+      className="relative rounded-2xl border border-accent-border bg-bg-surface/60 p-8 sm:p-10"
       style={{
-        boxShadow:
-          '0 0 0 1px rgba(212,168,83,0.08), 0 20px 60px -20px rgba(212,168,83,0.20), inset 0 1px 0 0 rgba(255,255,255,0.02)',
+        boxShadow: '0 20px 60px -20px rgba(212,168,83,0.20)',
       }}
     >
       {gate === 'loading' && (
