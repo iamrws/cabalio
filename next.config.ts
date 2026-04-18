@@ -55,6 +55,14 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ['@anthropic-ai/sdk'],
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+    ],
+  },
   async headers() {
     return [
       {
