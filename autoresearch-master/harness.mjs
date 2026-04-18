@@ -50,15 +50,25 @@ async function runCmd(cmd, args, { cwd = REPO_ROOT, timeout = HARD_KILL_MS } = {
 // Primary KPI: build + measure LCP
 // ---------------------------------------------------------------------------
 
-function parseFirstLoadKb(buildStdout) {
-  // Next.js build prints a table with "First Load JS shared by all" total.
-  // Match lines like "+ First Load JS shared by all             123 kB"
-  const m = buildStdout.match(/First Load JS shared by all\s+([\d.]+)\s*kB/i);
-  if (m) return parseFloat(m[1]);
-  // Fallback: sum of route-level "First Load JS" column
-  const rows = [...buildStdout.matchAll(/^\s*[├└○●ƒλ]\s+\S.*?\s+([\d.]+)\s*kB\s*$/gm)];
-  if (rows.length) return Math.max(...rows.map(r => parseFloat(r[1])));
-  return 0;
+async function measureStaticJs() {
+  // Measure directly from .next/static/chunks — robust across Next versions.
+  const dir = path.join(REPO_ROOT, '.next', 'static', 'chunks');
+  let files = 0;
+  let bytes = 0;
+  async function walk(d) {
+    let entries;
+    try { entries = await fs.readdir(d, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) await walk(p);
+      else if (e.name.endsWith('.js')) {
+        files++;
+        try { bytes += (await fs.stat(p)).size; } catch { /* ignore */ }
+      }
+    }
+  }
+  await walk(dir);
+  return { chunks: files, first_load_js_kb: +(bytes / 1024).toFixed(1) };
 }
 
 async function buildApp() {
@@ -66,7 +76,8 @@ async function buildApp() {
   if (r.exitCode !== 0) {
     throw new Error(`next build failed:\n${r.all ?? r.stderr}`);
   }
-  return { stdout: r.stdout ?? '', first_load_js_kb: parseFirstLoadKb(r.stdout ?? '') };
+  const { chunks, first_load_js_kb } = await measureStaticJs();
+  return { stdout: r.stdout ?? '', first_load_js_kb, chunks };
 }
 
 async function measureLcp() {
@@ -180,17 +191,6 @@ async function scoreTsc() {
   return errs.length;
 }
 
-async function scoreChunks() {
-  const manifest = path.join(REPO_ROOT, '.next', 'build-manifest.json');
-  try {
-    const raw = await fs.readFile(manifest, 'utf8');
-    const m = JSON.parse(raw);
-    const chunks = new Set();
-    for (const arr of Object.values(m.pages || {})) for (const f of arr) chunks.add(f);
-    return chunks.size;
-  } catch { return -1; }
-}
-
 function archScoreFrom({ eslint, cycles, avgComplexity, tsErrors, chunks }) {
   let score = 100;
   if (eslint.errors   >= 0) score -= Math.min(40, eslint.errors * 2);
@@ -203,13 +203,12 @@ function archScoreFrom({ eslint, cycles, avgComplexity, tsErrors, chunks }) {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
-async function architectureScore() {
-  const [eslint, cycles, avgComplexity, tsErrors, chunks] = await Promise.all([
+async function architectureScore(chunks) {
+  const [eslint, cycles, avgComplexity, tsErrors] = await Promise.all([
     scoreEslint(),
     scoreMadge(),
     scoreEscomplex(),
     scoreTsc(),
-    scoreChunks(),
   ]);
   return {
     arch_score: archScoreFrom({ eslint, cycles, avgComplexity, tsErrors, chunks }),
@@ -231,7 +230,7 @@ export async function runExperiment() {
   const lcpMs = Date.now() - tLcp;
 
   const tArch = Date.now();
-  const { arch_score, breakdown } = await architectureScore();
+  const { arch_score, breakdown } = await architectureScore(build.chunks);
   const archMs = Date.now() - tArch;
 
   const total = Date.now() - t0;
