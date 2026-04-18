@@ -31,7 +31,8 @@ Each experiment runs on a single machine. The harness runs for a **fixed time bu
 **What you CANNOT do:**
 - Modify `harness.mjs`, `run.mjs`, `program.md`, `README.md`, or `analysis.mjs`. The harness is the ground-truth metric.
 - Add runtime dependencies to `../package.json`. DevDependencies for measurement are already installed.
-- Modify `*.test.ts`, `../supabase/migrations/**`, or anything under `autoresearch-master/`.
+- Modify `../supabase/migrations/**`, or anything under `autoresearch-master/`.
+- Alter `*.test.ts` / `*.test.tsx` in ways that change test behavior — no deletions, no `.skip`/`.only`, no loosened assertions, no reduced coverage. Tests may be edited to fix type/lint errors, but not to alter assertions, skip tests, or reduce coverage.
 - Change the measurement code itself (Playwright setup, build command, scoring function).
 
 **The goal is simple: get the lowest `load_ms`, with `arch_score` as a tiebreaker.** Since the harness budget is fixed, you don't need to worry about measurement time. Everything else is fair game: swap libraries for lighter alternatives, lazy-load Solana wallet adapters, code-split the dashboard, drop unused CSS, etc.
