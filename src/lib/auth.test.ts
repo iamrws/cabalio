@@ -111,26 +111,56 @@ describe('generateNonce', () => {
 // ─── Sign-In Message ────────────────────────────────────────────
 
 describe('buildSignInMessage', () => {
-  it('includes wallet, nonce, and issuedAt', () => {
-    const msg = buildSignInMessage('SomeWallet', 'abc123', '2025-01-01T00:00:00Z');
-    expect(msg).toContain('Wallet: SomeWallet');
+  it('includes SIWS-style domain, URI, chain, wallet, nonce, issued/expires', () => {
+    const msg = buildSignInMessage({
+      walletAddress: 'SomeWallet',
+      nonce: 'abc123',
+      issuedAt: '2025-01-01T00:00:00Z',
+      expiresAt: '2025-01-01T00:05:00Z',
+      domain: 'app.cabalio.dev',
+      uri: 'https://app.cabalio.dev',
+      chainId: 'solana:mainnet',
+    });
+    expect(msg.startsWith('app.cabalio.dev wants you to sign in with your Solana account:')).toBe(true);
+    expect(msg).toContain('SomeWallet');
+    expect(msg).toContain('URI: https://app.cabalio.dev');
+    expect(msg).toContain('Chain ID: solana:mainnet');
     expect(msg).toContain('Nonce: abc123');
     expect(msg).toContain('Issued At: 2025-01-01T00:00:00Z');
-    expect(msg).toContain('Jito Cabal Authentication');
+    expect(msg).toContain('Expiration Time: 2025-01-01T00:05:00Z');
+    expect(msg).toContain('Version: 1');
+  });
+
+  it('produces different bytes for different domains (replay resistance)', () => {
+    const base = {
+      walletAddress: 'W',
+      nonce: 'N',
+      issuedAt: '2025-01-01T00:00:00Z',
+      expiresAt: '2025-01-01T00:05:00Z',
+      uri: 'https://a',
+      chainId: 'solana:mainnet',
+    } as const;
+    const a = buildSignInMessage({ ...base, domain: 'good.example.com' });
+    const b = buildSignInMessage({ ...base, domain: 'evil.example.com' });
+    expect(a).not.toEqual(b);
   });
 });
 
 // ─── Challenge Encode/Decode ────────────────────────────────────
 
 describe('encodeChallenge / decodeChallenge', () => {
-  it('roundtrips a challenge', async () => {
-    const challenge: AuthChallenge = {
-      nonce: 'test-nonce',
-      issuedAt: '2025-06-01T12:00:00Z',
-      walletAddress: 'ChallengeWallet',
-    };
+  const sampleChallenge: AuthChallenge = {
+    nonce: 'test-nonce',
+    issuedAt: '2025-06-01T12:00:00Z',
+    expiresAt: '2025-06-01T12:05:00Z',
+    walletAddress: 'ChallengeWallet',
+    domain: 'app.cabalio.dev',
+    uri: 'https://app.cabalio.dev',
+    chainId: 'solana:mainnet',
+  };
 
-    const encoded = await encodeChallenge(challenge);
+  it('roundtrips a challenge including domain/URI/chain/expiry', async () => {
+    const encoded = await encodeChallenge(sampleChallenge);
     expect(typeof encoded).toBe('string');
     expect(encoded).toContain('.');
 
@@ -139,6 +169,10 @@ describe('encodeChallenge / decodeChallenge', () => {
     expect(decoded!.nonce).toBe('test-nonce');
     expect(decoded!.walletAddress).toBe('ChallengeWallet');
     expect(decoded!.issuedAt).toBe('2025-06-01T12:00:00Z');
+    expect(decoded!.expiresAt).toBe('2025-06-01T12:05:00Z');
+    expect(decoded!.domain).toBe('app.cabalio.dev');
+    expect(decoded!.uri).toBe('https://app.cabalio.dev');
+    expect(decoded!.chainId).toBe('solana:mainnet');
   });
 
   it('returns null for undefined/empty input', async () => {
@@ -147,16 +181,36 @@ describe('encodeChallenge / decodeChallenge', () => {
   });
 
   it('returns null for tampered challenge', async () => {
-    const challenge: AuthChallenge = {
+    const encoded = await encodeChallenge(sampleChallenge);
+    const [, sig] = encoded.split('.');
+    const fakePayload = btoa(
+      JSON.stringify({
+        ...sampleChallenge,
+        walletAddress: 'Evil',
+      })
+    );
+    const tampered = `${fakePayload}.${sig}`;
+    expect(await decodeChallenge(tampered)).toBeNull();
+  });
+
+  it('returns null when a required SIWS field is missing', async () => {
+    // A legacy-shape challenge (pre-SIWS) must be rejected.
+    const legacy = {
       nonce: 'n',
       issuedAt: '2025-06-01T12:00:00Z',
       walletAddress: 'W',
     };
-    const encoded = await encodeChallenge(challenge);
-    const [, sig] = encoded.split('.');
-    const fakePayload = btoa(JSON.stringify({ nonce: 'evil', issuedAt: '2025-06-01T12:00:00Z', walletAddress: 'Evil' }));
-    const tampered = `${fakePayload}.${sig}`;
-    expect(await decodeChallenge(tampered)).toBeNull();
+    // Force-encode by reaching into the same HMAC path: we just reuse the
+    // test secret and produce a valid signature for a legacy payload so the
+    // decoder is tested on the missing-field branch rather than the HMAC
+    // branch.
+    const { createHmac } = await import('crypto');
+    const payload = Buffer.from(JSON.stringify(legacy));
+    const sig = createHmac('sha256', process.env.NEXTAUTH_SECRET!).update(payload).digest();
+    const b64 = (buf: Buffer) =>
+      buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const encoded = `${b64(payload)}.${b64(sig)}`;
+    expect(await decodeChallenge(encoded)).toBeNull();
   });
 
   it('returns null for malformed input', async () => {
@@ -199,15 +253,20 @@ describe('validateCsrfOrigin', () => {
     } as unknown as import('next/server').NextRequest;
   }
 
-  it('returns false when no host header', () => {
+  it('returns false when no allowed host and no config', () => {
+    const origAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+    delete process.env.NEXT_PUBLIC_APP_URL;
+    vi.stubEnv('NODE_ENV', 'production');
     expect(validateCsrfOrigin(makeRequest({}))).toBe(false);
+    vi.unstubAllEnvs();
+    if (origAppUrl) process.env.NEXT_PUBLIC_APP_URL = origAppUrl;
   });
 
   it('returns false when no origin and no referer', () => {
     expect(validateCsrfOrigin(makeRequest({ host: 'example.com' }))).toBe(false);
   });
 
-  it('accepts matching origin', () => {
+  it('accepts matching origin (dev fallback uses request host)', () => {
     expect(
       validateCsrfOrigin(
         makeRequest({ host: 'example.com', origin: 'https://example.com' })
@@ -252,6 +311,21 @@ describe('validateCsrfOrigin', () => {
       )
     ).toBe(true);
 
+    process.env.NEXT_PUBLIC_APP_URL = original;
+  });
+
+  it('rejects request-host fallback in production (N-12)', () => {
+    const original = process.env.NEXT_PUBLIC_APP_URL;
+    process.env.NEXT_PUBLIC_APP_URL = 'https://app.jitocabal.com';
+    vi.stubEnv('NODE_ENV', 'production');
+
+    expect(
+      validateCsrfOrigin(
+        makeRequest({ host: 'attacker.com', origin: 'https://attacker.com' })
+      )
+    ).toBe(false);
+
+    vi.unstubAllEnvs();
     process.env.NEXT_PUBLIC_APP_URL = original;
   });
 

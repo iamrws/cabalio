@@ -24,7 +24,55 @@ export interface SessionPayload {
 export interface AuthChallenge {
   nonce: string;
   issuedAt: string;
+  expiresAt: string;
   walletAddress: string;
+  domain: string;
+  uri: string;
+  chainId: string;
+}
+
+export interface SignInMessageFields {
+  walletAddress: string;
+  nonce: string;
+  issuedAt: string;
+  expiresAt: string;
+  domain: string;
+  uri: string;
+  chainId: string;
+}
+
+const DEFAULT_CHAIN_ID = 'solana:mainnet';
+const DEV_APP_URL_FALLBACK = 'http://localhost:3000';
+
+/**
+ * Canonical app URL used for domain binding in the sign-in message and for
+ * CSRF origin validation. Set NEXT_PUBLIC_APP_URL in every non-dev
+ * environment. In production we refuse to fall back to the request host
+ * because that is attacker-controlled.
+ */
+export function getCanonicalAppUrl(): URL {
+  const raw = process.env.NEXT_PUBLIC_APP_URL || '';
+  if (raw) {
+    try {
+      return new URL(raw);
+    } catch {
+      // fall through to default handling below
+    }
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'NEXT_PUBLIC_APP_URL must be configured in production for domain-bound auth'
+    );
+  }
+  return new URL(DEV_APP_URL_FALLBACK);
+}
+
+export function getCanonicalDomain(): string {
+  return getCanonicalAppUrl().host;
+}
+
+export function getChainId(): string {
+  return process.env.NEXT_PUBLIC_CHAIN_ID || DEFAULT_CHAIN_ID;
 }
 
 function base64UrlEncode(bytes: Uint8Array): string {
@@ -215,15 +263,25 @@ export function generateNonce(): string {
   return base64UrlEncode(bytes);
 }
 
-export function buildSignInMessage(walletAddress: string, nonce: string, issuedAt: string): string {
+/**
+ * Construct the SIWS-style sign-in message the wallet signs. Includes the
+ * canonical domain, URI, chain ID, nonce, and an explicit issue/expire
+ * window so a relayed signature cannot be replayed against a different
+ * host (see AUDIT_4.23.26 H-02).
+ */
+export function buildSignInMessage(fields: SignInMessageFields): string {
   return [
-    'Jito Cabal Authentication',
+    `${fields.domain} wants you to sign in with your Solana account:`,
+    fields.walletAddress,
     '',
-    `Wallet: ${walletAddress}`,
-    `Nonce: ${nonce}`,
-    `Issued At: ${issuedAt}`,
+    'Sign in to Jito Cabal and verify holder-only access.',
     '',
-    'Sign this message to verify wallet ownership and access holder-only features.',
+    `URI: ${fields.uri}`,
+    'Version: 1',
+    `Chain ID: ${fields.chainId}`,
+    `Nonce: ${fields.nonce}`,
+    `Issued At: ${fields.issuedAt}`,
+    `Expiration Time: ${fields.expiresAt}`,
   ].join('\n');
 }
 
@@ -260,9 +318,19 @@ export async function decodeChallenge(raw: string | undefined): Promise<AuthChal
     const expectedSig = new Uint8Array(await crypto.subtle.sign('HMAC', key, payload.buffer as ArrayBuffer));
     if (!timingSafeEqual(expectedSig, sig)) return null;
     const decoded = new TextDecoder().decode(payload);
-    const challenge = JSON.parse(decoded) as AuthChallenge;
-    if (!challenge.nonce || !challenge.issuedAt || !challenge.walletAddress) return null;
-    return challenge;
+    const challenge = JSON.parse(decoded) as Partial<AuthChallenge>;
+    if (
+      !challenge.nonce ||
+      !challenge.issuedAt ||
+      !challenge.walletAddress ||
+      !challenge.expiresAt ||
+      !challenge.domain ||
+      !challenge.uri ||
+      !challenge.chainId
+    ) {
+      return null;
+    }
+    return challenge as AuthChallenge;
   } catch {
     return null;
   }
@@ -291,29 +359,40 @@ export function isChallengeAgeFresh(issuedAt: string): boolean {
 }
 
 /**
- * Validate the Origin or Referer header against the expected host
- * to protect against CSRF on POST endpoints.
- * Returns true if the request origin is valid.
+ * Validate the Origin or Referer header against the canonical app URL.
+ * Prevents CSRF from cross-origin submissions. The request's own `Host`
+ * header is attacker-controlled and is ONLY used as a fallback outside of
+ * production (so the dev server keeps working on arbitrary localhost
+ * ports). See AUDIT_4.23.26 N-12.
  */
 export function validateCsrfOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
   const host = request.headers.get('host');
 
-  if (!host) return false;
-
-  // Build allowlist from configured app URL + request host as fallback
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const allowedHosts = new Set<string>();
-  allowedHosts.add(host); // Keep host as fallback for dev environments
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (appUrl) {
-    try { allowedHosts.add(new URL(appUrl).host); } catch {}
+    try {
+      allowedHosts.add(new URL(appUrl).host);
+    } catch {
+      // invalid env var -- ignored, but fail-closed below if this was our
+      // only hope of a trusted host.
+    }
   }
+
+  if (process.env.NODE_ENV !== 'production' && host) {
+    // In dev, trust the request host so `next dev` on random ports works.
+    // Production never takes this branch -- host is attacker-controlled
+    // via spoofing or request smuggling.
+    allowedHosts.add(host);
+  }
+
+  if (allowedHosts.size === 0) return false;
 
   if (origin) {
     try {
-      const originHost = new URL(origin).host;
-      return allowedHosts.has(originHost);
+      return allowedHosts.has(new URL(origin).host);
     } catch {
       return false;
     }
@@ -321,8 +400,7 @@ export function validateCsrfOrigin(request: NextRequest): boolean {
 
   if (referer) {
     try {
-      const refererHost = new URL(referer).host;
-      return allowedHosts.has(refererHost);
+      return allowedHosts.has(new URL(referer).host);
     } catch {
       return false;
     }

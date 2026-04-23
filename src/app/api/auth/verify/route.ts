@@ -8,6 +8,8 @@ import {
   createSessionToken,
   decodeChallenge,
   getAuthCookieOptions,
+  getCanonicalDomain,
+  getChainId,
   isAdminWallet,
   isChallengeAgeFresh,
   validateCsrfOrigin,
@@ -119,7 +121,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Nonce already consumed' }, { status: 401 });
     }
 
-    const message = buildSignInMessage(parsed.walletAddress, challenge.nonce, challenge.issuedAt);
+    // H-02: Reject sessions signed for a different domain or chain. The
+    // challenge cookie captured these at nonce-issue time; refuse if the
+    // server's current config disagrees (stale-deploy / misconfig).
+    const expectedDomain = getCanonicalDomain();
+    const expectedChain = getChainId();
+    if (challenge.domain !== expectedDomain || challenge.chainId !== expectedChain) {
+      supabase
+        .from('audit_logs')
+        .insert({
+          action: 'auth_failed',
+          actor_wallet: parsed.walletAddress,
+          target_wallet: parsed.walletAddress,
+          details: {
+            reason: 'domain_or_chain_mismatch',
+            expected_domain: expectedDomain,
+            challenge_domain: challenge.domain,
+            expected_chain: expectedChain,
+            challenge_chain: challenge.chainId,
+          },
+          created_at: new Date().toISOString(),
+        })
+        .then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
+      return NextResponse.json({ error: 'Authentication domain mismatch' }, { status: 401 });
+    }
+
+    if (new Date(challenge.expiresAt).getTime() <= Date.now()) {
+      return NextResponse.json({ error: 'Authentication challenge expired' }, { status: 401 });
+    }
+
+    const message = buildSignInMessage({
+      walletAddress: parsed.walletAddress,
+      nonce: challenge.nonce,
+      issuedAt: challenge.issuedAt,
+      expiresAt: challenge.expiresAt,
+      domain: challenge.domain,
+      uri: challenge.uri,
+      chainId: challenge.chainId,
+    });
     const signatureBytes = base64ToBytes(parsed.signature);
     const isSignatureValid = verifySignature(message, signatureBytes, publicKey);
 

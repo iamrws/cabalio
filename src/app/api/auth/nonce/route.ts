@@ -7,6 +7,9 @@ import {
   encodeChallenge,
   generateNonce,
   getAuthCookieOptions,
+  getCanonicalAppUrl,
+  getCanonicalDomain,
+  getChainId,
   validateCsrfOrigin,
 } from '@/lib/auth';
 import { createServerClient } from '@/lib/db';
@@ -34,7 +37,20 @@ export async function POST(request: NextRequest) {
     }
 
     const nonce = generateNonce();
-    const issuedAt = new Date().toISOString();
+    const issuedAtMs = Date.now();
+    const issuedAt = new Date(issuedAtMs).toISOString();
+    const expiresAt = new Date(issuedAtMs + 5 * 60 * 1000).toISOString();
+
+    let domain: string;
+    let uri: string;
+    try {
+      domain = getCanonicalDomain();
+      uri = getCanonicalAppUrl().toString();
+    } catch (err) {
+      console.error('Auth misconfiguration:', err instanceof Error ? err.message : err);
+      return NextResponse.json({ error: 'Authentication misconfigured' }, { status: 500 });
+    }
+    const chainId = getChainId();
 
     // C1: Store nonce in Supabase for server-side validation and single-use enforcement
     const supabase = createServerClient();
@@ -65,11 +81,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication setup failed' }, { status: 500 });
     }
 
-    // M4: Include wallet address in challenge cookie so it's bound to the requesting wallet
-    const challenge = await encodeChallenge({ nonce, issuedAt, walletAddress: parsed.walletAddress });
-    const message = buildSignInMessage(parsed.walletAddress, nonce, issuedAt);
+    // M4: Include wallet address in challenge cookie so it's bound to the requesting wallet.
+    // H-02: Bind the signed message to domain/URI/chain-id/expiry.
+    const challenge = await encodeChallenge({
+      nonce,
+      issuedAt,
+      expiresAt,
+      walletAddress: parsed.walletAddress,
+      domain,
+      uri,
+      chainId,
+    });
+    const message = buildSignInMessage({
+      walletAddress: parsed.walletAddress,
+      nonce,
+      issuedAt,
+      expiresAt,
+      domain,
+      uri,
+      chainId,
+    });
 
-    const response = NextResponse.json({ message, issuedAt });
+    const response = NextResponse.json({ message, issuedAt, expiresAt });
     response.cookies.set(AUTH_CHALLENGE_COOKIE_NAME, challenge, {
       ...getAuthCookieOptions(60 * 5),
       maxAge: 60 * 5,
