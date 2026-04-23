@@ -8,6 +8,7 @@ import { Bell, FlaskConical, LogOut, Settings, User } from 'lucide-react';
 import { NAV_ITEMS, SECONDARY_NAV } from '@/lib/constants';
 import { useUser } from '../shared/UserProvider';
 import { useAiOrNot } from '../game/AiOrNotPanel';
+import { safeInternalPath } from '@/lib/notifications';
 import { useSubmitDrawer } from '../shared/SubmitDrawerProvider';
 import PointsBadge from '../shared/PointsBadge';
 
@@ -113,8 +114,8 @@ export default function TopNav() {
       try { await fetch(`/api/notifications/${n.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ read: true }) }); } catch { void fetchNotifications(); }
     }
     setBellOpen(false);
-    const link = n.link || n.metadata?.link;
-    if (link && typeof link === 'string') router.push(link);
+    const safe = safeInternalPath(n.link || n.metadata?.link);
+    if (safe) router.push(safe);
   };
 
   const handleLogout = async () => {

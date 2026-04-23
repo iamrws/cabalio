@@ -16,11 +16,20 @@ const feedbackSchema = z.object({
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT_MAX = 5;
 
+/**
+ * Only trust X-Forwarded-For when we're explicitly running behind a known
+ * reverse proxy (TRUST_PROXY_HEADERS=true). Defaults to 'unknown' so a
+ * client cannot forge an IP and evade rate limits. Closes N-15.
+ */
 function getClientIp(request: NextRequest): string {
+  if (process.env.TRUST_PROXY_HEADERS !== 'true') return 'unknown';
   const fwd = request.headers.get('x-forwarded-for');
-  if (fwd) return fwd.split(',')[0].trim();
+  if (fwd) {
+    const first = fwd.split(',')[0]?.trim() || '';
+    if (/^[0-9a-fA-F.:]+$/.test(first)) return first;
+  }
   const real = request.headers.get('x-real-ip');
-  if (real) return real.trim();
+  if (real && /^[0-9a-fA-F.:]+$/.test(real.trim())) return real.trim();
   return 'unknown';
 }
 
@@ -63,20 +72,35 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServerClient();
 
-  // Rate limit: 5/hour per wallet (or per IP as a backstop).
+  // Rate limit: 5/hour per wallet (or per IP as a backstop). Two separate
+  // count queries instead of raw .or() string interpolation so a wallet
+  // containing PostgREST operator chars cannot break out of the filter.
   const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
-  const { count: recentCount, error: rateErr } = await supabase
-    .from('feature_requests')
-    .select('id', { count: 'exact', head: true })
-    .gte('created_at', windowStart)
-    .or(`wallet_address.eq.${walletAddress},ip_hash.eq.${ipHash}`);
+  const [walletCountResult, ipCountResult] = await Promise.all([
+    supabase
+      .from('feature_requests')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', windowStart)
+      .eq('wallet_address', walletAddress),
+    ip === 'unknown'
+      ? Promise.resolve({ count: 0, error: null })
+      : supabase
+          .from('feature_requests')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', windowStart)
+          .eq('ip_hash', ipHash),
+  ]);
 
-  if (rateErr) {
-    console.error('Feature request rate-limit check failed:', rateErr);
+  if (walletCountResult.error || ipCountResult.error) {
+    console.error(
+      'Feature request rate-limit check failed:',
+      walletCountResult.error?.message || ipCountResult.error?.message
+    );
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 
-  if ((recentCount || 0) >= RATE_LIMIT_MAX) {
+  const recentCount = Math.max(walletCountResult.count || 0, ipCountResult.count || 0);
+  if (recentCount >= RATE_LIMIT_MAX) {
     return NextResponse.json(
       { error: 'Too many submissions. Please try again later.' },
       { status: 429 }

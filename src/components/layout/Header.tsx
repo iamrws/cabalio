@@ -7,6 +7,7 @@ import { Bell, Flame } from 'lucide-react';
 import AuthControls from '../shared/AuthControls';
 import PointsBadge from '../shared/PointsBadge';
 import { useUser } from '../shared/UserProvider';
+import { safeInternalPath } from '@/lib/notifications';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -151,9 +152,10 @@ export default function Header() {
 
     setIsOpen(false);
 
-    const link = notification.link || notification.metadata?.link;
-    if (link && typeof link === 'string') {
-      router.push(link);
+    const rawLink = notification.link || notification.metadata?.link;
+    const safe = safeInternalPath(rawLink);
+    if (safe) {
+      router.push(safe);
     }
   };
 

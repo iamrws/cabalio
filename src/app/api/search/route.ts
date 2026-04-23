@@ -35,13 +35,49 @@ export async function GET(request: NextRequest) {
 
   const supabase = createServerClient();
 
-  // Sanitize search query to strip PostgREST operator characters and SQL wildcards
-  const sanitized = q.replace(/[%_\\'"]/g, '');
+  // N-23: per-wallet search rate limit (60/min). Cheap pre-count on the
+  // engagement_events table we already log search into elsewhere would
+  // require a schema change; for now use the rate_limits table.
+  const windowStart = new Date(Date.now() - 60 * 1000).toISOString();
+  const { data: rlRow } = await supabase
+    .from('rate_limits')
+    .select('request_count')
+    .eq('wallet_address', session.walletAddress)
+    .eq('action', 'search')
+    .gte('window_start', windowStart)
+    .order('window_start', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (rlRow && rlRow.request_count >= 60) {
+    return NextResponse.json({ error: 'Search rate limit exceeded' }, { status: 429 });
+  }
+  await supabase.from('rate_limits').upsert(
+    {
+      wallet_address: session.walletAddress,
+      action: 'search',
+      request_count: (rlRow?.request_count || 0) + 1,
+      window_start: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'wallet_address,action' }
+  );
+
+  // M-08: Strip PostgREST operator/wildcard chars. Commas, parentheses,
+  // dots, and quotes would break out of the .or() clause; % / _ are SQL
+  // wildcards; backslash escapes. Be strict and reject early if nothing
+  // searchable remains after sanitization.
+  const sanitized = q.replace(/[%_\\'"(),.*]/g, '').trim();
+  if (!sanitized) {
+    return NextResponse.json({ error: 'Search term has no valid characters' }, { status: 400 });
+  }
   const pattern = `%${sanitized}%`;
 
   let query = supabase
     .from('submissions')
-    .select('id, type, title, content_text, points_awarded, normalized_score, created_at, wallet_address, users(display_name)', { count: 'exact' })
+    .select(
+      'id, type, title, content_text, points_awarded, normalized_score, created_at, wallet_address, users(display_name)',
+      { count: 'exact' }
+    )
     .eq('status', 'approved')
     .or(`title.ilike.${pattern},content_text.ilike.${pattern}`);
 
@@ -60,7 +96,7 @@ export async function GET(request: NextRequest) {
   const { data, count, error } = await query;
 
   if (error) {
-    console.error('Search query error:', error);
+    console.error('Search query error:', error.message);
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });
   }
 

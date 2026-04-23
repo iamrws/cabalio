@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,14 +71,23 @@ export async function POST(
   const { type } = parsed.data;
   const supabase = createServerClient();
 
-  // Verify submission exists
+  // M-03: verify submission AND enforce the same visibility gate as GET
+  // /api/submissions/[id]. Only approved submissions, or own/admin-visible
+  // ones, can be reacted to. Otherwise 404 (not 403) to avoid leaking
+  // existence of rejected/private submissions.
   const { data: submission, error: subError } = await supabase
     .from('submissions')
-    .select('id')
+    .select('id, wallet_address, status')
     .eq('id', id)
     .single();
 
   if (subError || !submission) {
+    return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+  }
+
+  const isOwner = submission.wallet_address === session.walletAddress;
+  const isAdminUser = await verifyAdminStatus(session.walletAddress, session);
+  if (submission.status !== 'approved' && !isOwner && !isAdminUser) {
     return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
   }
 
@@ -138,11 +147,12 @@ export async function GET(
   }
 
   const supabase = createServerClient();
+  const session = await getSessionFromRequest(request);
 
-  // Verify submission exists
+  // M-03: reject reads of non-approved submissions for non-owner/non-admin.
   const { data: submission, error: subError } = await supabase
     .from('submissions')
-    .select('id')
+    .select('id, wallet_address, status')
     .eq('id', id)
     .single();
 
@@ -150,12 +160,20 @@ export async function GET(
     return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
   }
 
+  if (submission.status !== 'approved') {
+    if (!session) {
+      return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+    }
+    const isOwner = submission.wallet_address === session.walletAddress;
+    const isAdminUser = await verifyAdminStatus(session.walletAddress, session);
+    if (!isOwner && !isAdminUser) {
+      return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+    }
+  }
+
   const counts = await getReactionCounts(supabase, id);
 
-  // If user is authenticated, include their reactions
-  const session = await getSessionFromRequest(request);
   let userReactions: ReactionType[] = [];
-
   if (session) {
     const { data: userRows } = await supabase
       .from('reactions')

@@ -54,6 +54,23 @@ export async function POST(request: NextRequest) {
     const walletAddress = parsed.wallet_address.trim();
     const absDelta = Math.abs(parsed.points_delta);
 
+    // N-10: per-admin rate limit (10 adjustments per minute). Prevents a
+    // rogue admin from inflating points in a burst.
+    const rateWindow = new Date(Date.now() - 60 * 1000).toISOString();
+    const supabaseRateCheck = createServerClient();
+    const { count: recentAdjustments } = await supabaseRateCheck
+      .from('audit_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('action', 'manual_points_adjustment')
+      .eq('actor_wallet', session.walletAddress)
+      .gte('created_at', rateWindow);
+    if ((recentAdjustments || 0) >= 10) {
+      return NextResponse.json(
+        { error: 'Admin adjustment rate limit exceeded (10/min)' },
+        { status: 429 }
+      );
+    }
+
     if (absDelta > SINGLE_ADMIN_ADJUSTMENT_CAP) {
       if (!parsed.approving_admin) {
         return NextResponse.json(
