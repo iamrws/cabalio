@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
 import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { verifyVoteTicket } from '@/lib/game-tickets';
 
 export const dynamic = 'force-dynamic';
 
 const voteSchema = z.object({
   videoId: z.string().regex(/^[a-zA-Z0-9_-]{1,50}$/, 'Invalid video ID format'),
   vote: z.enum(['ai', 'human']),
+  ticket: z.string().min(10).max(400),
 });
 
 async function isVoteRateLimited(supabase: ReturnType<typeof createServerClient>, walletAddress: string): Promise<boolean> {
@@ -51,6 +53,16 @@ export async function POST(request: NextRequest) {
 
     const walletAddress = session.walletAddress;
 
+    // M-05: only accept votes for videos served by /api/game/shorts, via a
+    // short-lived HMAC-signed ticket bound to (videoId, wallet).
+    const ticketCheck = await verifyVoteTicket(parsed.ticket, parsed.videoId, walletAddress);
+    if (!ticketCheck.ok) {
+      return NextResponse.json(
+        { error: 'Invalid or expired vote ticket' },
+        { status: 403 }
+      );
+    }
+
     // Prevent duplicate votes on the same video
     const { data: existingVote } = await supabase
       .from('game_votes')
@@ -88,10 +100,19 @@ export async function POST(request: NextRequest) {
     const totalVotesAfter = newAiCount + newHumanCount;
     const aiPct = totalVotesAfter > 0 ? Math.round((newAiCount / totalVotesAfter) * 100) : 50;
 
-    // Determine if vote matches the community majority (need at least 3 prior
-    // votes for meaningful consensus; otherwise default to matched)
-    const communityThinks = aiPct > 50 ? 'ai' : 'human';
-    const matched = totalVotesBefore < 3 ? true : parsed.vote === communityThinks;
+    // N-07: tie breaker. With exactly 50/50 we do NOT award a match bonus to
+    // either side; otherwise the 'human' branch got a free win on ties.
+    // Need at least 3 prior votes for meaningful consensus; first-movers are
+    // treated as matched to avoid punishing early voters.
+    let matched: boolean;
+    if (totalVotesBefore < 3) {
+      matched = true;
+    } else if (aiPct === 50) {
+      matched = false;
+    } else {
+      const communityThinks: 'ai' | 'human' = aiPct > 50 ? 'ai' : 'human';
+      matched = parsed.vote === communityThinks;
+    }
 
     // Fetch the player's current game session state
     const { data: gameState } = await supabase

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest } from '@/lib/auth';
+import { issueVoteTicket } from '@/lib/game-tickets';
 
 // L7: Validate required env vars at module load time (startup).
 // Log a warning instead of crashing so the fallback path still works.
@@ -187,20 +188,28 @@ export async function GET(request: NextRequest) {
   try {
     const apiKey = process.env.YOUTUBE_API_KEY;
 
-    // Check cache first
+    // Issue a vote ticket per short served so /api/game/vote can reject
+    // votes on arbitrary unissued video IDs (M-05).
+    const withTickets = async (list: YouTubeShort[]) =>
+      Promise.all(
+        list.map(async (s) => ({
+          ...s,
+          voteTicket: await issueVoteTicket(s.videoId, session.walletAddress),
+        }))
+      );
+
     if (cachedShorts.length > 0 && Date.now() - cacheTimestamp < CACHE_TTL) {
-      // Return a shuffled subset from cache
+      const subset = shuffle(cachedShorts).slice(0, 10);
       return NextResponse.json({
-        shorts: shuffle(cachedShorts).slice(0, 10),
+        shorts: await withTickets(subset),
         cached: true,
         total: cachedShorts.length,
       });
     }
 
     if (!apiKey) {
-      // Return fallback shorts when no API key
       return NextResponse.json({
-        shorts: FALLBACK_SHORTS,
+        shorts: await withTickets(FALLBACK_SHORTS),
         cached: false,
         fallback: true,
         total: FALLBACK_SHORTS.length,
@@ -215,12 +224,12 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      shorts: shorts.slice(0, 10),
+      shorts: await withTickets(shorts.slice(0, 10)),
       cached: false,
       total: shorts.length,
     });
   } catch (error) {
-    console.error('Game shorts API error:', error);
+    console.error('Game shorts API error:', error instanceof Error ? error.message : error);
     return NextResponse.json(
       { error: 'Failed to fetch shorts', shorts: FALLBACK_SHORTS },
       { status: 500 }
