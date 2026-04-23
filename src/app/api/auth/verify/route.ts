@@ -176,8 +176,10 @@ export async function POST(request: NextRequest) {
 
     const now = new Date().toISOString();
 
-    // M3 fix: Reduce NFT holder cache TTL to 1 hour. Re-verify only when cache expired.
-    const NFT_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+    // N-05 / H-08: cut NFT holder cache TTL to 5 min so a transferred-out
+    // holder loses claim/vote access within one session refresh instead of
+    // an hour.
+    const NFT_CACHE_TTL_MS = 5 * 60 * 1000;
     let isHolder = false;
     let mintAddress: string | null = null;
 

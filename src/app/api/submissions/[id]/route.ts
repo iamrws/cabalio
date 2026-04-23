@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest } from '@/lib/auth';
+import { getSessionFromRequest, verifyAdminStatus } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +34,7 @@ export async function GET(
   }
 
   const isOwner = data.wallet_address === session.walletAddress;
-  const isAdmin = session.role === 'admin';
+  const isAdmin = await verifyAdminStatus(session.walletAddress, session);
   const isPublic = data.status === 'approved';
 
   if (!isOwner && !isAdmin && !isPublic) {

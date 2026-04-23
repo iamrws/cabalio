@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
 import { getISOWeekNumber } from '@/lib/scoring';
-import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
 import {
   MAX_SUBMISSIONS_PER_DAY,
   MIN_ART_DESCRIPTION_LENGTH,
@@ -177,7 +177,8 @@ export async function GET(request: NextRequest) {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  const isAdmin = session.role === 'admin';
+  // Live admin check: session.role can lag 24 h behind a revocation.
+  const isAdmin = await verifyAdminStatus(session.walletAddress, session);
 
   if (!isAdmin) {
     if (scope === 'mine') {

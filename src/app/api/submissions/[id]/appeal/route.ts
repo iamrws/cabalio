@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@/lib/db';
-import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
+import { getSessionFromRequest, validateCsrfOrigin, verifyAdminStatus } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
@@ -134,7 +134,7 @@ export async function GET(
   }
 
   const isOwner = submission.wallet_address === session.walletAddress;
-  const isAdmin = session.role === 'admin';
+  const isAdmin = await verifyAdminStatus(session.walletAddress, session);
 
   if (!isOwner && !isAdmin) {
     return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
