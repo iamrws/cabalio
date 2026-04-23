@@ -59,6 +59,9 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ['@anthropic-ai/sdk'],
   experimental: {
+    // NOTE: do NOT add @solana/wallet-adapter-react-ui here — it ships
+    // a CSS file that the optimizer mangles, producing a ChunkLoadError
+    // when the wallet modal opens (CSS chunk fails to resolve).
     optimizePackageImports: [
       'lucide-react',
       '@radix-ui/react-dialog',
@@ -66,7 +69,6 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-tooltip',
       '@solana/web3.js',
       '@solana/wallet-adapter-react',
-      '@solana/wallet-adapter-react-ui',
       '@solana/wallet-adapter-base',
       'zod',
     ],
