@@ -114,10 +114,13 @@ export async function checkDailyLimit(
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
 
+  // Count both in-flight ('processing') and settled ('completed') claims.
+  // Matches record_reward_claim_atomic's budget check so this helper agrees
+  // with the authoritative server-side enforcement.
   const { data } = await supabase
     .from('reward_claims')
     .select('amount_lamports')
-    .eq('status', 'paid')
+    .in('status', ['processing', 'completed'])
     .gte('created_at', todayStart.toISOString());
 
   const todayTotal = (data || []).reduce(
