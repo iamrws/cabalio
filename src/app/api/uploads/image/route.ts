@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest, validateCsrfOrigin } from '@/lib/auth';
 import { MAX_IMAGE_SIZE_MB } from '@/lib/constants';
@@ -68,10 +68,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Image MIME type mismatch' }, { status: 400 });
   }
 
+  const supabase = createServerClient();
+
+  // M-04: per-wallet upload quota. 25 uploads / 50 MB per 24 h.
+  const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: recent, error: quotaErr } = await supabase
+    .from('uploads')
+    .select('size_bytes')
+    .eq('wallet_address', session.walletAddress)
+    .gte('created_at', windowStart);
+  if (quotaErr) {
+    console.error('Upload quota lookup failed:', quotaErr.message);
+    return NextResponse.json({ error: 'Unable to check upload quota' }, { status: 500 });
+  }
+  const uploadsInWindow = recent?.length || 0;
+  const bytesInWindow =
+    recent?.reduce((s, r) => s + (r.size_bytes as number | null ?? 0), 0) || 0;
+  const MAX_UPLOADS_PER_DAY = 25;
+  const MAX_BYTES_PER_DAY = 50 * 1024 * 1024;
+  if (uploadsInWindow >= MAX_UPLOADS_PER_DAY) {
+    return NextResponse.json(
+      { error: 'Daily upload count limit reached' },
+      { status: 429 }
+    );
+  }
+  if (bytesInWindow + maybeFile.size > MAX_BYTES_PER_DAY) {
+    return NextResponse.json(
+      { error: 'Daily upload size limit reached' },
+      { status: 429 }
+    );
+  }
+
   const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'submission-images';
   const walletSegment = sanitizePathSegment(session.walletAddress);
   const imagePath = `uploads/${walletSegment}/${Date.now()}-${randomUUID()}.${detected.extension}`;
-  const supabase = createServerClient();
 
   const { error: uploadError } = await supabase.storage.from(bucket).upload(imagePath, imageBuffer, {
     contentType: detected.mimeType,
@@ -80,8 +110,26 @@ export async function POST(request: NextRequest) {
   });
 
   if (uploadError) {
-    console.error('Upload failed:', uploadError);
+    console.error('Upload failed:', uploadError.message);
     return NextResponse.json({ error: 'Unable to store uploaded image' }, { status: 500 });
+  }
+
+  const sha256 = createHash('sha256').update(imageBuffer).digest('hex');
+  const { error: trackErr } = await supabase.from('uploads').insert({
+    wallet_address: session.walletAddress,
+    image_path: imagePath,
+    mime_type: detected.mimeType,
+    size_bytes: maybeFile.size,
+    sha256,
+    bucket,
+    status: 'ready',
+  });
+  if (trackErr) {
+    // If we can't persist ownership the submission route would also reject.
+    // Remove the storage object and return 500 so the client retries later.
+    await supabase.storage.from(bucket).remove([imagePath]).catch(() => undefined);
+    console.error('Upload tracking insert failed:', trackErr.message);
+    return NextResponse.json({ error: 'Unable to track upload' }, { status: 500 });
   }
 
   const {

@@ -245,6 +245,29 @@ export async function POST(request: NextRequest) {
     const walletAddress = session.walletAddress;
     const normalizedUrl = normalizeUrl(parsed.url);
 
+    // M-04: verify art image belongs to this wallet, not just that the path
+    // format looks right. The uploads table is the source of truth.
+    if (parsed.type === 'art' && parsed.image_path) {
+      const { data: owned } = await supabase
+        .from('uploads')
+        .select('id, status')
+        .eq('image_path', parsed.image_path)
+        .eq('wallet_address', walletAddress)
+        .maybeSingle();
+      if (!owned) {
+        return NextResponse.json(
+          { error: 'Image does not belong to this wallet' },
+          { status: 403 }
+        );
+      }
+      if (owned.status === 'deleted') {
+        return NextResponse.json(
+          { error: 'Uploaded image is no longer available' },
+          { status: 409 }
+        );
+      }
+    }
+
     // Wallet-based rate limiting (persisted in Supabase, survives cold starts)
     if (await isWalletRateLimited(supabase, walletAddress)) {
       return NextResponse.json(
