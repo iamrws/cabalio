@@ -19,6 +19,66 @@ const QUEST_RATE_LIMIT_WINDOW_SECONDS = 3600;
 /** Max quest submissions per wallet per window. */
 const QUEST_RATE_LIMIT_MAX = 20;
 
+interface QuestRuleCheckInput {
+  status: string;
+  type: string | null;
+  normalized_score: number | null;
+  created_at: string | null;
+}
+
+interface QuestForRules {
+  starts_at: string;
+  ends_at: string;
+}
+
+/**
+ * Evaluate a quest's rules_json against a source submission. Returns true
+ * only when every declared rule passes. Unknown rule keys are ignored so
+ * stored rules remain forward-compatible. Supported rules:
+ *   - requires_type: string  -> submission.type must match
+ *   - min_score: number      -> submission.normalized_score must be >=
+ *   - requires_created_within_window: boolean
+ *                              -> submission.created_at must fall between
+ *                                 quest.starts_at and quest.ends_at
+ *   - requires_created_after: ISO string
+ *                              -> submission.created_at must be newer
+ */
+function evaluateQuestRules(
+  rules: Record<string, unknown>,
+  submission: QuestRuleCheckInput,
+  quest: QuestForRules
+): boolean {
+  if (!rules || Object.keys(rules).length === 0) return true;
+
+  const requiresType = typeof rules.requires_type === 'string' ? rules.requires_type : null;
+  if (requiresType && submission.type !== requiresType) return false;
+
+  const minScore = typeof rules.min_score === 'number' ? rules.min_score : null;
+  if (minScore !== null && (submission.normalized_score ?? 0) < minScore) return false;
+
+  const requiresWithinWindow = rules.requires_created_within_window === true;
+  if (requiresWithinWindow) {
+    if (!submission.created_at) return false;
+    const createdMs = new Date(submission.created_at).getTime();
+    const startsMs = new Date(quest.starts_at).getTime();
+    const endsMs = new Date(quest.ends_at).getTime();
+    if (Number.isNaN(createdMs) || Number.isNaN(startsMs) || Number.isNaN(endsMs)) return false;
+    if (createdMs < startsMs || createdMs > endsMs) return false;
+  }
+
+  const requiresAfter =
+    typeof rules.requires_created_after === 'string' ? rules.requires_created_after : null;
+  if (requiresAfter) {
+    if (!submission.created_at) return false;
+    const afterMs = new Date(requiresAfter).getTime();
+    const createdMs = new Date(submission.created_at).getTime();
+    if (Number.isNaN(afterMs) || Number.isNaN(createdMs)) return false;
+    if (createdMs < afterMs) return false;
+  }
+
+  return true;
+}
+
 /** Wallet-based rate limiting backed by Supabase (serverless-safe). */
 async function isSubmitRateLimited(
   supabase: ReturnType<typeof createServerClient>,
@@ -175,19 +235,25 @@ export async function POST(
 
       const sourceSubmission = await supabase
         .from('submissions')
-        .select('id, wallet_address, status')
+        .select('id, wallet_address, status, type, normalized_score, created_at')
         .eq('id', normalizedEvidenceId)
         .maybeSingle();
 
       if (sourceSubmission.error) {
-        console.error('Quest source submission lookup error:', sourceSubmission.error);
+        console.error('Quest source submission lookup error:', sourceSubmission.error.message);
         return NextResponse.json({ error: 'Failed to look up referenced submission' }, { status: 500 });
       }
       if (!sourceSubmission.data || sourceSubmission.data.wallet_address !== session.walletAddress) {
         return NextResponse.json({ error: 'Referenced submission not found' }, { status: 404 });
       }
 
-      autoApprove = sourceSubmission.data.status === 'approved';
+      // H-03: evaluate quest rules_json against the referenced submission.
+      // Only auto-approve when the submission is approved AND satisfies every
+      // declared rule; otherwise fall back to manual review.
+      const rulesJson = (questResult.data.rules_json as Record<string, unknown>) || {};
+      autoApprove =
+        sourceSubmission.data.status === 'approved' &&
+        evaluateQuestRules(rulesJson, sourceSubmission.data, questResult.data);
     }
 
     const insertResult = await supabase
@@ -230,57 +296,60 @@ export async function POST(
 
     if (autoApprove) {
       const pointsReward = questResult.data.points_reward || 0;
-      await supabase.from('points_ledger').insert({
-        wallet_address: session.walletAddress,
-        entry_type: 'quest_bonus',
-        points_delta: pointsReward,
-        metadata: {
-          reason_code: 'season_quest_approved',
-          season_id: season.id,
-          quest_id: questId,
-          season_quest_submission_id: insertResult.data.id,
-        },
-        created_at: nowIso,
-      });
-
       if (pointsReward > 0) {
-        // Update user's total_xp to reflect quest bonus
-        const { data: currentUser } = await supabase
-          .from('users')
-          .select('total_xp')
-          .eq('wallet_address', session.walletAddress)
-          .single();
+        // Atomic: users.total_xp += reward, insert points_ledger entry, insert
+        // audit log -- all in one transaction under a per-user row lock.
+        const { error: applyError } = await supabase.rpc('apply_points_adjustment_atomic', {
+          p_wallet: session.walletAddress,
+          p_delta: pointsReward,
+          p_entry_type: 'quest_bonus',
+          p_submission_id: null,
+          p_metadata: {
+            reason_code: 'season_quest_approved',
+            season_id: season.id,
+            quest_id: questId,
+            season_quest_submission_id: insertResult.data.id,
+          },
+          p_audit_action: 'season_quest_auto_approved',
+          p_audit_actor: session.walletAddress,
+          p_audit_details: {
+            season_id: season.id,
+            quest_id: questId,
+            season_quest_submission_id: insertResult.data.id,
+            points_awarded: pointsReward,
+            evidence_id: normalizedEvidenceId,
+          },
+        });
 
-        if (currentUser) {
-          const { data: updatedUser } = await supabase
-            .from('users')
+        if (applyError) {
+          // Auto-approval already persisted to season_quest_submissions, but
+          // the points RPC failed. Roll the submission back to pending review
+          // so an admin can re-award manually after investigating.
+          console.error(
+            'Quest auto-approve points RPC failed; reverting to manual review:',
+            applyError.message
+          );
+          await supabase
+            .from('season_quest_submissions')
             .update({
-              total_xp: (currentUser.total_xp || 0) + pointsReward,
+              status: 'submitted',
+              reviewed_at: null,
+              reviewed_by: null,
               updated_at: new Date().toISOString(),
             })
-            .eq('wallet_address', session.walletAddress)
-            .eq('total_xp', currentUser.total_xp || 0) // Optimistic lock
-            .select('total_xp')
-            .maybeSingle();
+            .eq('id', insertResult.data.id);
 
-          // Retry once on concurrent modification
-          if (!updatedUser) {
-            const { data: freshUser } = await supabase
-              .from('users')
-              .select('total_xp')
-              .eq('wallet_address', session.walletAddress)
-              .single();
-            if (freshUser) {
-              await supabase
-                .from('users')
-                .update({
-                  total_xp: (freshUser.total_xp || 0) + pointsReward,
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('wallet_address', session.walletAddress)
-                .eq('total_xp', freshUser.total_xp || 0);
-            }
-          }
+          return NextResponse.json(
+            {
+              success: true,
+              season_id: season.id,
+              quest_id: questId,
+              auto_approved: false,
+              submission: { ...insertResult.data, status: 'submitted' },
+              note: 'Auto-approval failed; submission queued for manual review.',
+            },
+            { status: 200 }
+          );
         }
       }
 
