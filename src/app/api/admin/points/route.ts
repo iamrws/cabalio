@@ -33,15 +33,17 @@ export async function POST(request: NextRequest) {
   }
   const isAdmin = await verifyAdminStatus(session.walletAddress);
   if (!isAdmin) {
-    // Log failed admin access attempt
     const supabaseAudit = createServerClient();
-    supabaseAudit.from('audit_logs').insert({
-      action: 'admin_access_denied',
-      actor_wallet: session.walletAddress,
-      target_wallet: session.walletAddress,
-      details: { endpoint: '/api/admin/points', reason: 'not_admin' },
-      created_at: new Date().toISOString(),
-    }).then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
+    supabaseAudit
+      .from('audit_logs')
+      .insert({
+        action: 'admin_access_denied',
+        actor_wallet: session.walletAddress,
+        target_wallet: session.walletAddress,
+        details: { endpoint: '/api/admin/points', reason: 'not_admin' },
+        created_at: new Date().toISOString(),
+      })
+      .then(undefined, (err: unknown) => console.error('Audit log insert failed:', err));
 
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
@@ -52,11 +54,12 @@ export async function POST(request: NextRequest) {
     const walletAddress = parsed.wallet_address.trim();
     const absDelta = Math.abs(parsed.points_delta);
 
-    // Enforce two-admin approval for large adjustments
     if (absDelta > SINGLE_ADMIN_ADJUSTMENT_CAP) {
       if (!parsed.approving_admin) {
         return NextResponse.json(
-          { error: `Adjustments exceeding ${SINGLE_ADMIN_ADJUSTMENT_CAP} points require a second admin approval (approving_admin field)` },
+          {
+            error: `Adjustments exceeding ${SINGLE_ADMIN_ADJUSTMENT_CAP} points require a second admin approval (approving_admin field)`,
+          },
           { status: 403 }
         );
       }
@@ -67,7 +70,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Verify the approving admin exists in admin_wallets table or env allowlist
       const supabaseCheck = createServerClient();
       const { data: approverRow } = await supabaseCheck
         .from('admin_wallets')
@@ -76,7 +78,10 @@ export async function POST(request: NextRequest) {
         .eq('active', true)
         .maybeSingle();
 
-      const envAdmins = (process.env.ADMIN_WALLET_ADDRESSES || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const envAdmins = (process.env.ADMIN_WALLET_ADDRESSES || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       const isApproverAdmin = !!approverRow || envAdmins.includes(parsed.approving_admin);
       if (!isApproverAdmin) {
         return NextResponse.json(
@@ -87,7 +92,6 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServerClient();
-    const now = new Date().toISOString();
 
     const { data: existingUser, error: userLookupError } = await supabase
       .from('users')
@@ -99,92 +103,64 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found for wallet address' }, { status: 404 });
     }
 
-    // Insert into immutable audit_logs table
-    const { error: auditError } = await supabase
-      .from('audit_logs')
-      .insert({
-        action: 'manual_points_adjustment',
-        actor_wallet: session.walletAddress,
-        target_wallet: walletAddress,
-        details: {
-          points_delta: parsed.points_delta,
-          note: parsed.note,
-          approving_admin: parsed.approving_admin || null,
-          previous_total_xp: existingUser.total_xp || 0,
-          new_total_xp: (existingUser.total_xp || 0) + parsed.points_delta,
-        },
-        created_at: now,
-      });
+    const auditDetails = {
+      points_delta: parsed.points_delta,
+      note: parsed.note,
+      approving_admin: parsed.approving_admin || null,
+      previous_total_xp: existingUser.total_xp || 0,
+      projected_new_total_xp: (existingUser.total_xp || 0) + parsed.points_delta,
+    };
 
-    if (auditError) {
-      console.error('Audit log insert failed:', auditError);
-      return NextResponse.json({ error: 'Failed to record audit trail' }, { status: 500 });
-    }
-
-    // Anomaly detection: flag large adjustments
-    if (absDelta >= ANOMALY_ALERT_THRESHOLD) {
-      console.warn(
-        `[ANOMALY] Large points adjustment: ${parsed.points_delta} points to ${walletAddress} by admin ${session.walletAddress}` +
-        (parsed.approving_admin ? ` (approved by ${parsed.approving_admin})` : '')
-      );
-
-      // Insert anomaly alert record for monitoring
-      await supabase.from('audit_logs').insert({
-        action: 'anomaly_large_adjustment',
-        actor_wallet: session.walletAddress,
-        target_wallet: walletAddress,
-        details: {
-          points_delta: parsed.points_delta,
-          note: parsed.note,
-          threshold: ANOMALY_ALERT_THRESHOLD,
-        },
-        created_at: now,
-      });
-    }
-
-    // Update user XP first with optimistic lock, BEFORE inserting ledger entry.
-    // This prevents orphaned ledger entries on concurrent modification.
-    const { data: updatedUser, error: userUpdateError } = await supabase
-      .from('users')
-      .update({
-        total_xp: (existingUser.total_xp || 0) + parsed.points_delta,
-        updated_at: now,
-      })
-      .eq('wallet_address', walletAddress)
-      .eq('total_xp', existingUser.total_xp || 0)  // Optimistic lock
-      .select('total_xp')
-      .maybeSingle();
-
-    if (userUpdateError) {
-      console.error('User XP update failed:', userUpdateError);
-      return NextResponse.json({ error: 'Failed to update user points' }, { status: 500 });
-    }
-
-    if (!updatedUser) {
-      return NextResponse.json(
-        { error: 'Concurrent modification detected. Please try again.' },
-        { status: 409 }
-      );
-    }
-
-    // Now insert immutable ledger entry (XP update already succeeded)
-    const { error: ledgerError } = await supabase
-      .from('points_ledger')
-      .insert({
-        wallet_address: walletAddress,
-        entry_type: 'manual_adjustment',
-        points_delta: parsed.points_delta,
-        metadata: {
+    // Atomic: user update + ledger insert + audit log, all in one transaction.
+    const { data: applied, error: applyError } = await supabase.rpc(
+      'apply_points_adjustment_atomic',
+      {
+        p_wallet: walletAddress,
+        p_delta: parsed.points_delta,
+        p_entry_type: 'manual_adjustment',
+        p_submission_id: null,
+        p_metadata: {
           note: parsed.note,
           reviewed_by: session.walletAddress,
           approving_admin: parsed.approving_admin || null,
         },
-        created_at: now,
-      });
+        p_audit_action: 'manual_points_adjustment',
+        p_audit_actor: session.walletAddress,
+        p_audit_details: auditDetails,
+      }
+    );
 
-    if (ledgerError) {
-      console.error('Points ledger insert failed:', ledgerError);
-      return NextResponse.json({ error: 'Failed to record points adjustment' }, { status: 500 });
+    if (applyError) {
+      const message = applyError.message || '';
+      if (message.includes('user_not_found')) {
+        return NextResponse.json({ error: 'User not found for wallet address' }, { status: 404 });
+      }
+      console.error('Atomic points adjustment failed:', message);
+      return NextResponse.json({ error: 'Failed to apply adjustment' }, { status: 500 });
+    }
+
+    // Anomaly detection fires AFTER the authoritative write so it never masks
+    // the real result. Fire-and-forget; a failed anomaly log does not undo
+    // the adjustment.
+    if (absDelta >= ANOMALY_ALERT_THRESHOLD) {
+      console.warn(
+        `[ANOMALY] Large points adjustment: ${parsed.points_delta} points to ${walletAddress} by admin ${session.walletAddress}` +
+          (parsed.approving_admin ? ` (approved by ${parsed.approving_admin})` : '')
+      );
+      supabase
+        .from('audit_logs')
+        .insert({
+          action: 'anomaly_large_adjustment',
+          actor_wallet: session.walletAddress,
+          target_wallet: walletAddress,
+          details: {
+            points_delta: parsed.points_delta,
+            note: parsed.note,
+            threshold: ANOMALY_ALERT_THRESHOLD,
+          },
+          created_at: new Date().toISOString(),
+        })
+        .then(undefined, (err: unknown) => console.error('Anomaly log insert failed:', err));
     }
 
     void createNotification({
@@ -200,13 +176,14 @@ export async function POST(request: NextRequest) {
       wallet_address: walletAddress,
       points_delta: parsed.points_delta,
       note: parsed.note,
+      applied,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
 
-    console.error('Manual points adjustment error:', error);
+    console.error('Manual points adjustment error:', error instanceof Error ? error.message : error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
