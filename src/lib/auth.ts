@@ -369,6 +369,7 @@ export function validateCsrfOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
   const host = request.headers.get('host');
+  const forwardedHost = request.headers.get('x-forwarded-host');
 
   const allowedHosts = new Set<string>();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -379,6 +380,13 @@ export function validateCsrfOrigin(request: NextRequest): boolean {
       // invalid env var -- ignored, but fail-closed below if this was our
       // only hope of a trusted host.
     }
+  }
+
+  // Vercel sets x-forwarded-host to the real custom domain. Unlike Host,
+  // this header is set by Vercel's own edge infrastructure, not the client,
+  // so it is safe to trust in production.
+  if (forwardedHost) {
+    allowedHosts.add(forwardedHost);
   }
 
   if (process.env.NODE_ENV !== 'production' && host) {
