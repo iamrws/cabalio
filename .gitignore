@@ -40,3 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .gstack/
+
+# Local agent/automation state (L-03)
+.claude/
+.superpowers/
+
+# Generated experiment/perf artifacts
+perf-results.tsv
+results.tsv
+run.log
+autoresearch-master/run.log
+autoresearch-master/perf-results.tsv

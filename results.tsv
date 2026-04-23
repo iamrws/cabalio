@@ -1,7 +1,0 @@
-round	score	bugs_found	bugs_fixed	status	description
-1	69	86	7	baseline	initial assessment — fixed nav clip, transition-width, shadow bridge, hardcoded colors, nav underline
-2	70	86	26	improved	hero visibility, transition-colors explicit, interactive states, line-height 1.7
-3	85	86	30	improved	auth empty states redesigned, dashboard contrast, rewards muted zero, brand wordmark
-4	88	86	36	improved	rewards auth lock, home mobile cards, leaderboard truncation, simulator text-balance, pillars spacing, NeonCard focus
-5	90	86	41	improved	submit labels+pipeline markers, footer learn column, roadmap padding, dashboard compact button, profile skeleton contrast
-6	92	86	45	improved	feed/quests/leaderboard empty states designed, settings save button contrast — STOPPING: score >= 90
