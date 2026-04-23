@@ -6,9 +6,13 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com",
-      "style-src 'self' 'unsafe-inline'",
+      // Google Fonts allowed because @solana/wallet-adapter-react-ui
+      // bundles a stylesheet with `@import` to fonts.googleapis.com.
+      // Without these, the wallet modal's CSS chunk fails to load and
+      // throws a ChunkLoadError that crashes the page.
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: https://i.ytimg.com https://img.youtube.com",
-      "font-src 'self'",
+      "font-src 'self' https://fonts.gstatic.com",
       "connect-src 'self' https://mainnet.helius-rpc.com https://youtube.googleapis.com https://*.supabase.co",
       "frame-src 'self' https://www.youtube.com",
       "object-src 'none'",
