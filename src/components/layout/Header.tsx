@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Bell, Flame } from 'lucide-react';
 import AuthControls from '../shared/AuthControls';
@@ -161,7 +162,13 @@ export default function Header() {
       <div className="flex items-center justify-between h-14 px-4 sm:px-6">
         <div className="flex items-center gap-4">
           <div className="lg:hidden">
-            <span className="text-lg font-bold text-accent-text">JC</span>
+            <Image
+              src="/logo.jpg"
+              alt="Jito Cabal"
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-md select-none"
+            />
           </div>
           <h1 className="text-lg font-display font-semibold text-text-primary tracking-tight">{title}</h1>
         </div>

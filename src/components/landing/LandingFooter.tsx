@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 const EXTERNAL_LINKS = [
@@ -26,9 +27,13 @@ export function LandingFooter() {
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-10 mb-12">
           {/* Wordmark */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="h-8 w-8 rounded-md bg-accent flex items-center justify-center text-xs font-bold text-[#08080a] select-none">
-              JC
-            </div>
+            <Image
+              src="/logo.jpg"
+              alt="Jito Cabal"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-md select-none"
+            />
             <span className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-text-primary">
               JITO CABAL
             </span>

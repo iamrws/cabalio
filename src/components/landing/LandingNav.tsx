@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LazyAuthControls from './LazyAuthControls';
@@ -35,9 +36,14 @@ export function LandingNav() {
             className="flex items-center gap-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             aria-label="Jito Cabal home"
           >
-            <div className="h-8 w-8 rounded-md bg-accent flex items-center justify-center text-xs font-bold text-[#08080a] select-none">
-              JC
-            </div>
+            <Image
+              src="/logo.jpg"
+              alt="Jito Cabal"
+              width={32}
+              height={32}
+              priority
+              className="h-8 w-8 rounded-md select-none"
+            />
             <span className="text-sm font-semibold uppercase tracking-[0.25em] text-accent-text hidden sm:block">
               Jito Cabal
             </span>

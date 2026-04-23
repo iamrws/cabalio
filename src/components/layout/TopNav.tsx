@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Bell, FlaskConical, LogOut, Settings, User } from 'lucide-react';
@@ -125,7 +126,14 @@ export default function TopNav() {
     <header className="sticky top-0 z-40 bg-bg-surface/85 backdrop-blur-xl border-b border-border-subtle">
       <div className="flex items-center justify-between h-14 px-4 sm:px-6 w-full max-w-4xl mx-auto">
         <Link href="/" className="group flex items-center gap-2.5 shrink-0">
-          <div className="h-8 w-8 rounded-lg bg-accent-text flex items-center justify-center text-bg-base font-bold text-sm transition-[background-color,transform] duration-150 group-hover:bg-accent group-hover:scale-105">JC</div>
+          <Image
+            src="/logo.jpg"
+            alt="Jito Cabal"
+            width={32}
+            height={32}
+            priority
+            className="h-8 w-8 rounded-lg select-none transition-transform duration-150 group-hover:scale-105"
+          />
           <span className="hidden sm:inline text-sm font-semibold uppercase tracking-[0.25em] text-accent-text">Jito Cabal</span>
         </Link>
 
