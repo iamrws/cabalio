@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import FeatureRequestMount from '@/components/widgets/FeatureRequestMount';
 
 export const metadata: Metadata = {
   title: 'Jito Cabal | Community Engagement Platform',
@@ -39,6 +40,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased bg-bg-base text-text-primary">
         {children}
+        <FeatureRequestMount />
       </body>
     </html>
   );

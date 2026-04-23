@@ -58,6 +58,27 @@ interface AppealRow {
   } | null;
 }
 
+type FeedbackStatus = 'new' | 'triaged' | 'in_progress' | 'done' | 'wont_do';
+const FEEDBACK_STATUSES: FeedbackStatus[] = ['new', 'triaged', 'in_progress', 'done', 'wont_do'];
+const FEEDBACK_STATUS_FILTERS: Array<FeedbackStatus | 'all'> = [...FEEDBACK_STATUSES, 'all'];
+
+interface FeedbackRow {
+  id: string;
+  type: 'feature' | 'bug';
+  title: string;
+  description: string;
+  wallet_address: string | null;
+  email: string | null;
+  ip_hash: string | null;
+  user_agent: string | null;
+  status: FeedbackStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+type AdminTab = 'operations' | 'feedback';
+
 export default function CabalCorePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(true);
@@ -114,6 +135,65 @@ export default function CabalCorePage() {
   const [bossIdempotency, setBossIdempotency] = useState(`boss-${Date.now()}`);
   const [bossBusy, setBossBusy] = useState(false);
   const [bossMessage, setBossMessage] = useState('');
+
+  // Feedback tab state
+  const [activeTab, setActiveTab] = useState<AdminTab>('operations');
+  const [feedbackItems, setFeedbackItems] = useState<FeedbackRow[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<FeedbackStatus | 'all'>('new');
+  const [feedbackUpdatingId, setFeedbackUpdatingId] = useState<string | null>(null);
+
+  const loadFeedback = useCallback(async () => {
+    setFeedbackLoading(true);
+    setFeedbackError('');
+    try {
+      const response = await fetch(
+        `/api/admin/feature-requests?status=${feedbackStatusFilter}&limit=100`,
+        { method: 'GET', cache: 'no-store' }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load feedback');
+      }
+      setFeedbackItems(data.items || []);
+    } catch (loadError) {
+      setFeedbackError(loadError instanceof Error ? loadError.message : 'Failed to load feedback');
+      setFeedbackItems([]);
+    } finally {
+      setFeedbackLoading(false);
+    }
+  }, [feedbackStatusFilter]);
+
+  const handleFeedbackStatusChange = useCallback(
+    async (id: string, nextStatus: FeedbackStatus) => {
+      setFeedbackUpdatingId(id);
+      setFeedbackError('');
+      try {
+        const response = await fetch('/api/admin/feature-requests', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status: nextStatus }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Update failed');
+        }
+        // If the item no longer matches the active filter, drop it; otherwise update in place.
+        setFeedbackItems((prev) => {
+          if (feedbackStatusFilter !== 'all' && nextStatus !== feedbackStatusFilter) {
+            return prev.filter((item) => item.id !== id);
+          }
+          return prev.map((item) => (item.id === id ? { ...item, ...data.item } : item));
+        });
+      } catch (updateError) {
+        setFeedbackError(updateError instanceof Error ? updateError.message : 'Update failed');
+      } finally {
+        setFeedbackUpdatingId(null);
+      }
+    },
+    [feedbackStatusFilter]
+  );
 
   const loadSubmissions = useCallback(async () => {
     setLoading(true);
@@ -216,6 +296,12 @@ export default function CabalCorePage() {
   useEffect(() => {
     void loadAppeals();
   }, [loadAppeals]);
+
+  useEffect(() => {
+    if (activeTab === 'feedback') {
+      void loadFeedback();
+    }
+  }, [activeTab, loadFeedback]);
 
   const handleReview = useCallback(async (submissionId: string, action: ReviewAction) => {
     setProcessingId(submissionId);
@@ -443,6 +529,26 @@ export default function CabalCorePage() {
           </div>
         </div>
 
+        <div className="flex items-center gap-2 border-b border-border-subtle pb-1" role="tablist">
+          {(['operations', 'feedback'] as const).map((tab) => (
+            <button
+              key={tab}
+              role="tab"
+              aria-selected={activeTab === tab}
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-t-lg px-4 py-2 text-xs font-medium capitalize transition-colors ${
+                activeTab === tab
+                  ? 'bg-accent-muted border border-accent-border border-b-0 text-accent-text'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              {tab === 'operations' ? 'Operations' : 'Feedback'}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'operations' ? (
+        <>
         <NeonCard hover={false} className="p-4">
           <h2 className="text-sm font-semibold text-text-primary mb-3 font-display">Manual Points Distribution</h2>
           <form onSubmit={handleManualAdjustment} className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -838,6 +944,110 @@ export default function CabalCorePage() {
             </NeonCard>
           ))}
         </div>
+        </>
+        ) : (
+          <>
+            <NeonCard hover={false} className="p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {FEEDBACK_STATUS_FILTERS.map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFeedbackStatusFilter(status)}
+                    className={`rounded-full px-3 py-1 text-xs border capitalize ${
+                      feedbackStatusFilter === status
+                        ? 'bg-accent-muted border-accent-border text-accent-text'
+                        : 'bg-bg-raised border-border-subtle text-text-secondary'
+                    }`}
+                  >
+                    {status.replace('_', ' ')}
+                  </button>
+                ))}
+                <span className="ml-auto text-xs text-text-muted font-mono">
+                  {feedbackItems.length} items
+                </span>
+              </div>
+            </NeonCard>
+
+            {feedbackError ? (
+              <NeonCard hover={false} className="p-4 border border-negative-border">
+                <div className="text-sm text-negative">{feedbackError}</div>
+              </NeonCard>
+            ) : null}
+
+            {feedbackLoading ? (
+              <NeonCard hover={false} className="p-5">
+                <div className="text-sm text-text-muted">Loading feedback...</div>
+              </NeonCard>
+            ) : null}
+
+            {!feedbackLoading && feedbackItems.length === 0 ? (
+              <NeonCard hover={false} className="p-5">
+                <div className="text-sm text-text-muted">No feedback items in this queue.</div>
+              </NeonCard>
+            ) : null}
+
+            <div className="space-y-4">
+              {feedbackItems.map((item) => (
+                <NeonCard key={item.id} hover={false} className="p-5 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide border ${
+                            item.type === 'bug'
+                              ? 'bg-negative-muted border-negative-border text-negative'
+                              : 'bg-accent-muted border-accent-border text-accent-text'
+                          }`}
+                        >
+                          {item.type}
+                        </span>
+                        <span className="text-xs text-text-muted font-mono truncate">
+                          {item.wallet_address || 'anonymous'}
+                        </span>
+                      </div>
+                      <h2 className="text-base font-semibold text-text-primary font-display">
+                        {item.title}
+                      </h2>
+                      <div className="text-xs text-text-muted mt-1">
+                        {new Date(item.created_at).toLocaleString()}
+                        {item.email ? <span> | {item.email}</span> : null}
+                      </div>
+                    </div>
+                    <select
+                      value={item.status}
+                      onChange={(event) =>
+                        handleFeedbackStatusChange(item.id, event.target.value as FeedbackStatus)
+                      }
+                      disabled={feedbackUpdatingId === item.id}
+                      className="rounded-lg bg-bg-raised border border-border-subtle px-2 py-1.5 text-xs text-text-primary disabled:opacity-60"
+                    >
+                      {FEEDBACK_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {status.replace('_', ' ')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <p className="text-sm text-text-secondary whitespace-pre-wrap">
+                    {item.description}
+                  </p>
+
+                  {item.admin_notes ? (
+                    <div className="rounded-lg border border-border-subtle bg-bg-raised/40 px-3 py-2">
+                      <div className="text-[10px] uppercase tracking-wide text-text-muted mb-1">
+                        Admin notes
+                      </div>
+                      <p className="text-xs text-text-secondary whitespace-pre-wrap">
+                        {item.admin_notes}
+                      </p>
+                    </div>
+                  ) : null}
+                </NeonCard>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </main>
   );

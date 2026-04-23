@@ -24,30 +24,66 @@ export default function LeaderboardPage() {
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
   const [participantCount, setParticipantCount] = useState(0);
 
+  // Fetch user's own rank info
+  const [myRank, setMyRank] = useState<{ rank: number; tier: string; points: number; points_to_next: number; rival_name: string | null; rival_gap: number } | null>(null);
+
   useEffect(() => {
     let cancelled = false;
-    const fetchLeaderboard = async () => {
+    const load = async () => {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch(`/api/leaderboard?range=${timeRange}`, { method: 'GET', cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to load leaderboard');
-        if (!cancelled) {
-          setEntries(data.leaderboard || []);
+        // Kick off both fetches concurrently — command-center doesn't depend on leaderboard entries.
+        const [lbResult, ccResult] = await Promise.allSettled([
+          fetch(`/api/leaderboard?range=${timeRange}`, { method: 'GET', cache: 'no-store' }).then(async (r) => {
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Failed to load leaderboard');
+            return d;
+          }),
+          fetch('/api/me/command-center', { cache: 'no-store' }).then(async (r) => {
+            if (!r.ok) return null;
+            return r.json();
+          }),
+        ]);
+
+        if (cancelled) return;
+
+        let lbEntries: LeaderboardEntry[] = [];
+        if (lbResult.status === 'fulfilled') {
+          const data = lbResult.value;
+          lbEntries = data.leaderboard || [];
+          setEntries(lbEntries);
           setWeekNumber(data.week_number ?? null);
           setParticipantCount(data.total_participants || 0);
-        }
-      } catch (fetchError) {
-        if (!cancelled) {
-          setError(fetchError instanceof Error ? fetchError.message : 'Failed to load');
+        } else {
+          setError(lbResult.reason instanceof Error ? lbResult.reason.message : 'Failed to load');
           setEntries([]);
+        }
+
+        if (ccResult.status === 'fulfilled' && ccResult.value) {
+          const data = ccResult.value;
+          const rank = data.bracket?.rank;
+          const points = data.bracket?.points;
+          const tier = data.tier?.current;
+          const ptnr = data.bracket?.points_to_next_rank;
+
+          let rivalName: string | null = null;
+          let rivalGap = 0;
+          if (rank && rank > 1 && lbEntries.length > 0) {
+            const above = lbEntries.find((e) => e.rank === rank - 1);
+            if (above) {
+              rivalName = above.display_name || above.wallet_address.slice(0, 4) + '...' + above.wallet_address.slice(-4);
+              rivalGap = above.total_points - (points || 0);
+            }
+          }
+
+          setMyRank({ rank, tier, points, points_to_next: ptnr, rival_name: rivalName, rival_gap: rivalGap });
         }
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
-    void fetchLeaderboard();
+    void load();
     return () => { cancelled = true; };
   }, [timeRange]);
 
@@ -56,41 +92,6 @@ export default function LeaderboardPage() {
     member: entries.filter((e) => e.tier === 'member'),
     initiate: entries.filter((e) => e.tier === 'initiate'),
   }), [entries]);
-
-  // Fetch user's own rank info
-  const [myRank, setMyRank] = useState<{ rank: number; tier: string; points: number; points_to_next: number; rival_name: string | null; rival_gap: number } | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchMyRank = async () => {
-      try {
-        const res = await fetch('/api/me/command-center', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (cancelled) return;
-
-        const rank = data.bracket?.rank;
-        const points = data.bracket?.points;
-        const tier = data.tier?.current;
-        const ptnr = data.bracket?.points_to_next_rank;
-
-        // Find rival from leaderboard entries
-        let rivalName: string | null = null;
-        let rivalGap = 0;
-        if (rank && rank > 1 && entries.length > 0) {
-          const above = entries.find((e) => e.rank === rank - 1);
-          if (above) {
-            rivalName = above.display_name || above.wallet_address.slice(0, 4) + '...' + above.wallet_address.slice(-4);
-            rivalGap = above.total_points - (points || 0);
-          }
-        }
-
-        setMyRank({ rank, tier, points, points_to_next: ptnr, rival_name: rivalName, rival_gap: rivalGap });
-      } catch { /* silent */ }
-    };
-    void fetchMyRank();
-    return () => { cancelled = true; };
-  }, [entries]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

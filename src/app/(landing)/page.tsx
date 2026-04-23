@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { ScrollFadeUp } from '@/components/landing/ScrollFadeUp';
 import LandingAuthGate from '@/components/landing/LandingAuthGate';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { memo, useRef } from 'react';
 import { useInView } from '@/hooks/useInView';
 
 function fadeUpStyle(visible: boolean, delay = 0) {
@@ -11,7 +11,7 @@ function fadeUpStyle(visible: boolean, delay = 0) {
   } as const;
 }
 
-export function ScrollFadeUp({
+function ScrollFadeUpImpl({
   delay = 0,
   className = '',
   children,
@@ -32,3 +32,8 @@ export function ScrollFadeUp({
     </div>
   );
 }
+
+// Memoized because this component renders dozens of times across landing
+// routes. Parent re-renders (e.g. the engine simulator toggling flags)
+// should not re-render every fade wrapper whose props are stable.
+export const ScrollFadeUp = memo(ScrollFadeUpImpl);

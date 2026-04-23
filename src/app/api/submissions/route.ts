@@ -253,13 +253,46 @@ export async function POST(request: NextRequest) {
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const { count } = await supabase
-      .from('submissions')
-      .select('id', { count: 'exact', head: true })
-      .eq('wallet_address', walletAddress)
-      .gte('created_at', `${today}T00:00:00Z`);
+    const contentHash = computeContentHash(parsed.title, parsed.content_text, normalizedUrl);
 
-    if ((count || 0) >= MAX_SUBMISSIONS_PER_DAY) {
+    // Batch the independent duplicate-detection queries concurrently.
+    // All four checks have no data dependency on each other, so Promise.all
+    // cuts sequential round-trips from ~4x to ~1x network latency.
+    const [
+      dailyCountResult,
+      idempotencyResult,
+      urlDupResult,
+      contentHashResult,
+    ] = await Promise.all([
+      supabase
+        .from('submissions')
+        .select('id', { count: 'exact', head: true })
+        .eq('wallet_address', walletAddress)
+        .gte('created_at', `${today}T00:00:00Z`),
+      parsed.idempotency_token
+        ? supabase
+            .from('submissions')
+            .select('id')
+            .eq('idempotency_token', parsed.idempotency_token)
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null as { id: string } | null }),
+      normalizedUrl
+        ? supabase
+            .from('submissions')
+            .select('id')
+            .eq('url', normalizedUrl)
+            .limit(1)
+        : Promise.resolve({ data: [] as { id: string }[] }),
+      supabase
+        .from('submissions')
+        .select('id')
+        .eq('content_hash', contentHash)
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if ((dailyCountResult.count || 0) >= MAX_SUBMISSIONS_PER_DAY) {
       return NextResponse.json(
         { error: `Maximum ${MAX_SUBMISSIONS_PER_DAY} submissions per day` },
         { status: 429 }
@@ -267,48 +300,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Idempotency token check: if client sent a token, reject if already used
-    if (parsed.idempotency_token) {
-      const { data: existingToken } = await supabase
-        .from('submissions')
-        .select('id')
-        .eq('idempotency_token', parsed.idempotency_token)
-        .limit(1)
-        .maybeSingle();
-
-      if (existingToken) {
-        return NextResponse.json(
-          { error: 'Duplicate submission (idempotency token already used)' },
-          { status: 409 }
-        );
-      }
+    if (parsed.idempotency_token && idempotencyResult.data) {
+      return NextResponse.json(
+        { error: 'Duplicate submission (idempotency token already used)' },
+        { status: 409 }
+      );
     }
 
     // URL-based permanent duplicate check (not time-limited)
-    if (normalizedUrl) {
-      const duplicateUrlCheck = await supabase
-        .from('submissions')
-        .select('id')
-        .eq('url', normalizedUrl)
-        .limit(1);
-
-      if ((duplicateUrlCheck.data || []).length > 0) {
-        return NextResponse.json(
-          { error: 'This URL has already been submitted' },
-          { status: 409 }
-        );
-      }
+    if (normalizedUrl && (urlDupResult.data || []).length > 0) {
+      return NextResponse.json(
+        { error: 'This URL has already been submitted' },
+        { status: 409 }
+      );
     }
 
     // Content-hash based duplicate detection (SHA-256)
-    const contentHash = computeContentHash(parsed.title, parsed.content_text, normalizedUrl);
-    const { data: duplicateHashRow } = await supabase
-      .from('submissions')
-      .select('id')
-      .eq('content_hash', contentHash)
-      .limit(1)
-      .maybeSingle();
-
-    if (duplicateHashRow) {
+    if (contentHashResult.data) {
       return NextResponse.json(
         { error: 'Duplicate submission detected (matching content)' },
         { status: 409 }

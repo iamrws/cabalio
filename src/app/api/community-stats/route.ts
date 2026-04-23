@@ -13,11 +13,11 @@ export async function GET() {
     const [membersResult, submissionsResult, pointsResult] = await Promise.all([
       supabase
         .from('users')
-        .select('*', { count: 'exact', head: true })
+        .select('wallet_address', { count: 'exact', head: true })
         .eq('is_holder', true),
       supabase
         .from('submissions')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('status', 'approved'),
       supabase
         .from('points_ledger')
@@ -46,7 +46,7 @@ export async function GET() {
 
     response.headers.set(
       'Cache-Control',
-      `public, max-age=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=120`,
+      `public, max-age=${CACHE_MAX_AGE_SECONDS}, s-maxage=300, stale-while-revalidate=600`,
     );
 
     return response;

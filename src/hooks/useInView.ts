@@ -1,8 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import type React from 'react';
+import { observe } from './sharedObserver';
 
-/** Intersection Observer hook — triggers once when element enters viewport */
+/** Intersection Observer hook — triggers once when element enters viewport.
+ *
+ * Uses a process-wide SHARED IntersectionObserver (bucketed by threshold)
+ * so mounting many ScrollFadeUp subscribers doesn't spin up one observer
+ * per element. Hook API is identical to the previous per-element version.
+ */
 export function useInView(
   ref: React.RefObject<HTMLElement | null>,
   opts?: { threshold?: number; once?: boolean },
@@ -14,17 +20,23 @@ export function useInView(
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          if (once) observer.disconnect();
+
+    let disposed = false;
+    const unobserve = observe(el, threshold, (entry) => {
+      if (disposed) return;
+      if (entry.isIntersecting) {
+        setInView(true);
+        if (once) {
+          disposed = true;
+          unobserve();
         }
-      },
-      { threshold },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+      }
+    });
+
+    return () => {
+      disposed = true;
+      unobserve();
+    };
   }, [ref, once, threshold]);
 
   return inView;

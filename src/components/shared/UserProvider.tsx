@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from 'react';
 
 interface UserSummary {
   user: { display_name: string | null; level: number; current_streak: number } | null;
@@ -26,26 +26,33 @@ export function useUser() {
 export function UserProvider({ children }: { children: ReactNode }) {
   const [summary, setSummary] = useState<UserSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
 
   const fetchSummary = useCallback(async () => {
     try {
       const res = await fetch('/api/me/summary', { cache: 'no-store' });
+      if (!mountedRef.current) return;
       if (!res.ok) return;
       const data = await res.json();
+      if (!mountedRef.current) return;
       setSummary(data);
     } catch {
       /* silent — components fall back to defaults */
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     fetchSummary();
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') fetchSummary();
-    }, 60_000);
-    return () => clearInterval(interval);
+    }, 120_000);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+    };
   }, [fetchSummary]);
 
   return (

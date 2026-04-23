@@ -1,5 +1,3 @@
-'use client';
-
 import { ScrollFadeUp } from '@/components/landing/ScrollFadeUp';
 
 const roadmap = [

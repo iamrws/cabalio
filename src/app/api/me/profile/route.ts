@@ -45,7 +45,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
   }
 
-  return NextResponse.json({ user });
+  return NextResponse.json(
+    { user },
+    {
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=120',
+      },
+    }
+  );
 }
 
 // PATCH /api/me/profile — update the current user's profile fields

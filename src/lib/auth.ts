@@ -12,6 +12,12 @@ export interface SessionPayload {
   walletAddress: string;
   isHolder: boolean;
   role: SessionRole;
+  /**
+   * Cached admin flag. Set at session-creation time to avoid a DB round-trip
+   * on every admin endpoint. May be absent on older tokens; callers should
+   * fall back to a DB lookup when undefined.
+   */
+  isAdmin?: boolean;
   exp: number;
 }
 
@@ -88,6 +94,7 @@ export async function createSessionToken(
     walletAddress,
     isHolder,
     role: isAdmin ? 'admin' : 'member',
+    isAdmin,
     exp: Math.floor(Date.now() / 1000) + getSessionMaxAgeSeconds(),
   };
 
@@ -169,10 +176,22 @@ export async function isAdminWallet(walletAddress: string): Promise<boolean> {
 }
 
 /**
- * Re-verify admin status from the database/env, not trusting the token claim.
- * Use this on admin endpoints instead of checking session.role.
+ * Re-verify admin status from the database/env. Prefers the cached `isAdmin`
+ * flag on the session to skip a DB round-trip, but still falls back to the env
+ * allowlist + admin_wallets table when the session is old (no `isAdmin` claim)
+ * or the caller doesn't pass it. Use on admin endpoints instead of the token
+ * role claim directly.
  */
-export async function verifyAdminStatus(walletAddress: string): Promise<boolean> {
+export async function verifyAdminStatus(
+  walletAddress: string,
+  session?: SessionPayload | null
+): Promise<boolean> {
+  // Fast path: session already encodes admin status from sign-in time.
+  // Older sessions may not have the claim — fall through to env+DB in that case.
+  if (session && typeof session.isAdmin === 'boolean') {
+    return session.isAdmin;
+  }
+
   // Check environment allowlist first (fast path)
   const envAdmins = (process.env.ADMIN_WALLET_ADDRESSES || '').split(',').map(w => w.trim()).filter(Boolean);
   if (envAdmins.includes(walletAddress)) return true;

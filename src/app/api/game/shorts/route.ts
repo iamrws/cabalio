@@ -93,8 +93,11 @@ const FALLBACK_SHORTS: YouTubeShort[] = [
   { videoId: 'kJQP7kiw5Fk', title: 'Despacito', channelTitle: 'LuisFonsiVEVO', thumbnailUrl: ytThumbnail('kJQP7kiw5Fk'), publishedAt: '2017-01-12T00:00:00Z', viewCount: 8000000000 },
 ];
 
+// Pre-compiled at module scope to avoid re-parsing the regex on every call.
+const ISO_8601_DURATION_REGEX = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
+
 function parseDuration(duration: string): number {
-  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const match = duration.match(ISO_8601_DURATION_REGEX);
   if (!match) return 0;
   return (parseInt(match[1] || '0') * 3600) +
          (parseInt(match[2] || '0') * 60) +
