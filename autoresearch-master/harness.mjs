@@ -3,7 +3,7 @@
 // DO NOT MODIFY during experimentation.
 //
 // Measures:
-//   - load_ms:          median LCP over 3 cold Playwright navigations
+//   - load_ms:          median LCP over 5 cold Playwright navigations
 //                       against a production `next start` build. Lower = better.
 //                       (Primary KPI, analog of val_bpb.)
 //   - first_load_js_kb: First Load JS size parsed from `next build` stdout.
@@ -29,7 +29,7 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 
 export const TIME_BUDGET_MS = 90_000;
 export const HARD_KILL_MS = 180_000;
-export const LCP_RUNS = 3;
+export const LCP_RUNS = 5;
 export const TARGET_ROUTE = '/';
 
 // ---------------------------------------------------------------------------
@@ -40,6 +40,14 @@ function median(xs) {
   const s = [...xs].sort((a, b) => a - b);
   const m = s.length >> 1;
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function percentile(xs, p) {
+  if (!xs.length) return 0;
+  const s = [...xs].sort((a, b) => a - b);
+  // Nearest-rank method: clamp to last index.
+  const idx = Math.min(s.length - 1, Math.ceil((p / 100) * s.length) - 1);
+  return s[Math.max(0, idx)];
 }
 
 async function runCmd(cmd, args, { cwd = REPO_ROOT, timeout = HARD_KILL_MS } = {}) {
@@ -128,7 +136,17 @@ async function measureLcp() {
     // give Windows a moment to release the port
     await new Promise(r => setTimeout(r, 250));
   }
-  return median(samples);
+  const med = median(samples);
+  const p90 = percentile(samples, 90);
+  const range = samples.length
+    ? Math.max(...samples) - Math.min(...samples)
+    : 0;
+  return {
+    median:  med,
+    samples: samples.map(s => +s.toFixed(1)),
+    p90:     +p90.toFixed(1),
+    range:   +range.toFixed(1),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -226,22 +244,32 @@ export async function runExperiment() {
   const buildMs = Date.now() - t0;
 
   const tLcp = Date.now();
-  const load_ms = await measureLcp();
+  const lcp = await measureLcp();
   const lcpMs = Date.now() - tLcp;
 
   const tArch = Date.now();
   const { arch_score, breakdown } = await architectureScore(build.chunks);
   const archMs = Date.now() - tArch;
 
+  // Attach LCP noise-floor diagnostics to the breakdown. These are for agent
+  // decision-making only; the TSV schema (and the scalar `load_ms` KPI) are
+  // unchanged so existing rows stay compatible.
+  const breakdownWithLcp = {
+    ...breakdown,
+    lcp_samples: lcp.samples,
+    lcp_p90:     lcp.p90,
+    lcp_range:   lcp.range,
+  };
+
   const total = Date.now() - t0;
   return {
-    load_ms:          +load_ms.toFixed(1),
+    load_ms:          +lcp.median.toFixed(1),
     first_load_js_kb: +build.first_load_js_kb.toFixed(1),
     arch_score,
     build_ms:         buildMs,
     measure_ms:       lcpMs,
     arch_ms:          archMs,
     total_seconds:    +(total / 1000).toFixed(1),
-    breakdown,
+    breakdown:        breakdownWithLcp,
   };
 }

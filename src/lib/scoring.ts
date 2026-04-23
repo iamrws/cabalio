@@ -1,16 +1,16 @@
-import Anthropic from '@anthropic-ai/sdk';
+import type Anthropic from '@anthropic-ai/sdk';
 import { ScoringBreakdown, SubmissionType } from './types';
 import { SCORING_WEIGHTS } from './constants';
 
 let _anthropic: Anthropic | null = null;
-function getAnthropicClient(): Anthropic {
-  if (!_anthropic) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY environment variable is not set');
-    }
-    _anthropic = new Anthropic({ apiKey });
+async function getAnthropicClient(): Promise<Anthropic> {
+  if (_anthropic) return _anthropic;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is not set');
   }
+  const { default: AnthropicCtor } = await import('@anthropic-ai/sdk');
+  _anthropic = new AnthropicCtor({ apiKey });
   return _anthropic;
 }
 
@@ -74,7 +74,8 @@ ${content}
 
 Score this submission using the score_submission tool.`;
 
-  const message = await getAnthropicClient().messages.create({
+  const anthropic = await getAnthropicClient();
+  const message = await anthropic.messages.create({
     model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250514',
     max_tokens: 1024,
     system: SYSTEM_PROMPT,

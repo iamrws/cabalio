@@ -119,23 +119,30 @@ export async function GET(
         ) / 10
       : 0;
 
-  return NextResponse.json({
-    wallet_address: walletAddress,
-    user,
-    rewards: (isSelf || isAdmin) ? rewards : [],
-    contributions: submissions,
-    points_history: visiblePoints,
-    stats: {
-      total_submissions: submissions.length,
-      approved_submissions: approvedSubmissions.length,
-      pending_submissions: (isSelf || isAdmin) ? submissions.filter((submission) => submission.status === 'submitted').length : 0,
-      total_points: totalPoints,
-      weekly_points: weeklyPoints,
-      avg_score: avgScore,
+  return NextResponse.json(
+    {
+      wallet_address: walletAddress,
+      user,
+      rewards: (isSelf || isAdmin) ? rewards : [],
+      contributions: submissions,
+      points_history: visiblePoints,
+      stats: {
+        total_submissions: submissions.length,
+        approved_submissions: approvedSubmissions.length,
+        pending_submissions: (isSelf || isAdmin) ? submissions.filter((submission) => submission.status === 'submitted').length : 0,
+        total_points: totalPoints,
+        weekly_points: weeklyPoints,
+        avg_score: avgScore,
+      },
+      viewer: {
+        is_self: isSelf,
+        is_admin: isAdmin,
+      },
     },
-    viewer: {
-      is_self: isSelf,
-      is_admin: isAdmin,
-    },
-  });
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+      },
+    }
+  );
 }

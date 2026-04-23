@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Gift, CheckCircle2, Clock, Lock } from 'lucide-react';
 
 import NeonCard from '@/components/shared/NeonCard';
@@ -53,80 +54,13 @@ function TrendIndicator({ trend, pct }: { trend: 'up' | 'down' | 'stable'; pct: 
   );
 }
 
-/* ── Earnings History Bar Chart (inline SVG) ── */
-function EarningsChart({ weeks }: { weeks: WeekHistory[] }) {
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const maxPoints = Math.max(...weeks.map((w) => w.points), 1);
-  const barCount = weeks.length;
-  const chartHeight = 160;
-  const barGap = 6;
-  const barWidth = `calc((100% - ${(barCount - 1) * barGap}px) / ${barCount})`;
-
-  return (
-    <div className="relative">
-      {/* Tooltip */}
-      {hoveredIdx !== null && (
-        <div
-          className="absolute -top-12 left-1/2 -translate-x-1/2 bg-bg-raised border border-border-subtle rounded-lg px-3 py-1.5 text-xs font-mono shadow-lg z-10 whitespace-nowrap pointer-events-none transition-opacity duration-150"
-        >
-          <span className="text-text-primary">{weeks[hoveredIdx].points} pts</span>
-          <span className="text-text-muted mx-1">·</span>
-          <span className="text-accent-text">{weeks[hoveredIdx].reward_sol.toFixed(4)} SOL</span>
-        </div>
-      )}
-
-      {/* Bars */}
-      <div
-        className="flex items-end"
-        style={{ height: chartHeight, gap: barGap }}
-      >
-        {weeks.map((week, idx) => {
-          const isCurrentWeek = idx === weeks.length - 1;
-          const heightPct = maxPoints > 0 ? (week.points / maxPoints) * 100 : 0;
-          const minHeight = week.points > 0 ? 4 : 1;
-          return (
-            <div
-              key={`${week.year}-${week.week_number}`}
-              className="flex flex-col items-center justify-end"
-              style={{ width: barWidth, height: '100%' }}
-            >
-              <div
-                className={`w-full rounded-t-md cursor-pointer transition-[background-color] duration-500 ${
-                  isCurrentWeek
-                    ? 'bg-accent'
-                    : hoveredIdx === idx
-                      ? 'bg-accent/70'
-                      : 'bg-accent/30'
-                }`}
-                style={{ minHeight, height: `${Math.max(heightPct, minHeight / chartHeight * 100)}%` }}
-                onMouseEnter={() => setHoveredIdx(idx)}
-                onMouseLeave={() => setHoveredIdx(null)}
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Week labels */}
-      <div className="flex mt-2" style={{ gap: barGap }}>
-        {weeks.map((week, idx) => {
-          const isCurrentWeek = idx === weeks.length - 1;
-          return (
-            <div
-              key={`label-${week.year}-${week.week_number}`}
-              className={`text-center text-[10px] font-mono ${
-                isCurrentWeek ? 'text-accent-text' : 'text-text-muted'
-              }`}
-              style={{ width: barWidth }}
-            >
-              {isCurrentWeek ? 'Now' : `W${week.week_number}`}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+/* ── Lazy-loaded earnings chart (client-only, code-split) ── */
+const EarningsChart = dynamic(() => import('./EarningsChart'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[192px] rounded-lg bg-bg-raised/40 animate-pulse" aria-hidden="true" />
+  ),
+});
 
 export default function RewardsPage() {
   const [rewards, setRewards] = useState<Reward[]>([]);
@@ -142,52 +76,39 @@ export default function RewardsPage() {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
+      setProjectionsLoading(true);
       setError('');
-      try {
-        const response = await fetch('/api/me/summary', { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to load rewards');
-        }
-        if (!cancelled) {
-          setRewards(data.rewards || []);
-          setWeeklyPoints(data.stats?.weekly_points || 0);
-        }
-      } catch (loadError) {
-        if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : 'Failed to load rewards');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      // Fire both requests concurrently; treat projections as best-effort.
+      const [summaryRes, projectionsRes] = await Promise.allSettled([
+        fetch('/api/me/summary', { cache: 'no-store' }).then(async (r) => {
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || 'Failed to load rewards');
+          return data;
+        }),
+        fetch('/api/me/reward-projections', { cache: 'no-store' }).then(async (r) => {
+          if (!r.ok) return null;
+          return r.json();
+        }),
+      ]);
+
+      if (cancelled) return;
+
+      if (summaryRes.status === 'fulfilled') {
+        const data = summaryRes.value;
+        setRewards(data.rewards || []);
+        setWeeklyPoints(data.stats?.weekly_points || 0);
+      } else {
+        setError(summaryRes.reason instanceof Error ? summaryRes.reason.message : 'Failed to load rewards');
       }
+      setLoading(false);
+
+      if (projectionsRes.status === 'fulfilled' && projectionsRes.value) {
+        setProjections(projectionsRes.value);
+      }
+      setProjectionsLoading(false);
     };
 
     void load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadProjections = async () => {
-      setProjectionsLoading(true);
-      try {
-        const res = await fetch('/api/me/reward-projections', { cache: 'no-store' });
-        const data = await res.json();
-        if (res.ok && !cancelled) {
-          setProjections(data);
-        }
-      } catch {
-        // Projections are supplemental; don't block the page on failure
-      } finally {
-        if (!cancelled) setProjectionsLoading(false);
-      }
-    };
-
-    void loadProjections();
     return () => {
       cancelled = true;
     };

@@ -31,7 +31,8 @@ Each experiment runs on a single machine. The harness runs for a **fixed time bu
 **What you CANNOT do:**
 - Modify `harness.mjs`, `run.mjs`, `program.md`, `README.md`, or `analysis.mjs`. The harness is the ground-truth metric.
 - Add runtime dependencies to `../package.json`. DevDependencies for measurement are already installed.
-- Modify `*.test.ts`, `../supabase/migrations/**`, or anything under `autoresearch-master/`.
+- Modify `../supabase/migrations/**`, or anything under `autoresearch-master/`.
+- Alter `*.test.ts` / `*.test.tsx` in ways that change test behavior — no deletions, no `.skip`/`.only`, no loosened assertions, no reduced coverage. Tests may be edited to fix type/lint errors, but not to alter assertions, skip tests, or reduce coverage.
 - Change the measurement code itself (Playwright setup, build command, scoring function).
 
 **The goal is simple: get the lowest `load_ms`, with `arch_score` as a tiebreaker.** Since the harness budget is fixed, you don't need to worry about measurement time. Everything else is fair game: swap libraries for lighter alternatives, lazy-load Solana wallet adapters, code-split the dashboard, drop unused CSS, etc.
@@ -92,10 +93,24 @@ c3d4e5f	1301.8	189.5	75	discard	swap radix dialog for custom modal
 d4e5f6g	0	0	0	crash	inline all images (OOM in next build)
 ```
 
+**Diagnostic LCP fields (not in the TSV):** the harness's `arch_breakdown` JSON
+now also exposes `lcp_samples` (the raw 5-run array), `lcp_p90` (90th
+percentile), and `lcp_range` (max − min). These are diagnostic signals that
+feed into the decision rule above — for example, a tight `lcp_range` justifies
+keeping a small improvement that would otherwise look like noise. They are
+**not** logged to `perf-results.tsv`: the TSV schema stays at 6 columns
+(`commit`, `load_ms`, `first_load_js_kb`, `arch_score`, `status`,
+`description`) so historical rows remain valid. Read the fields from `run.log`
+when a decision is borderline.
+
 ## Decision rule (keep vs discard)
 
-- `load_ms` strictly lower than the current branch tip → **keep**.
-- `load_ms` within 2% of the current tip AND `arch_score` strictly higher → **keep**.
+The harness's LCP noise floor (σ≈15-20ms over a median-of-5) means a 1-2% swing
+can be pure measurement noise. The thresholds below are noise-aware:
+
+- `load_ms` lower than the current branch tip by **more than 5%** → **keep** (clearly above noise floor).
+- `load_ms` within **±5%** of the current tip AND `arch_score` strictly higher → **keep** (tiebreak on architecture).
+- `load_ms` lower by **2-5%** AND `lcp_range` **< 20ms** → **keep** (small but stable improvement, range confirms it isn't noise).
 - otherwise → **discard** (`git reset --hard` back to the branch tip before the experiment).
 
 Track only the branch-tip metric as "current best," not the all-time best — this lets the agent explore monotonically.

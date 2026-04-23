@@ -198,40 +198,47 @@ export async function GET(request: NextRequest) {
       weekly_points: weeklyPointsForUser,
     });
 
-    return NextResponse.json({
-      wallet_address: session.walletAddress,
-      tier: {
-        current: tierProgress.current,
-        current_points: tierProgress.currentPoints,
-        next_tier: tierProgress.nextTier,
-        points_to_next: tierProgress.pointsToNext,
-        progress: tierProgress.progress,
-        unlocks_preview: tierProgress.unlocksPreview,
+    return NextResponse.json(
+      {
+        wallet_address: session.walletAddress,
+        tier: {
+          current: tierProgress.current,
+          current_points: tierProgress.currentPoints,
+          next_tier: tierProgress.nextTier,
+          points_to_next: tierProgress.pointsToNext,
+          progress: tierProgress.progress,
+          unlocks_preview: tierProgress.unlocksPreview,
+        },
+        streak: {
+          current_days: currentStreakDays,
+          shield_available: shieldCount > 0,
+          shields_available: shieldCount,
+          comeback_bonus_ready: comebackBonusReady,
+          last_meaningful_activity_at: lastActivityAt,
+        },
+        bracket: {
+          week_start: weekStart,
+          week_end: weekEnd,
+          name: getBracketName(bracketIndex),
+          rank: safeRankIndex + 1,
+          members: bracketRows.length,
+          points: weeklyPointsForUser,
+          points_to_next_rank: pointsToNextRank,
+        },
+        next_best_action: {
+          action_id: action.action_id,
+          title: action.title,
+          reason: action.reason,
+          estimated_points: action.estimated_points,
+          expires_at: expiresAt,
+        },
       },
-      streak: {
-        current_days: currentStreakDays,
-        shield_available: shieldCount > 0,
-        shields_available: shieldCount,
-        comeback_bonus_ready: comebackBonusReady,
-        last_meaningful_activity_at: lastActivityAt,
-      },
-      bracket: {
-        week_start: weekStart,
-        week_end: weekEnd,
-        name: getBracketName(bracketIndex),
-        rank: safeRankIndex + 1,
-        members: bracketRows.length,
-        points: weeklyPointsForUser,
-        points_to_next_rank: pointsToNextRank,
-      },
-      next_best_action: {
-        action_id: action.action_id,
-        title: action.title,
-        reason: action.reason,
-        estimated_points: action.estimated_points,
-        expires_at: expiresAt,
-      },
-    });
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=30, stale-while-revalidate=120',
+        },
+      }
+    );
   } catch (error) {
     console.error('Command center error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

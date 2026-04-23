@@ -5,6 +5,7 @@ import BottomBar from '@/components/layout/BottomBar';
 import { UserProvider } from '@/components/shared/UserProvider';
 import { SubmitDrawerProvider } from '@/components/shared/SubmitDrawerProvider';
 import SubmitDrawer from '@/components/shared/SubmitDrawer';
+import WalletProviders from '@/components/shared/Providers';
 import dynamic from 'next/dynamic';
 import { AiOrNotProvider } from '@/components/game/AiOrNotPanel';
 
@@ -15,6 +16,7 @@ const AiOrNotPanel = dynamic(
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
+    <WalletProviders>
     <UserProvider>
     <AiOrNotProvider>
     <SubmitDrawerProvider>
@@ -33,5 +35,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     </SubmitDrawerProvider>
     </AiOrNotProvider>
     </UserProvider>
+    </WalletProviders>
   );
 }

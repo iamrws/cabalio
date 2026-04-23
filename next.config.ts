@@ -45,6 +45,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  productionBrowserSourceMaps: false,
+  poweredByHeader: false,
+  compress: true,
   turbopack: {
     root: process.cwd(),
   },
@@ -55,6 +58,20 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ['@anthropic-ai/sdk'],
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+      '@solana/web3.js',
+      '@solana/wallet-adapter-react',
+      '@solana/wallet-adapter-react-ui',
+      '@solana/wallet-adapter-base',
+      'zod',
+    ],
+    serverActions: { bodySizeLimit: '2mb' },
+  },
   async headers() {
     return [
       {

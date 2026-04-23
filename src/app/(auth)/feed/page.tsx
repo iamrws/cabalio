@@ -100,15 +100,29 @@ export default function FeedPage() {
         const res = await fetch('/api/submissions?limit=25', { cache: 'no-store' });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || 'Failed to load community feed');
-        if (!cancelled) {
-          setCommunitySubmissions(d.submissions || []);
+        if (cancelled) return;
+        const subs: SubmissionRow[] = d.submissions || [];
+        setCommunitySubmissions(subs);
+        setLoading(false);
+
+        // Chain reactions fetch immediately (dependent on submission IDs) —
+        // avoids an extra render-cycle delay vs. a separate useEffect.
+        if (subs.length > 0) {
+          const ids = subs.map((s) => s.id).join(',');
+          try {
+            const reactRes = await fetch(`/api/submissions/reactions/batch?ids=${ids}`, {
+              cache: 'no-store',
+            });
+            if (!reactRes.ok || cancelled) return;
+            const body = await reactRes.json();
+            if (!cancelled) setReactions(body.reactions || {});
+          } catch {
+            // Silently fail — reaction counts are non-critical
+          }
         }
       } catch (loadError) {
         if (!cancelled) {
           setError(loadError instanceof Error ? loadError.message : 'Failed to load feed');
-        }
-      } finally {
-        if (!cancelled) {
           setLoading(false);
         }
       }
@@ -119,32 +133,6 @@ export default function FeedPage() {
       cancelled = true;
     };
   }, []);
-
-  // Fetch reactions for community submissions in a single batch request
-  useEffect(() => {
-    if (communitySubmissions.length === 0) return;
-    let cancelled = false;
-
-    const fetchReactions = async () => {
-      const ids = communitySubmissions.map((s) => s.id).join(',');
-      try {
-        const res = await fetch(`/api/submissions/reactions/batch?ids=${ids}`, {
-          cache: 'no-store',
-        });
-        if (!res.ok) return;
-        const body = await res.json();
-        if (cancelled) return;
-        setReactions(body.reactions || {});
-      } catch {
-        // Silently fail — reaction counts are non-critical
-      }
-    };
-
-    void fetchReactions();
-    return () => {
-      cancelled = true;
-    };
-  }, [communitySubmissions]);
 
   // Optimistic reaction toggle
   const handleReactionToggle = useCallback(
