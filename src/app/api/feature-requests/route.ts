@@ -10,13 +10,6 @@ const feedbackSchema = z.object({
   type: z.enum(['feature', 'bug']),
   title: z.string().trim().min(3).max(120),
   description: z.string().trim().min(10).max(2000),
-  email: z
-    .string()
-    .trim()
-    .email()
-    .max(254)
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
 });
 
 /** Rate-limit window and caps — applied per wallet OR per IP hash. */
@@ -50,30 +43,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
+  const session = await getSessionFromRequest(request);
+  if (!session) {
+    return NextResponse.json(
+      { error: 'You must be signed in with your Cabal NFT wallet to submit feedback.' },
+      { status: 401 }
+    );
+  }
+
   const parsed = feedbackSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.errors }, { status: 400 });
   }
 
-  const session = await getSessionFromRequest(request);
-  const walletAddress = session?.walletAddress ?? null;
+  const walletAddress = session.walletAddress;
   const ip = getClientIp(request);
   const ipHash = hashIp(ip);
   const userAgent = request.headers.get('user-agent')?.slice(0, 500) ?? null;
 
   const supabase = createServerClient();
 
-  // Rate limit: count recent rows matching either the wallet or the IP hash
+  // Rate limit: 5/hour per wallet (or per IP as a backstop).
   const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
-  const filter = walletAddress
-    ? `wallet_address.eq.${walletAddress},ip_hash.eq.${ipHash}`
-    : `ip_hash.eq.${ipHash}`;
-
   const { count: recentCount, error: rateErr } = await supabase
     .from('feature_requests')
     .select('id', { count: 'exact', head: true })
     .gte('created_at', windowStart)
-    .or(filter);
+    .or(`wallet_address.eq.${walletAddress},ip_hash.eq.${ipHash}`);
 
   if (rateErr) {
     console.error('Feature request rate-limit check failed:', rateErr);
@@ -94,7 +90,6 @@ export async function POST(request: NextRequest) {
       title: parsed.data.title,
       description: parsed.data.description,
       wallet_address: walletAddress,
-      email: parsed.data.email ?? null,
       ip_hash: ipHash,
       user_agent: userAgent,
       status: 'new',

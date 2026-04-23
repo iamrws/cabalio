@@ -2,40 +2,74 @@
 
 import { useCallback, useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare, X, Wallet } from 'lucide-react';
 
 type FeedbackType = 'feature' | 'bug';
-type SubmitState = { kind: 'idle' } | { kind: 'submitting' } | { kind: 'success' } | { kind: 'error'; message: string };
+type SubmitState =
+  | { kind: 'idle' }
+  | { kind: 'submitting' }
+  | { kind: 'success' }
+  | { kind: 'error'; message: string };
+
+type AuthState =
+  | { kind: 'loading' }
+  | { kind: 'signed-out' }
+  | { kind: 'signed-in'; walletAddress: string };
 
 const TITLE_MAX = 120;
 const DESC_MAX = 2000;
 const TITLE_MIN = 3;
 const DESC_MIN = 10;
 
+function shortAddress(addr: string): string {
+  if (!addr || addr.length < 10) return addr;
+  return `${addr.slice(0, 4)}…${addr.slice(-4)}`;
+}
+
 /**
  * Persistent floating feedback widget. Mounts once in the root layout and
- * appears on every route (landing, auth, dashboard, admin).
- *
- * Anonymous users can submit without a wallet; the server records session
- * info when available and falls back to an IP hash for spam triage.
+ * appears on every route. Submission is gated to verified Cabal NFT holders
+ * (wallet-signed session); unauthenticated users see a connect-wallet prompt.
  */
 export default function FeatureRequestWidget() {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType>('feature');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [email, setEmail] = useState('');
   const [state, setState] = useState<SubmitState>({ kind: 'idle' });
+  const [auth, setAuth] = useState<AuthState>({ kind: 'loading' });
 
-  // Reset transient state whenever the dialog closes so the next open starts fresh.
+  // Re-check session whenever the dialog opens — user may have connected
+  // their wallet in another tab between opens.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setAuth({ kind: 'loading' });
+    fetch('/api/auth/session', { cache: 'no-store', credentials: 'same-origin' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data?.session?.walletAddress) {
+          setAuth({ kind: 'signed-in', walletAddress: data.session.walletAddress });
+        } else {
+          setAuth({ kind: 'signed-out' });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAuth({ kind: 'signed-out' });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  // Reset transient state on close so the next open starts fresh.
   useEffect(() => {
     if (!open) {
-      // Delay slightly so the close animation can complete with the success message visible.
       const t = setTimeout(() => {
         setState({ kind: 'idle' });
         setTitle('');
         setDescription('');
-        setEmail('');
         setType('feature');
       }, 200);
       return () => clearTimeout(t);
@@ -43,6 +77,7 @@ export default function FeatureRequestWidget() {
   }, [open]);
 
   const canSubmit =
+    auth.kind === 'signed-in' &&
     title.trim().length >= TITLE_MIN &&
     title.trim().length <= TITLE_MAX &&
     description.trim().length >= DESC_MIN &&
@@ -64,7 +99,6 @@ export default function FeatureRequestWidget() {
             type,
             title: title.trim(),
             description: description.trim(),
-            email: email.trim() || undefined,
           }),
         });
 
@@ -76,6 +110,9 @@ export default function FeatureRequestWidget() {
               message = data.error;
             } else if (response.status === 429) {
               message = 'Too many submissions. Please try again later.';
+            } else if (response.status === 401) {
+              message = 'Your session expired. Please reconnect your wallet.';
+              setAuth({ kind: 'signed-out' });
             }
           } catch {
             /* ignore parse errors */
@@ -87,12 +124,11 @@ export default function FeatureRequestWidget() {
         setState({ kind: 'success' });
         setTitle('');
         setDescription('');
-        setEmail('');
       } catch {
         setState({ kind: 'error', message: 'Network error. Please try again.' });
       }
     },
-    [canSubmit, description, email, title, type]
+    [canSubmit, description, title, type]
   );
 
   return (
@@ -139,7 +175,29 @@ export default function FeatureRequestWidget() {
             </Dialog.Close>
           </div>
 
-          {state.kind === 'success' ? (
+          {auth.kind === 'loading' ? (
+            <div className="py-10 text-center text-xs text-text-secondary">
+              Checking your wallet…
+            </div>
+          ) : auth.kind === 'signed-out' ? (
+            <div className="py-6 text-center">
+              <Wallet className="mx-auto h-8 w-8 text-accent-text mb-3" aria-hidden="true" />
+              <div className="text-sm text-text-primary font-medium mb-2">
+                Holders only
+              </div>
+              <div className="text-xs text-text-secondary mb-5 leading-relaxed max-w-sm mx-auto">
+                Feedback is open to verified Jito Cabal NFT holders. Sign in with
+                your Solana wallet to submit a feature request or bug report.
+              </div>
+              <a
+                href="/dashboard"
+                className="inline-flex items-center gap-2 rounded-lg bg-accent-muted border border-accent-border px-4 py-2 text-xs font-medium text-accent-text hover:bg-accent/20 transition-colors"
+              >
+                <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
+                Connect wallet
+              </a>
+            </div>
+          ) : state.kind === 'success' ? (
             <div className="py-8 text-center">
               <div className="text-sm text-positive font-medium mb-2">Thanks — we got it.</div>
               <div className="text-xs text-text-secondary mb-4">
@@ -164,22 +222,30 @@ export default function FeatureRequestWidget() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="flex items-center gap-2">
-                {(['feature', 'bug'] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setType(value)}
-                    className={`rounded-full border px-3 py-1 text-xs capitalize transition-colors ${
-                      type === value
-                        ? 'bg-accent-muted border-accent-border text-accent-text'
-                        : 'bg-bg-raised border-border-subtle text-text-secondary hover:text-text-primary'
-                    }`}
-                  >
-                    {value === 'feature' ? 'Feature request' : 'Bug report'}
-                  </button>
-                ))}
+            <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <div className="flex items-center gap-2">
+                  {(['feature', 'bug'] as const).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setType(value)}
+                      className={`rounded-full border px-3 py-1 text-xs capitalize transition-colors ${
+                        type === value
+                          ? 'bg-accent-muted border-accent-border text-accent-text'
+                          : 'bg-bg-raised border-border-subtle text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      {value === 'feature' ? 'Feature request' : 'Bug report'}
+                    </button>
+                  ))}
+                </div>
+                <div
+                  className="text-[10px] font-mono text-text-muted"
+                  title={auth.walletAddress}
+                >
+                  {shortAddress(auth.walletAddress)}
+                </div>
               </div>
 
               <label className="block text-xs text-text-muted">
@@ -217,17 +283,6 @@ export default function FeatureRequestWidget() {
                 </span>
               </label>
 
-              <label className="block text-xs text-text-muted">
-                Email <span className="text-text-muted">(optional — if you&apos;d like a reply)</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  className="mt-1 w-full rounded-lg bg-bg-raised border border-border-subtle px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent-border focus:outline-none"
-                />
-              </label>
-
               {state.kind === 'error' ? (
                 <div className="rounded-lg border border-negative-border bg-negative-muted px-3 py-2 text-xs text-negative">
                   {state.message}
@@ -248,7 +303,7 @@ export default function FeatureRequestWidget() {
                   disabled={!canSubmit}
                   className="rounded-lg bg-accent-muted border border-accent-border px-4 py-2 text-xs font-medium text-accent-text disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent/20 transition-colors"
                 >
-                  {state.kind === 'submitting' ? 'Sending...' : 'Send feedback'}
+                  {state.kind === 'submitting' ? 'Sending…' : 'Send feedback'}
                 </button>
               </div>
             </form>
