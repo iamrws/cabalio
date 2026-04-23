@@ -393,7 +393,7 @@ export default function CabalCorePage() {
     fetch('/api/auth/session', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        setIsAdmin(data.session?.isAdmin === true);
+        setIsAdmin(data.session?.role === 'admin');
         setAdminLoading(false);
       })
       .catch(() => setAdminLoading(false));
